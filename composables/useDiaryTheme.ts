@@ -1,37 +1,43 @@
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
+
+// State global agar sinkron di semua halaman (Layout, Index, Login)
+const darkMode = ref(false)
 
 export const useDiaryTheme = () => {
-  const darkMode = useState<boolean>('diary-dark-mode', () => true)
+    // Fungsi untuk membalikkan status tema
+    const toggleTheme = () => {
+        darkMode.value = !darkMode.value
+        // Simpan pilihan user ke localStorage biar awet
+        localStorage.setItem('diary-theme', darkMode.value ? 'dark' : 'light')
 
-  const toggleTheme = () => {
-    darkMode.value = !darkMode.value
-    updateGlobalClass(darkMode.value)
-  }
-
-  const updateGlobalClass = (isDark: boolean) => {
-    if (typeof document !== 'undefined') {
-      if (isDark) {
-        document.documentElement.classList.add('dark')
-      } else {
-        document.documentElement.classList.remove('dark')
-      }
+        // Opsional: Pasang class 'dark' di root HTML untuk Tailwind CSS versi global
+        if (darkMode.value) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
     }
-  }
 
-  onMounted(() => {
-    const saved = localStorage.getItem('diary-theme')
-    if (saved) {
-      darkMode.value = saved === 'dark'
+    // Cek tema pilihan user saat pertama kali aplikasi dimuat di browser
+    onMounted(() => {
+        const savedTheme = localStorage.getItem('diary-theme')
+        if (savedTheme) {
+            darkMode.value = savedTheme === 'dark'
+        } else {
+            // Jika user belum pernah milih, ikuti setelan bawaan laptop/HP mereka
+            darkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+        }
+
+        // Terapkan class sesuai kondisi awal
+        if (darkMode.value) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    })
+
+    return {
+        darkMode,
+        toggleTheme
     }
-    updateGlobalClass(darkMode.value)
-  })
-
-  watch(darkMode, (newVal) => {
-    localStorage.setItem('diary-theme', newVal ? 'dark' : 'light')
-  })
-
-  return {
-    darkMode,
-    toggleTheme
-  }
 }

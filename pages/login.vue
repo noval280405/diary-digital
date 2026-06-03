@@ -59,6 +59,7 @@
 
       <!-- Form Utama -->
       <form @submit.prevent="handleSubmit" class="space-y-5">
+        <!-- Input Email -->
         <div>
           <label
             class="text-xs font-black uppercase tracking-[0.15em] block mb-2 opacity-70"
@@ -79,9 +80,10 @@
           />
         </div>
 
-        <div>
+        <!-- Input Password -->
+        <div class="space-y-2">
           <label
-            class="text-xs font-black uppercase tracking-[0.15em] block mb-2 opacity-70"
+            class="text-xs font-black uppercase tracking-[0.15em] block opacity-70"
           >
             Kata Sandi
           </label>
@@ -97,9 +99,24 @@
             "
             class="w-full px-4 py-3 border rounded-2xl text-sm outline-none transition-all duration-300 placeholder:text-slate-400"
           />
+
+          <!-- Link Lupa Password (Diposisikan manis di bawah input password, hanya muncul saat mode login) -->
+          <div v-if="!isRegister" class="text-right pt-1">
+            <NuxtLink
+              to="/forgot-password"
+              :class="
+                darkMode
+                  ? 'text-slate-400 hover:text-indigo-400'
+                  : 'text-slate-500 hover:text-orange-600'
+              "
+              class="text-xs font-bold transition-colors hover:underline"
+            >
+              Lupa kata sandi?
+            </NuxtLink>
+          </div>
         </div>
 
-        <!-- Tombol Submit Pro -->
+        <!-- Tombol Submit -->
         <button
           type="submit"
           :disabled="loading"
@@ -121,7 +138,10 @@
       </form>
 
       <!-- Toggle Pindah Halaman Login / Register -->
-      <div class="mt-6 text-center">
+      <div
+        class="mt-8 pt-4 border-t text-center"
+        :class="darkMode ? 'border-slate-800/60' : 'border-amber-100'"
+      >
         <p
           @click="isRegister = !isRegister"
           :class="
@@ -151,7 +171,6 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 
-// Gunakan tema gelap/terang bawaan aplikasi kamu agar serasi
 const { darkMode } = useDiaryTheme();
 const { $fbAuth } = useNuxtApp();
 const router = useRouter();
@@ -165,7 +184,6 @@ const handleSubmit = async () => {
   loading.value = true;
   try {
     if (isRegister.value) {
-      // PROSES DAFTAR (Firebase otomatis bikinin akun gratis)
       await createUserWithEmailAndPassword(
         $fbAuth,
         email.value,
@@ -173,19 +191,16 @@ const handleSubmit = async () => {
       );
       alert("Selamat! Akun diary kamu berhasil dibuat.");
     } else {
-      // PROSES LOGIN
       await signInWithEmailAndPassword($fbAuth, email.value, password.value);
     }
-
-    // Sukses -> langsung lempar ke halaman diary utama
     router.push("/");
   } catch (error) {
-    // Terjemahkan error umum agar user paham
     if (error.code === "auth/email-already-in-use") {
       alert("Email sudah terdaftar. Silakan login langsung.");
     } else if (
       error.code === "auth/wrong-password" ||
-      error.code === "auth/user-not-found"
+      error.code === "auth/user-not-found" ||
+      error.code === "auth/invalid-credential"
     ) {
       alert("Email atau password salah. Periksa kembali data kamu.");
     } else {
