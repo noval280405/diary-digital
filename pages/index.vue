@@ -156,7 +156,7 @@
 
           <!-- Navigasi Halaman & Tombol Kunci PIN -->
           <div class="flex items-center gap-3">
-            <!-- BARU: Tombol Status & Manajemen Kunci PIN Per Halaman (Hanya muncul saat membaca) -->
+            <!-- Tombol Status & Manajemen Kunci PIN Per Halaman (Hanya muncul saat membaca) -->
             <button
               v-if="!isWritingMode && currentPage.text"
               @click="togglePageLock"
@@ -221,16 +221,15 @@
         <!-- Mode Tampilan Lembaran Cerita -->
         <div v-if="!isWritingMode">
           <transition name="page-flip" mode="out-in">
-            <!-- CEK: Jika halaman valid ada isinya -->
             <div
               v-if="currentPage.text"
               :key="currentPageIndex"
               class="space-y-6"
             >
-              <!-- BARU: KONDISI 1 - Jika Halaman Dikunci & Belum Dimasukkan PIN yang Benar -->
+              <!-- KONDISI 1 - Jika Halaman Dikunci & Belum Dimasukkan PIN yang Benar -->
               <div
                 v-if="currentPage.isLocked && !isCurrentPageUnlocked"
-                class="flex flex-col items-center justify-center py-16 text-center space-y-4 animate-fadeIn"
+                class="flex flex-col items-center justify-center py-12 text-center space-y-4 animate-fadeIn"
               >
                 <div
                   class="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500 animate-bounce"
@@ -248,8 +247,7 @@
                     Lembaran Rahasia Terkunci
                   </h3>
                   <p class="text-xs opacity-60 max-w-xs mx-auto mt-1">
-                    Masukkan 6 digit PIN kamu untuk membuka catatan rahasia dan
-                    berkas sensitif ini.
+                    Masukkan 6 digit PIN kamu atau gunakan opsi reset jika lupa.
                   </p>
                 </div>
                 <div class="flex flex-col gap-2 items-center">
@@ -276,6 +274,14 @@
                     <Icon icon="solar:danger-bold" class="w-3.5 h-3.5" /> PIN
                     salah, silakan coba lagi!
                   </p>
+
+                  <!-- BARU: Tombol Lupa PIN -->
+                  <button
+                    @click="showResetModal = true"
+                    class="text-xs font-bold underline mt-3 opacity-50 hover:opacity-100 transition-opacity text-slate-500 dark:text-slate-400"
+                  >
+                    Lupa PIN Lembaran Ini? Reset dengan Password
+                  </button>
                 </div>
               </div>
 
@@ -513,6 +519,101 @@
         </button>
       </div>
     </div>
+
+    <!-- BARU: MODAL DIALOG RESET PIN VIA PASSWORD ACCOUNT -->
+    <div
+      v-if="showResetModal"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
+    >
+      <div
+        :class="
+          darkMode
+            ? 'bg-slate-900 border-slate-800 text-white'
+            : 'bg-white border-amber-200 text-slate-800'
+        "
+        class="w-full max-w-md p-6 rounded-3xl border shadow-2xl space-y-4"
+      >
+        <div
+          class="flex items-center gap-3 border-b pb-3"
+          :class="darkMode ? 'border-slate-800' : 'border-amber-100'"
+        >
+          <div class="p-2 rounded-xl bg-orange-500/10 text-orange-500">
+            <Icon icon="solar:shield-warning-bold-duotone" class="w-6 h-6" />
+          </div>
+          <div>
+            <h3 class="font-black text-base">Verifikasi Pemilik Akun</h3>
+            <p class="text-[11px] opacity-60">
+              Masukkan password login untuk menyetel ulang PIN lembaran ini.
+            </p>
+          </div>
+        </div>
+
+        <div class="space-y-3.5 text-xs">
+          <!-- Email Field (Read Only) -->
+          <div class="space-y-1">
+            <label class="font-bold opacity-70">Email Terdaftar</label>
+            <input
+              :value="currentUser?.email"
+              type="text"
+              disabled
+              class="w-full px-3 py-2 rounded-xl border bg-slate-100 dark:bg-slate-950 opacity-60 cursor-not-allowed font-medium"
+            />
+          </div>
+          <!-- Password Field -->
+          <div class="space-y-1">
+            <label class="font-bold opacity-70">Password Akun Login</label>
+            <input
+              v-model="resetPassword"
+              type="password"
+              placeholder="Masukkan password akun kamu..."
+              class="w-full px-3 py-2 rounded-xl border bg-transparent outline-none focus:ring-1 focus:ring-orange-400 dark:focus:ring-indigo-500"
+            />
+          </div>
+          <!-- New PIN Field -->
+          <div class="space-y-1">
+            <label class="font-bold opacity-70">Buat 6-Digit PIN Baru</label>
+            <input
+              v-model="resetNewPin"
+              type="text"
+              maxlength="6"
+              placeholder="Contoh: 123456"
+              class="w-full px-3 py-2 rounded-xl border bg-transparent outline-none focus:ring-1 focus:ring-orange-400 dark:focus:ring-indigo-500 tracking-wider"
+            />
+          </div>
+
+          <p
+            v-if="resetErrorMsg"
+            class="text-xs text-red-500 font-bold flex items-center gap-1"
+          >
+            <Icon icon="solar:danger-bold" class="w-3.5 h-3.5" />
+            {{ resetErrorMsg }}
+          </p>
+        </div>
+
+        <!-- Tombol Aksi Modal -->
+        <div class="flex justify-end gap-2.5 pt-2 text-xs">
+          <button
+            @click="closeResetModal"
+            :disabled="isResetLoading"
+            class="px-4 py-2 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40"
+          >
+            BATAL
+          </button>
+          <button
+            @click="handleResetPinWithPassword"
+            :disabled="isResetLoading"
+            class="px-4 py-2 rounded-xl font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 flex items-center gap-1.5 disabled:opacity-40 shadow-sm"
+          >
+            <Icon
+              v-if="isResetLoading"
+              icon="solar:spinner-bold"
+              class="w-3.5 h-3.5 animate-spin"
+            />
+            <span>{{ isResetLoading ? "Memproses..." : "UPDATE PIN" }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </NuxtLayout>
 </template>
 
@@ -520,7 +621,11 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import { useDiaryTheme } from "~/composables/useDiaryTheme";
-import { onAuthStateChanged } from "firebase/auth";
+import {
+  onAuthStateChanged,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+} from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const { darkMode } = useDiaryTheme();
@@ -543,10 +648,17 @@ const imagePreview = ref<string | null>(null);
 const searchQuery = ref("");
 const selectedMood = ref("😊");
 
-// BARU: State Khusus Fitur Proteksi Kunci PIN
+// State Proteksi Kunci PIN Utama
 const isCurrentPageUnlocked = ref(false);
 const inputPin = ref("");
 const pinError = ref(false);
+
+// BARU: State Pengaturan Modal Reset Lupa PIN via Password
+const showResetModal = ref(false);
+const resetPassword = ref("");
+const resetNewPin = ref("");
+const isResetLoading = ref(false);
+const resetErrorMsg = ref("");
 
 const moodList = [
   { emoji: "😊", label: "Senang" },
@@ -619,8 +731,7 @@ const currentPage = computed(
   () => filteredPages.value[currentPageIndex.value] || {},
 );
 
-// FIX KACAU: Deteksi perpindahan halaman berdasarkan Indeks dan Buku secara presisi
-// Cara ini dijamin mengunci ulang, baik kamu klik 'Selanjutnya' maupun 'Sebelumnya'!
+// FIX ANTI-GABAL: Auto-lock instan menyala kembali saat berpindah koordinat halaman/buku
 watch(
   [currentPageIndex, activeBookIndex],
   () => {
@@ -628,13 +739,14 @@ watch(
     inputPin.value = "";
     pinError.value = false;
   },
-  { immediate: true }, // Memastikan langsung mengunci saat pertama kali aplikasi dibuka/refresh
+  { immediate: true },
 );
 
 // Watcher otomatis mereset index jika user mengetik sesuatu di pencarian
 watch(searchQuery, () => {
   currentPageIndex.value = 0;
 });
+
 // Logika memverifikasi input PIN otomatis saat user mengetik 6 angka
 const checkPinInput = () => {
   if (inputPin.value.length === 6) {
@@ -648,14 +760,12 @@ const checkPinInput = () => {
   }
 };
 
-// Logika mengaktifkan atau mematikan proteksi gembok PIN
+// Logika mengaktifkan atau mematikan proteksi gembok PIN secara umum
 const togglePageLock = async () => {
-  // JIKA HALAMAN SUDAH TERKUNCI PIN DI DATABASE
   if (currentPage.value.isLocked) {
-    // Pilihan A: Jika halaman sedang terbuka di layar, tawarkan untuk HAPUS PROTEKSI PERMANEN
     if (isCurrentPageUnlocked.value) {
       const confirmDisable = confirm(
-        "Apakah kamu ingin MENMBUANG proteksi PIN pada halaman ini secara permanen?",
+        "Apakah kamu ingin MEMBUANG proteksi PIN pada halaman ini secara permanen?",
       );
       if (confirmDisable) {
         const confirmPin = prompt(
@@ -663,7 +773,7 @@ const togglePageLock = async () => {
         );
         if (confirmPin === currentPage.value.pin) {
           currentPage.value.isLocked = false;
-          currentPage.value.pin = ""; // Baru di sini aman diubah jadi kosong karena dihapus permanen
+          currentPage.value.pin = "";
           isCurrentPageUnlocked.value = false;
           alert(
             "🔒 Proteksi PIN telah dilepas. Halaman kembali berstatus umum!",
@@ -673,9 +783,7 @@ const togglePageLock = async () => {
           alert("❌ PIN Salah! Gagal melepas proteksi.");
         }
       }
-    }
-    // Pilihan B: Jika halaman sedang tertutup gembok, tombol ini bisa jadi alternatif untuk buka kunci di layar
-    else {
+    } else {
       const inputBuka = prompt(
         "Masukkan 6-Digit PIN untuk membuka lembaran ini:",
       );
@@ -686,13 +794,11 @@ const togglePageLock = async () => {
         alert("❌ PIN Salah!");
       }
     }
-  }
-  // JIKA HALAMAN MASIH POLOS (BELUM DIKUNCI) -> PROSEDUR BUAT PIN BARU
-  else {
+  } else {
     const newPin = prompt(
       "Buat 6-Digit PIN angka baru untuk mengunci halaman rahasia ini:",
     );
-    if (newPin === null) return; // User menekan batal
+    if (newPin === null) return;
 
     if (!newPin || newPin.length !== 6 || isNaN(Number(newPin))) {
       alert(
@@ -702,12 +808,78 @@ const togglePageLock = async () => {
     }
 
     currentPage.value.isLocked = true;
-    currentPage.value.pin = newPin; // Menyimpan PIN aman ke database
-    isCurrentPageUnlocked.value = true; // Langsung ijinkan lihat di layar tanpa ketik ulang
+    currentPage.value.pin = newPin;
+    isCurrentPageUnlocked.value = true;
     alert("🔐 Sukses! Lembaran ini terkunci aman dengan 6 digit PIN di Cloud.");
     await saveToFirebase();
   }
 };
+
+// BARU: Eksekusi Reset / Update PIN dengan verifikasi Firebase Auth Password
+const handleResetPinWithPassword = async () => {
+  resetErrorMsg.value = "";
+
+  if (!resetPassword.value) {
+    resetErrorMsg.value = "Password akun wajib diisi!";
+    return;
+  }
+  if (
+    !resetNewPin.value ||
+    resetNewPin.value.length !== 6 ||
+    isNaN(Number(resetNewPin.value))
+  ) {
+    resetErrorMsg.value = "PIN baru harus berupa 6 digit angka baku!";
+    return;
+  }
+
+  isResetLoading.value = true;
+  try {
+    // 1. Buat kredensial login ulang dari Email & Password user yang aktif
+    const credential = EmailAuthProvider.credential(
+      currentUser.value.email,
+      resetPassword.value,
+    );
+
+    // 2. Lakukan Re-authentication ke Firebase Auth Server
+    await reauthenticateWithCredential($fbAuth.currentUser!, credential);
+
+    // 3. Jika lolos pasword benar, ganti PIN di state halaman aktif
+    currentPage.value.pin = resetNewPin.value;
+    currentPage.value.isLocked = true; // Pastikan statusnya tetap terkunci aman
+    isCurrentPageUnlocked.value = true; // Langsung tampilkan teks halaman setelah sukses reset
+
+    // 4. Cadangkan perubahan PIN baru ke Firestore Cloud
+    await saveToFirebase();
+
+    alert(
+      "🔄 PIN Berhasil Diperbarui! Lembaran rahasia kamu kini aman dengan kombinasi PIN baru.",
+    );
+    closeResetModal();
+  } catch (error: any) {
+    console.error(error);
+    if (
+      error.code === "auth/wrong-password" ||
+      error.code === "auth/invalid-credential"
+    ) {
+      resetErrorMsg.value =
+        "Password akun yang kamu masukkan salah! Akses ditolak.";
+    } else {
+      resetErrorMsg.value =
+        "Gagal memverifikasi akun. Periksa koneksi internetmu.";
+    }
+  } finally {
+    isResetLoading.value = false;
+  }
+};
+
+// BARU: Fungsi menutup modal reset PIN dan mengosongkan form
+const closeResetModal = () => {
+  showResetModal.value = false;
+  resetPassword.value = "";
+  resetNewPin.value = "";
+  resetErrorMsg.value = "";
+};
+
 // Aksi Rak Jurnal
 const createNewBook = async () => {
   if (!newBookTitle.value.trim()) return;
@@ -744,7 +916,7 @@ const deleteBook = async (i: number) => {
 const startWriting = () => {
   newText.value = "";
   imagePreview.value = null;
-  selectedMood.value = "😊"; // Setel ulang ke emoji default ceria
+  selectedMood.value = "😊";
   isWritingMode.value = true;
 };
 
@@ -755,13 +927,12 @@ const cancelWriting = () => {
 const savePage = async () => {
   if (!newText.value.trim()) return;
 
-  // Memasukkan data baru lengkap termasuk inisialisasi properti kunci PIN bawaan
   currentBook.value.pages.push({
     text: newText.value,
     image: imagePreview.value,
     createdAt: Date.now(),
     mood: selectedMood.value,
-    isLocked: false, // Default awal lembaran baru: tidak terkunci
+    isLocked: false,
     pin: "",
   });
 
