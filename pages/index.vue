@@ -145,9 +145,18 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useDiaryTheme } from '~/composables/useDiaryTheme'
+// Tambahan impor untuk Firebase
+import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { doc, setDoc, getDoc } from 'firebase/firestore'
 
 const { darkMode } = useDiaryTheme()
+const { $fbAuth, $fbDb } = useNuxtApp()
+const router = useRouter()
 
+// State untuk memantau user yang sedang login
+const currentUser = ref(null)
+
+// --- SEMUA STATE ASLI KAMU (UTUH) ---
 const notebooks = ref([])
 const activeBookIndex = ref(0)
 const currentPageIndex = ref(0)
@@ -159,42 +168,78 @@ const imagePreview = ref(null)
 
 const generateId = () => 'book_' + Date.now() + Math.random().toString(36).slice(2, 8)
 
+// --- LOGIKA UTAMA INTEGRASI FIREBASE GRATISAN ---
+
+// 1. Cek status login saat halaman dibuka
 onMounted(() => {
-  const data = localStorage.getItem('diary_books')
-  if (data) {
-    notebooks.value = JSON.parse(data)
-  } else {
-    notebooks.value = [{ id: generateId(), title: "Jurnal Utama Saya", pages: [] }]
-  }
+  onAuthStateChanged($fbAuth, async (user) => {
+    if (user) {
+      currentUser.value = user
+      await loadUserDiary(user.uid) // Tarik data diary KHUSUS milik UID user ini
+    } else {
+      router.push('/login') // Jika belum login, arahkan ke halaman login
+    }
+  })
 })
 
-watch(notebooks, (val) => {
-  localStorage.setItem('diary_books', JSON.stringify(val))
-}, { deep: true })
+// 2. Fungsi menarik data dari Cloud Firestore berdasarkan UID
+const loadUserDiary = async (uid) => {
+  try {
+    const docRef = doc($fbDb, "user_diaries", uid)
+    const docSnap = await getDoc(docRef)
+    
+    if (docSnap.exists()) {
+      notebooks.value = docSnap.data().notebooks || []
+    } else {
+      // Jika user baru mendaftar, buatkan satu buku default
+      notebooks.value = [{ id: generateId(), title: "Jurnal Utama Saya", pages: [] }]
+      await saveToFirebase()
+    }
+  } catch (e) {
+    console.error("Gagal memuat data dari cloud: ", e)
+  }
+}
+
+// 3. Fungsi sinkronisasi / backup data otomatis ke Firebase cloud
+const saveToFirebase = async () => {
+  if (!currentUser.value) return
+  try {
+    await setDoc(doc($fbDb, "user_diaries", currentUser.value.uid), {
+      notebooks: notebooks.value
+    })
+  } catch (e) {
+    console.error("Gagal mencadangkan ke cloud: ", e)
+  }
+}
+
+// --- SEMUA FUNGSI & COMPUTED ASLI KAMU (DIKEMBALIKAN 100% + DIINTEGRASIKAN) ---
 
 const currentBook = computed(() => notebooks.value[activeBookIndex.value] || { title: "", pages: [] })
 const currentPage = computed(() => currentBook.value.pages[currentPageIndex.value] || {})
 
-const createNewBook = () => {
+const createNewBook = async () => {
   if (!newBookTitle.value.trim()) return
   notebooks.value.push({ id: generateId(), title: newBookTitle.value, pages: [] })
   activeBookIndex.value = notebooks.value.length - 1
   currentPageIndex.value = 0
   newBookTitle.value = ""
+  await saveToFirebase() // Simpan perubahan ke cloud
 }
 
+// Ini fungsi selectBook yang sempat hilang, sekarang sudah aktif kembali!
 const selectBook = (i) => {
   activeBookIndex.value = i
   currentPageIndex.value = 0
   isWritingMode.value = false
 }
 
-const deleteBook = (i) => {
+const deleteBook = async (i) => {
   notebooks.value.splice(i, 1)
   if (activeBookIndex.value >= notebooks.value.length) {
     activeBookIndex.value = Math.max(0, notebooks.value.length - 1)
   }
   currentPageIndex.value = 0
+  await saveToFirebase() // Simpan perubahan ke cloud
 }
 
 const startWriting = () => {
@@ -205,13 +250,14 @@ const startWriting = () => {
 
 const cancelWriting = () => { isWritingMode.value = false }
 
-const savePage = () => {
+const savePage = async () => {
   if (!newText.value.trim()) return
   currentBook.value.pages.push({ text: newText.value, image: imagePreview.value })
   currentPageIndex.value = currentBook.value.pages.length - 1
   newText.value = ""
   imagePreview.value = null
   isWritingMode.value = false
+  await saveToFirebase() // Simpan perubahan ke cloud
 }
 
 const handleImageUpload = (e) => {
@@ -224,6 +270,12 @@ const handleImageUpload = (e) => {
 
 const nextPage = () => { if (currentPageIndex.value < currentBook.value.pages.length - 1) currentPageIndex.value++ }
 const prevPage = () => { if (currentPageIndex.value > 0) currentPageIndex.value-- }
+
+// Tambahan: Fungsi jika user ingin logout
+const handleLogout = async () => {
+  await signOut($fbAuth)
+  router.push('/login')
+}
 </script>
 
 <style scoped>

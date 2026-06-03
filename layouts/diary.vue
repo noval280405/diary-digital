@@ -109,35 +109,63 @@
           </div>
         </div>
 
+        <!-- MODIFIKASI SEKSI USER PROFILE & LOGOUT -->
         <div
-          class="flex items-center gap-3 pt-4 border-t transition-colors duration-500"
+          class="flex items-center justify-between pt-4 border-t transition-colors duration-500"
           :class="darkMode ? 'border-slate-800' : 'border-amber-200'"
         >
-          <!-- <div
-            class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-pink-500 flex items-center justify-center shadow-md"
-          >
-            <Icon icon="solar:user-bold" class="w-5 h-5 text-white" />
-          </div> -->
-
-           <div :class="darkMode ? 'from-indigo-500 to-pink-500' : 'from-orange-500 to-rose-500'" class="w-14 h-14 rounded-3xl bg-gradient-to-br flex items-center justify-center shadow-lg shrink-0">
-               <Icon icon="solar:user-bold" class="w-5 h-5 text-white" />
-            </div>
-          <div>
-            <h4
-              class="font-bold text-sm"
-              :class="darkMode ? 'text-white' : 'text-slate-900'"
-            >
-              Noval's Diary
-            </h4>
+          <div class="flex items-center gap-3 min-w-0">
             <div
-              class="flex items-center gap-1 text-xs text-emerald-500 font-semibold"
+              :class="
+                darkMode
+                  ? 'from-indigo-500 to-pink-500'
+                  : 'from-orange-500 to-rose-500'
+              "
+              class="w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg shrink-0"
             >
-              <span
-                class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
-              />
-              Auto Saved
+              <Icon icon="solar:user-bold" class="w-5 h-5 text-white" />
+            </div>
+            <div class="truncate">
+              <!-- Nama berubah dinamis dari email depan user -->
+              <h4
+                class="font-bold text-sm truncate"
+                :class="darkMode ? 'text-white' : 'text-slate-900'"
+              >
+                {{
+                  currentUser?.email
+                    ? currentUser.email.split("@")[0]
+                    : "Memuat..."
+                }}
+              </h4>
+              <div
+                class="flex items-center gap-1 text-xs text-emerald-500 font-semibold"
+              >
+                <span
+                  class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
+                />
+                Auto Saved
+              </div>
             </div>
           </div>
+
+          <!-- Tombol Logout Tambahan -->
+          <!-- Tombol Keluar / Ganti Akun -->
+          <button
+            @click="handleLogout"
+            title="Keluar / Ganti Akun"
+            :class="
+              darkMode
+                ? 'bg-slate-900 border-slate-800 text-red-400 hover:bg-red-950/30'
+                : 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100'
+            "
+            class="h-9 px-3 rounded-xl border flex items-center gap-2 text-xs font-black tracking-wide hover:scale-105 active:scale-95 transition-all shadow-sm group shrink-0"
+          >
+            <Icon
+              icon="solar:logout-3-bold"
+              class="w-4 h-4 group-hover:translate-x-0.5 transition-transform"
+            />
+            <span>Keluar</span>
+          </button>
         </div>
       </div>
     </aside>
@@ -183,8 +211,14 @@
 import { ref, onMounted } from "vue";
 import { Icon } from "@iconify/vue";
 import { useDiaryTheme } from "~/composables/useDiaryTheme";
+// Tambahan impor Firebase untuk memantau auth & logout di tingkat layout
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 const { darkMode, toggleTheme } = useDiaryTheme();
+const { $fbAuth } = useNuxtApp();
+const router = useRouter();
+
+const currentUser = ref<any>(null);
 
 const quotes = [
   "Writing is the painting of the voice.",
@@ -197,5 +231,18 @@ const quote = ref("");
 
 onMounted(() => {
   quote.value = quotes[Math.floor(Math.random() * quotes.length)];
+
+  // Pantau sesi user di layout agar nama profil sinkron
+  onAuthStateChanged($fbAuth, (user) => {
+    if (user) {
+      currentUser.value = user;
+    }
+  });
 });
+
+// Fungsi logout dipasang langsung di layout
+const handleLogout = async () => {
+  await signOut($fbAuth);
+  router.push("/login");
+};
 </script>
