@@ -5,6 +5,7 @@
     ]"
     class="min-h-screen flex transition-all duration-500 font-sans relative overflow-hidden"
   >
+    <!-- Efek Latar Belakang Gradasi -->
     <div
       class="fixed inset-0 pointer-events-none z-0 transition-all duration-500"
       :class="
@@ -14,11 +15,13 @@
       "
     />
 
+    <!-- Efek Ambient Glow -->
     <div
       class="fixed top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full blur-3xl opacity-20 pointer-events-none z-0 transition-all duration-500"
       :class="darkMode ? 'bg-indigo-500' : 'bg-orange-300'"
     />
 
+    <!-- Komponen Kiri: Sidebar -->
     <aside
       :class="
         darkMode
@@ -27,7 +30,8 @@
       "
       class="relative w-80 border-r backdrop-blur-xl p-6 flex flex-col justify-between shadow-2xl z-10 transition-colors duration-500"
     >
-      <div class="space-y-6">
+      <div class="space-y-5">
+        <!-- Identitas Aplikasi & Tombol Ganti Tema -->
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
             <div
@@ -70,6 +74,7 @@
           </button>
         </div>
 
+        <!-- Kutipan Bijak (Quotes) -->
         <div
           class="p-4 rounded-2xl border transition-colors duration-500"
           :class="
@@ -87,10 +92,22 @@
           </div>
         </div>
 
+        <!-- DI SINI: Tombol Navigasi Menu Analisis & Ekspor Statistik -->
+        <NuxtLink 
+          to="/stats"
+          :class="darkMode ? 'bg-slate-900/50 border-slate-800 text-slate-300 hover:bg-slate-800' : 'bg-amber-100/40 border-amber-200 text-slate-700 hover:bg-amber-100'"
+          class="w-full p-3 rounded-xl border flex items-center gap-2.5 text-xs font-black uppercase tracking-wider transition-all shadow-sm"
+        >
+          <Icon icon="solar:graph-up-bold-duotone" class="w-4 h-4 text-orange-500" />
+          <span>Lihat Analisis & Ekspor</span>
+        </NuxtLink>
+
+        <!-- Tempat Menyisipkan Konten Tambahan Sidebar dari Index Halaman -->
         <slot name="sidebar-content" />
       </div>
 
       <div class="space-y-4">
+        <!-- Target Menulis Harian (Writing Goal) -->
         <div>
           <div class="flex items-center gap-2 mb-2 opacity-60">
             <Icon icon="solar:pen-bold" class="w-4 h-4" />
@@ -108,18 +125,18 @@
             />
           </div>
 
-          <!-- Angka Kata Dinamis -->
+          <!-- Indikator Hitung Kata Dinamis -->
           <div class="mt-2 text-xs opacity-60 font-medium flex justify-between">
             <span>{{ todayWordCount }} / {{ wordGoal }} kata hari ini</span>
             <span
               v-if="todayWordCount >= wordGoal"
-              class="text-emerald-500 font-bold"
+              class="text-emerald-500 font-bold animate-pulse"
               >🎉 Target Tercapai!</span
             >
           </div>
         </div>
 
-        <!-- MODIFIKASI SEKSI USER PROFILE & LOGOUT -->
+        <!-- Profil Akun Pengguna & Aksi Log Out -->
         <div
           class="flex items-center justify-between pt-4 border-t transition-colors duration-500"
           :class="darkMode ? 'border-slate-800' : 'border-amber-200'"
@@ -136,7 +153,6 @@
               <Icon icon="solar:user-bold" class="w-5 h-5 text-white" />
             </div>
             <div class="truncate">
-              <!-- Nama berubah dinamis dari email depan user -->
               <h4
                 class="font-bold text-sm truncate"
                 :class="darkMode ? 'text-white' : 'text-slate-900'"
@@ -158,8 +174,6 @@
             </div>
           </div>
 
-          <!-- Tombol Logout Tambahan -->
-          <!-- Tombol Keluar / Ganti Akun -->
           <button
             @click="handleLogout"
             title="Keluar / Ganti Akun"
@@ -180,6 +194,7 @@
       </div>
     </aside>
 
+    <!-- Komponen Kanan: Area Isi Kertas Jurnal -->
     <main class="relative flex-1 p-6 md:p-10 overflow-y-auto z-10">
       <div class="max-w-4xl mx-auto">
         <div
@@ -190,10 +205,12 @@
           "
           class="rounded-[32px] border p-8 md:p-12 relative overflow-hidden transition-all duration-500 min-h-[580px]"
         >
+          <!-- Garis Margin Merah Khas Buku Diary Fisik -->
           <div
             class="absolute left-16 top-0 bottom-0 w-[1.5px] bg-red-400/30 z-20 pointer-events-none"
           />
 
+          <!-- Pola Garis-Garis Buku Bergaris Tradisional -->
           <div
             class="absolute inset-0 pointer-events-none z-0"
             style="
@@ -218,10 +235,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { Icon } from "@iconify/vue";
 import { useDiaryTheme } from "~/composables/useDiaryTheme";
-// Tambahan impor Firebase untuk memantau auth & logout di tingkat layout
 import { onAuthStateChanged, signOut } from "firebase/auth";
 
 const { darkMode, toggleTheme } = useDiaryTheme();
@@ -242,7 +258,7 @@ const quote = ref("");
 onMounted(() => {
   quote.value = quotes[Math.floor(Math.random() * quotes.length)];
 
-  // Pantau sesi user di layout agar nama profil sinkron
+  // Pantau sesi user di tingkat layout agar profil sinkron sepanjang waktu
   onAuthStateChanged($fbAuth, (user) => {
     if (user) {
       currentUser.value = user;
@@ -250,44 +266,43 @@ onMounted(() => {
   });
 });
 
-// Ambil data notebooks global yang di-share dari halaman utama
+// Mengakses data notebooks global tersinkronisasi dari halaman utama
 const notebooks = useState<any[]>("global-notebooks", () => []);
 
-// Target kata harian (bisa diubah sesuai keinginan)
+// Target kata harian standar
 const wordGoal = ref(500);
 
-// 1. Hitung total kata yang ditulis HARI INI
+// Hitung total kata yang ditulis khusus hari ini secara real-time
 const todayWordCount = computed(() => {
   let totalWords = 0;
-  const todayStr = new Date().toDateString(); // Format: "Wed Jun 03 2026"
+  const todayStr = new Date().toDateString(); 
 
   notebooks.value.forEach((book: any) => {
     if (book.pages && Array.isArray(book.pages)) {
       book.pages.forEach((page: any) => {
-        // Memastikan halaman memiliki tanggal
         const pageDate = page.createdAt
           ? new Date(page.createdAt).toDateString()
           : todayStr;
 
         if (pageDate === todayStr && page.text) {
-          // Bersihkan spasi ganda lalu hitung jumlah kata
+          // Membersihkan tumpukan spasi kosong dan menghitung jumlah kata yang valid
           const words = page.text.trim().split(/\s+/);
           totalWords += words.filter((w: string) => w.length > 0).length;
         }
       });
-    } // <-- Di sini tadi salah ketik tanda kurungnya
+    } 
   });
 
   return totalWords;
 });
 
-// 2. Hitung persentase untuk progress bar
+// Mengubah jumlah kalkulasi kata harian ke persentase bar visual
 const writingProgress = computed(() => {
   if (wordGoal.value === 0) return 0;
   return (todayWordCount.value / wordGoal.value) * 100;
 });
 
-// Fungsi logout dipasang langsung di layout
+// Aksi keluar akun pengguna
 const handleLogout = async () => {
   await signOut($fbAuth);
   router.push("/login");

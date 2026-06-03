@@ -1,6 +1,7 @@
 <template>
   <NuxtLayout name="diary">
     <template #sidebar-content>
+      <!-- Jurnal Baru -->
       <div
         class="space-y-3 pt-4 border-t transition-colors duration-500"
         :class="darkMode ? 'border-slate-800/60' : 'border-amber-200/60'"
@@ -37,6 +38,7 @@
         </div>
       </div>
 
+      <!-- Rak Jurnal -->
       <div class="space-y-3 mt-6">
         <label
           :class="darkMode ? 'text-slate-400' : 'text-amber-800/70'"
@@ -44,6 +46,19 @@
         >
           📚 Rak Jurnal
         </label>
+        
+        <!-- BARU: Kotak Pencarian Teks di Sidebar -->
+        <div class="relative mb-3">
+          <input 
+            v-model="searchQuery"
+            type="text"
+            placeholder="Cari cerita lama..."
+            :class="darkMode ? 'bg-slate-900/60 border-slate-800 text-white focus:ring-1 focus:ring-indigo-500' : 'bg-amber-50/40 border-amber-200 text-slate-800 focus:ring-1 focus:ring-orange-400'"
+            class="w-full pl-8 pr-3 py-1.5 border rounded-xl text-xs outline-none transition-all placeholder:text-slate-400"
+          />
+          <Icon icon="solar:magnifer-bold" class="w-3.5 h-3.5 absolute left-2.5 top-2.5 opacity-40" />
+        </div>
+
         <div class="space-y-2.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
           <div
             v-for="(book, i) in notebooks"
@@ -66,9 +81,7 @@
             />
             <div class="truncate font-bold flex items-center gap-2.5">
               <span>{{ activeBookIndex === i ? "📖" : "📔" }}</span>
-              <span class="truncate text-sm tracking-wide">{{
-                book.title
-              }}</span>
+              <span class="truncate text-sm tracking-wide">{{ book.title }}</span>
             </div>
             <div class="flex items-center gap-2">
               <span
@@ -81,7 +94,7 @@
                 "
                 class="px-2 py-0.5 rounded-full text-xs font-black"
               >
-                {{ book.pages.length }}
+                {{ book.pages ? book.pages.length : 0 }}
               </span>
               <button
                 @click.stop="deleteBook(i)"
@@ -95,9 +108,8 @@
       </div>
     </template>
 
-    <div
-      class="pl-0 md:pl-12 min-h-[500px] flex flex-col justify-between relative"
-    >
+    <!-- Konten Utama Jurnal -->
+    <div class="pl-0 md:pl-12 min-h-[500px] flex flex-col justify-between relative">
       <div>
         <div
           class="flex flex-wrap items-center justify-between gap-4 border-b pb-6 mb-8"
@@ -105,17 +117,10 @@
         >
           <div class="flex items-center gap-4">
             <div
-              :class="
-                darkMode
-                  ? 'from-indigo-500 to-pink-500'
-                  : 'from-orange-500 to-rose-500'
-              "
+              :class="darkMode ? 'from-indigo-500 to-pink-500' : 'from-orange-500 to-rose-500'"
               class="w-14 h-14 rounded-3xl bg-gradient-to-br flex items-center justify-center shadow-lg shrink-0"
             >
-              <Icon
-                icon="solar:book-bookmark-bold-duotone"
-                class="w-8 h-8 text-white"
-              />
+              <Icon icon="solar:book-bookmark-bold-duotone" class="w-8 h-8 text-white" />
             </div>
             <div>
               <h1
@@ -125,41 +130,29 @@
                 {{ currentBook.title || "Mulai Menulis" }}
               </h1>
               <p class="text-sm opacity-60 font-semibold mt-0.5">
-                {{ currentBook.pages.length }} Lembar Tersimpan
+                {{ filteredPages.length }} Lembar {{ searchQuery ? 'Ditemukan' : 'Tersimpan' }}
               </p>
             </div>
           </div>
 
+          <!-- Navigasi Halaman -->
           <div
             class="flex items-center gap-1.5 p-1 rounded-2xl border"
-            :class="
-              darkMode
-                ? 'bg-slate-900/50 border-slate-800'
-                : 'bg-amber-50/80 border-amber-200'
-            "
+            :class="darkMode ? 'bg-slate-900/50 border-slate-800' : 'bg-amber-50/80 border-amber-200'"
           >
             <button
               @click="prevPage"
-              :disabled="
-                currentPageIndex === 0 ||
-                !currentBook.pages.length ||
-                isWritingMode
-              "
+              :disabled="currentPageIndex === 0 || !filteredPages.length || isWritingMode"
               class="p-2 rounded-xl border disabled:opacity-20 active:scale-95 transition-all"
             >
               <Icon icon="solar:alt-arrow-left-bold" class="w-4 h-4" />
             </button>
             <span class="text-xs font-black px-2 text-center min-w-[55px]">
-              {{ currentBook.pages.length ? currentPageIndex + 1 : 0 }} /
-              {{ currentBook.pages.length }}
+              {{ filteredPages.length ? currentPageIndex + 1 : 0 }} / {{ filteredPages.length }}
             </span>
             <button
               @click="nextPage"
-              :disabled="
-                currentPageIndex >= currentBook.pages.length - 1 ||
-                !currentBook.pages.length ||
-                isWritingMode
-              "
+              :disabled="currentPageIndex >= filteredPages.length - 1 || !filteredPages.length || isWritingMode"
               class="p-2 rounded-xl border disabled:opacity-20 active:scale-95 transition-all"
             >
               <Icon icon="solar:alt-arrow-right-bold" class="w-4 h-4" />
@@ -167,106 +160,111 @@
           </div>
         </div>
 
+        <!-- Mode Tampilan Lembaran Cerita -->
         <div v-if="!isWritingMode">
           <transition name="page-flip" mode="out-in">
-            <div
-              v-if="currentPage.text"
-              :key="currentPageIndex"
-              class="space-y-6"
-            >
+            <div v-if="currentPage.text" :key="currentPageIndex" class="space-y-6">
+              
+              <!-- BARU: Tampilan Lencana Mood di Lembaran Cerita -->
+              <div v-if="currentPage.mood" class="flex items-center gap-2 animate-fadeIn">
+                <span 
+                  :class="darkMode ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-amber-100/60 border-amber-200 text-amber-900'"
+                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border"
+                >
+                  <span>{{ currentPage.mood }}</span>
+                  <span>Suasana Hati</span>
+                </span>
+                <span v-if="currentPage.createdAt" class="text-[11px] opacity-40 font-medium">
+                  • {{ new Date(currentPage.createdAt).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) }}
+                </span>
+              </div>
+
               <p
-                :class="
-                  darkMode ? 'text-slate-100' : 'text-slate-800 font-medium'
-                "
+                :class="darkMode ? 'text-slate-100' : 'text-slate-800 font-medium'"
                 class="whitespace-pre-wrap text-lg md:text-xl font-serif italic text-justify leading-[35px]"
               >
                 "{{ currentPage.text }}"
               </p>
 
+              <!-- Lampiran Foto -->
               <div
                 v-if="currentPage.image"
-                :class="
-                  darkMode
-                    ? 'border-slate-800 bg-slate-900/60 shadow-black/40'
-                    : 'border-amber-200 bg-amber-50/40 shadow-amber-900/5'
-                "
+                :class="darkMode ? 'border-slate-800 bg-slate-900/60 shadow-black/40' : 'border-amber-200 bg-amber-50/40 shadow-amber-900/5'"
                 class="p-3 pb-6 rounded-2xl border-2 shadow-xl inline-block transform -rotate-1 transition-transform hover:rotate-0"
               >
-                <img
-                  :src="currentPage.image"
-                  class="max-h-72 rounded-xl object-cover"
-                  alt="Attachment"
-                />
-                <div
-                  class="mt-3 text-center font-serif text-xs opacity-40 tracking-widest"
-                >
+                <img :src="currentPage.image" class="max-h-72 rounded-xl object-cover" alt="Attachment" />
+                <div class="mt-3 text-center font-serif text-xs opacity-40 tracking-widest">
                   ✦ MEMORI TERLAMPIR ✦
                 </div>
               </div>
             </div>
 
-            <div
-              v-else
-              class="text-center py-16 flex flex-col items-center space-y-3"
-            >
+            <!-- Halaman Kosong -->
+            <div v-else class="text-center py-16 flex flex-col items-center space-y-3">
               <Icon
                 icon="solar:pen-new-square-bold-duotone"
                 :class="darkMode ? 'text-indigo-400/60' : 'text-orange-500/60'"
                 class="w-16 h-16 animate-bounce"
               />
               <p class="font-serif italic text-slate-500 max-w-xs">
-                Lembar ini masih kosong. Siap menampung cerita seru
-                petualanganmu hari ini.
+                {{ searchQuery ? 'Tidak ada lembaran yang cocok dengan pencarian kata kuncimu.' : 'Lembar ini masih kosong. Siap menampung cerita seru petualanganmu hari ini.' }}
               </p>
             </div>
           </transition>
         </div>
 
+        <!-- Mode Input Menulis Jurnal -->
         <div v-else class="space-y-4 animate-fadeIn">
+          
+          <!-- BARU: Komponen Pemilih Mood Saat Menulis -->
+          <div 
+            class="p-4 rounded-2xl border transition-all" 
+            :class="darkMode ? 'bg-slate-900/40 border-slate-800' : 'bg-amber-50/50 border-amber-200'"
+          >
+            <label class="text-[10px] font-black uppercase tracking-[0.15em] block mb-2.5 opacity-60">
+              Bagaimana suasana hatimu hari ini?
+            </label>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="m in moodList"
+                :key="m.emoji"
+                type="button"
+                @click="selectedMood = m.emoji"
+                :class="[
+                  selectedMood === m.emoji 
+                    ? (darkMode ? 'bg-indigo-600/30 border-indigo-500 scale-105 text-white' : 'bg-orange-100 border-orange-400 scale-105 text-orange-900 font-bold') 
+                    : (darkMode ? 'bg-slate-950/80 border-slate-900/60 opacity-50 hover:opacity-100 text-slate-400' : 'bg-white border-amber-100 opacity-60 hover:opacity-100 text-slate-700')
+                ]"
+                class="flex items-center gap-1.5 px-3 py-1.5 border rounded-xl text-xs font-medium transition-all duration-200"
+              >
+                <span>{{ m.emoji }}</span>
+                <span>{{ m.label }}</span>
+              </button>
+            </div>
+          </div>
+
           <textarea
             v-model="newText"
             placeholder="Tuangkan isi pikiran, rencana, atau petualangan serumu hari ini di sini..."
-            :class="
-              darkMode
-                ? 'text-slate-100 placeholder-slate-700'
-                : 'text-slate-800 placeholder-slate-400 font-medium'
-            "
+            :class="darkMode ? 'text-slate-100 placeholder-slate-700' : 'text-slate-800 placeholder-slate-400 font-medium'"
             class="w-full h-64 p-2 outline-none text-lg font-serif resize-none bg-transparent leading-[35px]"
           />
 
+          <!-- Lampiran Gambar -->
           <div
-            :class="
-              darkMode
-                ? 'bg-slate-900/40 border-slate-800'
-                : 'bg-amber-50/40 border-amber-200'
-            "
+            :class="darkMode ? 'bg-slate-900/40 border-slate-800' : 'bg-amber-50/40 border-amber-200'"
             class="flex items-center justify-between p-4 rounded-2xl border border-dashed"
           >
             <label
-              :class="
-                darkMode
-                  ? 'bg-slate-800 border-slate-700 text-slate-200'
-                  : 'bg-white border-amber-200 text-slate-700 shadow-sm'
-              "
+              :class="darkMode ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-amber-200 text-slate-700 shadow-sm'"
               class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black cursor-pointer border active:scale-95 transition-transform"
             >
-              <Icon
-                icon="solar:camera-add-bold-duotone"
-                class="w-4 h-4 text-orange-500"
-              />
+              <Icon icon="solar:camera-add-bold-duotone" class="w-4 h-4 text-orange-500" />
               <span>{{ imagePreview ? "Ganti Foto" : "Sematkan Gambar" }}</span>
-              <input
-                type="file"
-                accept="image/*"
-                @change="handleImageUpload"
-                class="hidden"
-              />
+              <input type="file" accept="image/*" @change="handleImageUpload" class="hidden" />
             </label>
 
-            <div
-              v-if="imagePreview"
-              class="relative rounded-lg overflow-hidden border"
-            >
+            <div v-if="imagePreview" class="relative rounded-lg overflow-hidden border">
               <img :src="imagePreview" class="h-12 w-20 object-cover" />
               <button
                 @click="imagePreview = null"
@@ -279,6 +277,7 @@
         </div>
       </div>
 
+      <!-- Navigasi Aksi Simpan / Batal -->
       <div
         class="flex justify-end gap-3 pt-6 mt-8 border-t"
         :class="darkMode ? 'border-slate-800/80' : 'border-amber-200/60'"
@@ -287,11 +286,7 @@
           v-if="!isWritingMode"
           @click="startWriting"
           :disabled="!notebooks.length"
-          :class="
-            darkMode
-              ? 'from-indigo-600 to-violet-600'
-              : 'from-orange-500 to-amber-500'
-          "
+          :class="darkMode ? 'from-indigo-600 to-violet-600' : 'from-orange-500 to-amber-500'"
           class="bg-gradient-to-r px-5 py-2.5 rounded-xl text-white font-black text-xs flex items-center gap-2 shadow-md disabled:opacity-40"
         >
           <Icon icon="solar:pen-bold-duotone" class="w-4 h-4" /> TULIS JURNAL
@@ -300,11 +295,7 @@
         <button
           v-if="isWritingMode"
           @click="cancelWriting"
-          :class="
-            darkMode
-              ? 'bg-slate-800 text-slate-400'
-              : 'bg-amber-100 text-amber-800'
-          "
+          :class="darkMode ? 'bg-slate-800 text-slate-400' : 'bg-amber-100 text-amber-800'"
           class="px-4 py-2.5 rounded-xl font-black text-xs"
         >
           BATAL
@@ -313,15 +304,10 @@
         <button
           v-if="isWritingMode"
           @click="savePage"
-          :class="
-            darkMode
-              ? 'from-emerald-600 to-teal-600'
-              : 'from-emerald-500 to-teal-500'
-          "
+          :class="darkMode ? 'from-emerald-600 to-teal-600' : 'from-emerald-500 to-teal-500'"
           class="bg-gradient-to-r px-5 py-2.5 rounded-xl text-white font-black text-xs flex items-center gap-2 shadow-md"
         >
-          <Icon icon="solar:check-square-bold-duotone" class="w-4 h-4" /> SIMPAN
-          LEMBARAN
+          <Icon icon="solar:check-square-bold-duotone" class="w-4 h-4" /> SIMPAN LEMBARAN
         </button>
       </div>
     </div>
@@ -329,10 +315,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { Icon } from "@iconify/vue";
 import { useDiaryTheme } from "~/composables/useDiaryTheme";
-// Tambahan impor untuk Firebase
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
@@ -340,41 +325,46 @@ const { darkMode } = useDiaryTheme();
 const { $fbAuth, $fbDb } = useNuxtApp();
 const router = useRouter();
 
-// State untuk memantau user yang sedang login
-const currentUser = ref(null);
+const currentUser = ref<any>(null);
 
-// --- SEMUA STATE ASLI KAMU (UTUH) ---
-// Ganti baris const notebooks = ref([]) menjadi ini:
-const notebooks = useState<any[]>('global-notebooks', () => [])
+// State Utama
+const notebooks = useState<any[]>("global-notebooks", () => []);
 const activeBookIndex = ref(0);
 const currentPageIndex = ref(0);
 const isWritingMode = ref(false);
 
 const newBookTitle = ref("");
 const newText = ref("");
-const imagePreview = ref(null);
+const imagePreview = ref<string | null>(null);
 
+// BARU: State Pencarian dan Pilihan Mood
+const searchQuery = ref("");
+const selectedMood = ref("😊");
 
+const moodList = [
+  { emoji: "😊", label: "Senang" },
+  { emoji: "🥰", label: "Cinta" },
+  { emoji: "😢", label: "Sedih" },
+  { emoji: "😡", label: "Kesal" },
+  { emoji: "😴", label: "Lelah" },
+  { emoji: "🤢", label: "Sakit" },
+];
 
-const generateId = () =>
-  "book_" + Date.now() + Math.random().toString(36).slice(2, 8);
+const generateId = () => "book_" + Date.now() + Math.random().toString(36).slice(2, 8);
 
-// --- LOGIKA UTAMA INTEGRASI FIREBASE GRATISAN ---
-
-// 1. Cek status login saat halaman dibuka
+// Firebase Auth Lifecycle
 onMounted(() => {
   onAuthStateChanged($fbAuth, async (user) => {
     if (user) {
       currentUser.value = user;
-      await loadUserDiary(user.uid); // Tarik data diary KHUSUS milik UID user ini
+      await loadUserDiary(user.uid);
     } else {
-      router.push("/login"); // Jika belum login, arahkan ke halaman login
+      router.push("/login");
     }
   });
 });
 
-// 2. Fungsi menarik data dari Cloud Firestore berdasarkan UID
-const loadUserDiary = async (uid) => {
+const loadUserDiary = async (uid: string) => {
   try {
     const docRef = doc($fbDb, "user_diaries", uid);
     const docSnap = await getDoc(docRef);
@@ -382,10 +372,7 @@ const loadUserDiary = async (uid) => {
     if (docSnap.exists()) {
       notebooks.value = docSnap.data().notebooks || [];
     } else {
-      // Jika user baru mendaftar, buatkan satu buku default
-      notebooks.value = [
-        { id: generateId(), title: "Jurnal Utama Saya", pages: [] },
-      ];
+      notebooks.value = [{ id: generateId(), title: "Jurnal Utama Saya", pages: [] }];
       await saveToFirebase();
     }
   } catch (e) {
@@ -393,7 +380,6 @@ const loadUserDiary = async (uid) => {
   }
 };
 
-// 3. Fungsi sinkronisasi / backup data otomatis ke Firebase cloud
 const saveToFirebase = async () => {
   if (!currentUser.value) return;
   try {
@@ -405,15 +391,26 @@ const saveToFirebase = async () => {
   }
 };
 
-// --- SEMUA FUNGSI & COMPUTED ASLI KAMU (DIKEMBALIKAN 100% + DIINTEGRASIKAN) ---
+// Computed Properties
+const currentBook = computed(() => notebooks.value[activeBookIndex.value] || { title: "", pages: [] });
 
-const currentBook = computed(
-  () => notebooks.value[activeBookIndex.value] || { title: "", pages: [] },
-);
-const currentPage = computed(
-  () => currentBook.value.pages[currentPageIndex.value] || {},
-);
+// BARU: Logika memfilter halaman berdasarkan kotak pencarian secara real-time
+const filteredPages = computed(() => {
+  if (!currentBook.value || !currentBook.value.pages) return [];
+  return currentBook.value.pages.filter((page: any) => {
+    return page.text.toLowerCase().includes(searchQuery.value.toLowerCase());
+  });
+});
 
+// Membaca halaman aktif dari daftar halaman yang sudah difilter
+const currentPage = computed(() => filteredPages.value[currentPageIndex.value] || {});
+
+// Watcher otomatis mereset index jika user mengetik sesuatu di pencarian
+watch(searchQuery, () => {
+  currentPageIndex.value = 0;
+});
+
+// Aksi Rak Jurnal
 const createNewBook = async () => {
   if (!newBookTitle.value.trim()) return;
   notebooks.value.push({
@@ -424,28 +421,32 @@ const createNewBook = async () => {
   activeBookIndex.value = notebooks.value.length - 1;
   currentPageIndex.value = 0;
   newBookTitle.value = "";
-  await saveToFirebase(); // Simpan perubahan ke cloud
+  searchQuery.value = "";
+  await saveToFirebase();
 };
 
-// Ini fungsi selectBook yang sempat hilang, sekarang sudah aktif kembali!
-const selectBook = (i) => {
+const selectBook = (i: number) => {
   activeBookIndex.value = i;
   currentPageIndex.value = 0;
   isWritingMode.value = false;
+  searchQuery.value = "";
 };
 
-const deleteBook = async (i) => {
+const deleteBook = async (i: number) => {
   notebooks.value.splice(i, 1);
   if (activeBookIndex.value >= notebooks.value.length) {
     activeBookIndex.value = Math.max(0, notebooks.value.length - 1);
   }
   currentPageIndex.value = 0;
-  await saveToFirebase(); // Simpan perubahan ke cloud
+  searchQuery.value = "";
+  await saveToFirebase();
 };
 
+// Aksi Menulis
 const startWriting = () => {
   newText.value = "";
   imagePreview.value = null;
+  selectedMood.value = "😊"; // Setel ulang ke emoji default ceria
   isWritingMode.value = true;
 };
 
@@ -454,42 +455,40 @@ const cancelWriting = () => {
 };
 
 const savePage = async () => {
-  if (!newText.value.trim()) return
-  // Tambahkan properti createdAt: Date.now() di bawah ini
+  if (!newText.value.trim()) return;
+
+  // Memasukkan data baru secara lengkap termasuk status mood hari tersebut
   currentBook.value.pages.push({
     text: newText.value,
     image: imagePreview.value,
-    createdAt: Date.now() // <-- WAJIB TAMBAHKAN INI biar bisa difilter berdasarkan hari
-  })
-  currentPageIndex.value = currentBook.value.pages.length - 1
-  newText.value = ""
-  imagePreview.value = null
-  isWritingMode.value = false
-  await saveToFirebase()
-}
+    createdAt: Date.now(),
+    mood: selectedMood.value,
+  });
 
-const handleImageUpload = (e) => {
+  currentPageIndex.value = currentBook.value.pages.length - 1;
+  newText.value = "";
+  imagePreview.value = null;
+  isWritingMode.value = false;
+  searchQuery.value = "";
+  await saveToFirebase();
+};
+
+const handleImageUpload = (e: any) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (ev) => {
+  reader.onload = (ev: any) => {
     imagePreview.value = ev.target.result;
   };
   reader.readAsDataURL(file);
 };
 
+// Navigasi Lembaran Buku
 const nextPage = () => {
-  if (currentPageIndex.value < currentBook.value.pages.length - 1)
-    currentPageIndex.value++;
+  if (currentPageIndex.value < filteredPages.value.length - 1) currentPageIndex.value++;
 };
 const prevPage = () => {
   if (currentPageIndex.value > 0) currentPageIndex.value--;
-};
-
-// Tambahan: Fungsi jika user ingin logout
-const handleLogout = async () => {
-  await signOut($fbAuth);
-  router.push("/login");
 };
 </script>
 
