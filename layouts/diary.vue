@@ -96,16 +96,26 @@
             <Icon icon="solar:pen-bold" class="w-4 h-4" />
             <span class="text-xs font-medium">Writing Goal</span>
           </div>
+
+          <!-- Progress Bar Dinamis -->
           <div
             class="h-2 rounded-full overflow-hidden"
             :class="darkMode ? 'bg-slate-800' : 'bg-amber-200/60'"
           >
             <div
-              class="h-full w-[65%] bg-gradient-to-r from-orange-500 to-pink-500"
+              class="h-full bg-gradient-to-r from-orange-500 to-pink-500 transition-all duration-500 ease-out"
+              :style="{ width: `${Math.min(writingProgress, 100)}%` }"
             />
           </div>
-          <div class="mt-2 text-xs opacity-60 font-medium">
-            327 / 500 words today
+
+          <!-- Angka Kata Dinamis -->
+          <div class="mt-2 text-xs opacity-60 font-medium flex justify-between">
+            <span>{{ todayWordCount }} / {{ wordGoal }} kata hari ini</span>
+            <span
+              v-if="todayWordCount >= wordGoal"
+              class="text-emerald-500 font-bold"
+              >🎉 Target Tercapai!</span
+            >
           </div>
         </div>
 
@@ -238,6 +248,43 @@ onMounted(() => {
       currentUser.value = user;
     }
   });
+});
+
+// Ambil data notebooks global yang di-share dari halaman utama
+const notebooks = useState<any[]>("global-notebooks", () => []);
+
+// Target kata harian (bisa diubah sesuai keinginan)
+const wordGoal = ref(500);
+
+// 1. Hitung total kata yang ditulis HARI INI
+const todayWordCount = computed(() => {
+  let totalWords = 0;
+  const todayStr = new Date().toDateString(); // Format: "Wed Jun 03 2026"
+
+  notebooks.value.forEach((book: any) => {
+    if (book.pages && Array.isArray(book.pages)) {
+      book.pages.forEach((page: any) => {
+        // Memastikan halaman memiliki tanggal
+        const pageDate = page.createdAt
+          ? new Date(page.createdAt).toDateString()
+          : todayStr;
+
+        if (pageDate === todayStr && page.text) {
+          // Bersihkan spasi ganda lalu hitung jumlah kata
+          const words = page.text.trim().split(/\s+/);
+          totalWords += words.filter((w: string) => w.length > 0).length;
+        }
+      });
+    } // <-- Di sini tadi salah ketik tanda kurungnya
+  });
+
+  return totalWords;
+});
+
+// 2. Hitung persentase untuk progress bar
+const writingProgress = computed(() => {
+  if (wordGoal.value === 0) return 0;
+  return (todayWordCount.value / wordGoal.value) * 100;
 });
 
 // Fungsi logout dipasang langsung di layout

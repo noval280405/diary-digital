@@ -328,7 +328,7 @@
   </NuxtLayout>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import { Icon } from "@iconify/vue";
 import { useDiaryTheme } from "~/composables/useDiaryTheme";
@@ -344,7 +344,8 @@ const router = useRouter();
 const currentUser = ref(null);
 
 // --- SEMUA STATE ASLI KAMU (UTUH) ---
-const notebooks = ref([]);
+// Ganti baris const notebooks = ref([]) menjadi ini:
+const notebooks = useState<any[]>('global-notebooks', () => [])
 const activeBookIndex = ref(0);
 const currentPageIndex = ref(0);
 const isWritingMode = ref(false);
@@ -352,6 +353,8 @@ const isWritingMode = ref(false);
 const newBookTitle = ref("");
 const newText = ref("");
 const imagePreview = ref(null);
+
+
 
 const generateId = () =>
   "book_" + Date.now() + Math.random().toString(36).slice(2, 8);
@@ -451,17 +454,19 @@ const cancelWriting = () => {
 };
 
 const savePage = async () => {
-  if (!newText.value.trim()) return;
+  if (!newText.value.trim()) return
+  // Tambahkan properti createdAt: Date.now() di bawah ini
   currentBook.value.pages.push({
     text: newText.value,
     image: imagePreview.value,
-  });
-  currentPageIndex.value = currentBook.value.pages.length - 1;
-  newText.value = "";
-  imagePreview.value = null;
-  isWritingMode.value = false;
-  await saveToFirebase(); // Simpan perubahan ke cloud
-};
+    createdAt: Date.now() // <-- WAJIB TAMBAHKAN INI biar bisa difilter berdasarkan hari
+  })
+  currentPageIndex.value = currentBook.value.pages.length - 1
+  newText.value = ""
+  imagePreview.value = null
+  isWritingMode.value = false
+  await saveToFirebase()
+}
 
 const handleImageUpload = (e) => {
   const file = e.target.files[0];
