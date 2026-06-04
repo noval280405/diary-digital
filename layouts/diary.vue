@@ -1,61 +1,64 @@
 <template>
   <div
     :class="[
-      darkMode ? 'dark bg-slate-950 text-white' : 'bg-amber-50 text-slate-900',
+      themeClasses[currentTheme]?.wrapper || themeClasses['dark'].wrapper,
     ]"
-    class="min-h-screen flex flex-col md:flex-row transition-all duration-500 font-sans relative overflow-hidden"
+    class="min-h-screen flex flex-col md:flex-row transition-colors duration-700 font-sans relative overflow-hidden"
   >
-    <!-- Efek Latar Belakang Gradasi -->
+    <!-- EFEK LATAR BELAKANG: Gradasi Sinematik Luas -->
     <div
-      class="fixed inset-0 pointer-events-none z-0 transition-all duration-500"
+      class="fixed inset-0 pointer-events-none z-0 transition-all duration-700"
       :class="
-        darkMode
-          ? 'bg-[radial-gradient(circle_at_top,_#1e293b,_#020617)]'
-          : 'bg-[radial-gradient(circle_at_top,_#fff7ed,_#fef3c7)]'
+        themeClasses[currentTheme]?.bgGradient ||
+        themeClasses['dark'].bgGradient
       "
     />
 
-    <!-- Efek Ambient Glow -->
+    <!-- EFEK AMBIENT GLOW: Efek Pendaran Cahaya Interaktif -->
     <div
-      class="fixed top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full blur-3xl opacity-20 pointer-events-none z-0 transition-all duration-500"
-      :class="darkMode ? 'bg-indigo-500' : 'bg-orange-300'"
+      class="fixed -top-40 left-1/4 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none z-0 transition-all duration-700 animate-pulse"
+      :class="
+        themeClasses[currentTheme]?.glowTop || themeClasses['dark'].glowTop
+      "
+    />
+    <div
+      class="fixed -bottom-20 right-1/4 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none z-0 transition-all duration-700"
+      :class="
+        themeClasses[currentTheme]?.glowBottom ||
+        themeClasses['dark'].glowBottom
+      "
     />
 
-    <!-- HEADER TOP BAR (Khusus Mobile: Muncul Hanya di Layar HP) -->
+    <!-- MOBILE HEADER (Khusus Layar Smartphone) -->
     <header
       :class="
-        darkMode
-          ? 'bg-slate-950/80 border-slate-900 text-white'
-          : 'bg-white/90 border-amber-200 text-slate-900 shadow-sm'
+        themeClasses[currentTheme]?.mobileHeader ||
+        themeClasses['dark'].mobileHeader
       "
-      class="md:hidden sticky top-0 w-full z-40 flex items-center justify-between p-4 border-b backdrop-blur-md"
+      class="md:hidden sticky top-0 w-full z-40 flex items-center justify-between p-4 border-b backdrop-blur-md transition-colors duration-500"
     >
-      <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-3">
         <div
-          :class="
-            darkMode
-              ? 'from-indigo-500 to-pink-500'
-              : 'from-orange-500 to-rose-500'
-          "
-          class="w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center shadow"
+          class="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 via-rose-500 to-indigo-500 flex items-center justify-center shadow-md"
         >
           <Icon
             icon="solar:book-bookmark-bold-duotone"
             class="w-5 h-5 text-white"
           />
         </div>
-        <span class="font-black text-sm tracking-wide">My Diary</span>
+        <span
+          class="font-black text-sm tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text"
+          >My Diary</span
+        >
       </div>
 
-      <!-- Tombol Trigger Buka Sidebar di HP -->
       <button
         @click="isSidebarOpen = !isSidebarOpen"
         :class="
-          darkMode
-            ? 'bg-slate-900 border-slate-800 text-indigo-400'
-            : 'bg-amber-100 border-amber-200 text-amber-900'
+          themeClasses[currentTheme]?.mobileBtn ||
+          themeClasses['dark'].mobileBtn
         "
-        class="w-10 h-10 border rounded-xl flex items-center justify-center active:scale-95 transition-transform shadow-sm"
+        class="w-10 h-10 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-xs border"
       >
         <Icon
           :icon="
@@ -68,178 +71,295 @@
       </button>
     </header>
 
-    <!-- BACKDROP OVERLAY (Gelap di HP saat Sidebar Aktif Terbuka) -->
+    <!-- BACKDROP OVERLAY MOBILE -->
     <div
       v-if="isSidebarOpen"
       @click="isSidebarOpen = false"
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
+      class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-40 md:hidden transition-opacity duration-300"
     />
 
-    <!-- Komponen Kiri: Sidebar -->
+    <!-- SIDEBAR: Efek Glassmorphic Mewah & Rapi -->
     <aside
       :class="[
-        darkMode
-          ? 'bg-slate-950/95 md:bg-slate-950/70 border-slate-800 text-slate-200'
-          : 'bg-white md:bg-white/80 border-amber-200 text-slate-800 shadow-xl shadow-amber-900/5',
+        themeClasses[currentTheme]?.sidebar || themeClasses['dark'].sidebar,
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
       ]"
-      class="fixed inset-y-0 left-0 w-80 md:sticky md:h-screen border-r backdrop-blur-xl p-6 flex flex-col justify-between shadow-2xl md:shadow-none z-50 md:z-10 transition-transform duration-300 ease-in-out"
+      class="fixed inset-y-0 left-0 w-76 md:sticky md:h-screen border-r backdrop-blur-xl p-5 flex flex-col justify-between z-50 md:z-10 transition-transform duration-300 ease-in-out"
     >
-      <div class="space-y-5">
-        <!-- Identitas Aplikasi, Ganti Tema, & TOMBOL TUTUP MENU -->
-        <div class="flex items-center justify-between">
+      <div class="space-y-6">
+        <!-- Brand Header Area -->
+        <div
+          class="flex items-center justify-between pb-2 border-b border-dashed"
+          :class="
+            themeClasses[currentTheme]?.borderDashed || 'border-slate-800'
+          "
+        >
           <div class="flex items-center gap-3 min-w-0">
             <div
-              :class="
-                darkMode
-                  ? 'from-indigo-500 to-pink-500'
-                  : 'from-orange-500 to-rose-500'
-              "
-              class="w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-md shrink-0"
+              class="w-11 h-11 rounded-xl bg-gradient-to-tr from-orange-500 via-rose-500 to-indigo-500 flex items-center justify-center shadow-lg shrink-0"
             >
               <Icon
                 icon="solar:book-bookmark-bold-duotone"
-                class="w-6 h-6 text-white"
+                class="w-5 h-5 text-white"
               />
             </div>
             <div class="truncate">
-              <h2
-                class="font-bold text-base truncate"
-                :class="darkMode ? 'text-white' : 'text-slate-900'"
+              <h2 class="font-black text-sm tracking-tight">My Diary</h2>
+              <p
+                class="text-[10px] font-semibold opacity-50 uppercase tracking-wider"
               >
-                My Diary
-              </h2>
-              <p class="text-[11px] opacity-60">Personal Journal</p>
+                Premium Space
+              </p>
             </div>
           </div>
 
-          <!-- Aksi Kanan Atas Sidebar (Tema & Tutup) -->
-          <div class="flex items-center gap-1.5 shrink-0">
+          <!-- TOMBOL CLOSE SIDEBAR CUSTOM THEME (Khusus Mobile) -->
+          <button
+            @click="isSidebarOpen = false"
+            :class="
+              themeClasses[currentTheme]?.mobileClose ||
+              themeClasses['dark'].mobileClose
+            "
+            class="md:hidden group w-9 h-9 rounded-2xl border backdrop-blur-xl flex items-center justify-center transition-all duration-300 active:scale-90 hover:scale-105"
+          >
+            <Icon
+              icon="solar:alt-arrow-left-outline"
+              class="w-4 h-4 transition-all duration-300 group-hover:-translate-x-0.5"
+            />
+          </button>
+        </div>
+
+        <!-- PILIHAN WARNA TEMA (Tema Palettes) -->
+        <div class="space-y-2">
+          <label
+            class="text-[10px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5"
+          >
+            <Icon
+              icon="solar:palette-bold-duotone"
+              :class="themeClasses[currentTheme]?.iconPrimary"
+              class="w-3.5 h-3.5"
+            />
+            Warna Jurnal
+          </label>
+          <div
+            class="grid grid-cols-5 gap-2 bg-slate-500/5 p-1.5 rounded-xl border"
+            :class="
+              themeClasses[currentTheme]?.borderSimple || 'border-slate-800'
+            "
+          >
+            <!-- Gelap (Dark) -->
             <button
-              @click="toggleTheme"
+              @click="setTheme('dark')"
               :class="
-                darkMode
-                  ? 'bg-slate-900 border-slate-800 text-yellow-400'
-                  : 'bg-amber-100 border-amber-300 text-amber-900'
+                currentTheme === 'dark'
+                  ? 'ring-2 ring-indigo-500 scale-105'
+                  : ''
               "
-              class="w-10 h-10 rounded-xl border flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-sm"
-              title="Ganti Tema"
+              class="w-full h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center transition-all"
+              title="Tema Gelap"
             >
               <Icon
-                :icon="darkMode ? 'solar:moon-stars-bold' : 'solar:sun-bold'"
-                class="w-4 h-4"
+                v-if="currentTheme === 'dark'"
+                icon="solar:check-circle-bold"
+                class="w-3.5 h-3.5 text-indigo-400"
               />
             </button>
-
-            <!-- Tombol Tutup Menu Mobile (X) -->
+            <!-- Krem (Cream) -->
             <button
-              @click="isSidebarOpen = false"
+              @click="setTheme('cream')"
               :class="
-                darkMode
-                  ? 'bg-rose-950/40 border-rose-900/50 text-rose-400'
-                  : 'bg-rose-50 border-rose-200 text-rose-600'
+                currentTheme === 'cream'
+                  ? 'ring-2 ring-amber-600 scale-105'
+                  : ''
               "
-              class="md:hidden w-10 h-10 rounded-xl border flex items-center justify-center font-black active:scale-95 transition-all shadow-sm"
-              title="Tutup Menu"
+              class="w-full h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center transition-all"
+              title="Tema Krem"
             >
-              <Icon icon="solar:close-square-bold" class="w-5 h-5" />
+              <Icon
+                v-if="currentTheme === 'cream'"
+                icon="solar:check-circle-bold"
+                class="w-3.5 h-3.5 text-amber-700"
+              />
+            </button>
+            <!-- Pink (Rose) -->
+            <button
+              @click="setTheme('pink')"
+              :class="
+                currentTheme === 'pink' ? 'ring-2 ring-pink-500 scale-105' : ''
+              "
+              class="w-full h-8 rounded-lg bg-pink-50 border border-pink-200 flex items-center justify-center transition-all"
+              title="Tema Pink"
+            >
+              <Icon
+                v-if="currentTheme === 'pink'"
+                icon="solar:check-circle-bold"
+                class="w-3.5 h-3.5 text-pink-600"
+              />
+            </button>
+            <!-- Biru (Sky) -->
+            <button
+              @click="setTheme('blue')"
+              :class="
+                currentTheme === 'blue' ? 'ring-2 ring-sky-500 scale-105' : ''
+              "
+              class="w-full h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center transition-all"
+              title="Tema Biru"
+            >
+              <Icon
+                v-if="currentTheme === 'blue'"
+                icon="solar:check-circle-bold"
+                class="w-3.5 h-3.5 text-sky-600"
+              />
+            </button>
+            <!-- Ijo (Emerald/Green) -->
+            <button
+              @click="setTheme('green')"
+              :class="
+                currentTheme === 'green'
+                  ? 'ring-2 ring-emerald-500 scale-105'
+                  : ''
+              "
+              class="w-full h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center transition-all"
+              title="Tema Ijo"
+            >
+              <Icon
+                v-if="currentTheme === 'green'"
+                icon="solar:check-circle-bold"
+                class="w-3.5 h-3.5 text-emerald-600"
+              />
             </button>
           </div>
         </div>
 
-        <!-- Kutipan Bijak (Quotes) -->
+        <!-- Quotes Area -->
         <div
-          class="p-4 rounded-2xl border transition-colors duration-500"
+          class="p-4 rounded-xl border relative overflow-hidden group transition-all duration-300"
           :class="
-            darkMode
-              ? 'bg-white/5 border-slate-800/80 text-slate-300'
-              : 'bg-amber-50/60 border-amber-200 text-slate-700'
+            themeClasses[currentTheme]?.quoteBox ||
+            themeClasses['dark'].quoteBox
           "
         >
-          <div class="flex gap-3">
+          <div
+            class="absolute -right-2 -bottom-2 opacity-5 transition-transform group-hover:scale-110 duration-500"
+          >
+            <Icon icon="solar:chat-round-like-bold" class="w-16 h-16" />
+          </div>
+          <div class="flex gap-2.5 relative z-10">
             <Icon
-              icon="solar:chat-round-like-bold"
-              class="w-5 h-5 mt-1 shrink-0 opacity-70"
+              icon="solar:quote-open-bold"
+              :class="themeClasses[currentTheme]?.iconPrimary"
+              class="w-4 h-4 shrink-0 opacity-80"
             />
-            <p class="italic text-sm leading-relaxed">{{ quote }}</p>
+            <p class="italic text-xs font-serif leading-relaxed tracking-wide">
+              {{ quote }}
+            </p>
           </div>
         </div>
 
-        <!-- Tombol Navigasi Menu Analisis & Ekspor Statistik -->
-        <NuxtLink
-          to="/stats"
-          @click="isSidebarOpen = false"
-          :class="
-            darkMode
-              ? 'bg-slate-900/50 border-slate-800 text-slate-300 hover:bg-slate-800'
-              : 'bg-amber-100/40 border-amber-200 text-slate-700 hover:bg-amber-100'
-          "
-          class="w-full p-3 rounded-xl border flex items-center gap-2.5 text-xs font-black uppercase tracking-wider transition-all shadow-sm"
-        >
-          <Icon
-            icon="solar:graph-up-bold-duotone"
-            class="w-4 h-4 text-orange-500"
-          />
-          <span>Lihat Analisis & Ekspor</span>
-        </NuxtLink>
+        <!-- Navigasi Menu Utama -->
+        <div class="space-y-1">
+          <NuxtLink
+            to="/stats"
+            @click="isSidebarOpen = false"
+            :class="
+              themeClasses[currentTheme]?.navLink ||
+              themeClasses['dark'].navLink
+            "
+            class="w-full p-3 rounded-xl border flex items-center justify-between text-xs font-bold tracking-wide transition-all shadow-xs group"
+          >
+            <div class="flex items-center gap-3">
+              <Icon
+                icon="solar:graph-up-bold-duotone"
+                :class="themeClasses[currentTheme]?.iconPrimary"
+                class="w-4 h-4 transition-transform group-hover:scale-110"
+              />
+              <span>Analisis & Ekspor Data</span>
+            </div>
+            <Icon
+              icon="solar:alt-arrow-right-linear"
+              class="w-3.5 h-3.5 opacity-40 group-hover:translate-x-0.5 transition-transform"
+            />
+          </NuxtLink>
+        </div>
 
-        <!-- Tempat Menyisipkan Konten Tambahan Sidebar dari Index Halaman -->
-        <div @click="isSidebarOpen = false">
+        <!-- Slot Dinamis Konten Rak Buku -->
+        <div @click="isSidebarOpen = false" class="space-y-1 pt-1">
           <slot name="sidebar-content" />
         </div>
       </div>
 
-      <div class="space-y-4">
-        <!-- Target Menulis Harian (Writing Goal) -->
-        <div>
-          <div class="flex items-center gap-2 mb-2 opacity-60">
-            <Icon icon="solar:pen-bold" class="w-4 h-4" />
-            <span class="text-xs font-medium">Writing Goal</span>
+      <!-- Bagian Bawah Sidebar (Target Menulis & Akun) -->
+      <div
+        class="space-y-4 pt-4 border-t"
+        :class="themeClasses[currentTheme]?.borderDashed || 'border-slate-800'"
+      >
+        <!-- Progress Menulis -->
+        <div class="px-1">
+          <div
+            class="flex items-center justify-between text-[11px] font-bold opacity-60 mb-1.5"
+          >
+            <span class="flex items-center gap-1.5">
+              <Icon
+                icon="solar:pen-bold-duotone"
+                :class="themeClasses[currentTheme]?.iconSecondary"
+                class="w-3.5 h-3.5"
+              />
+              Target Hari Ini
+            </span>
+            <span class="font-mono tracking-tight"
+              >{{ todayWordCount }} / {{ wordGoal }} kata</span
+            >
           </div>
 
-          <!-- Progress Bar Dinamis -->
           <div
-            class="h-2 rounded-full overflow-hidden"
-            :class="darkMode ? 'bg-slate-800' : 'bg-amber-200/60'"
+            class="h-2 rounded-full overflow-hidden p-[1px]"
+            :class="
+              themeClasses[currentTheme]?.progressBg ||
+              'bg-slate-900 border border-slate-800'
+            "
           >
             <div
-              class="h-full bg-gradient-to-r from-orange-500 to-pink-500 transition-all duration-500 ease-out"
+              :class="
+                themeClasses[currentTheme]?.progressBar ||
+                'bg-gradient-to-r from-orange-500 via-rose-500 to-indigo-500'
+              "
+              class="h-full rounded-full transition-all duration-700 ease-out shadow-xs"
               :style="{ width: `${Math.min(writingProgress, 100)}%` }"
             />
           </div>
 
-          <!-- Indikator Hitung Kata Dinamis -->
-          <div class="mt-2 text-xs opacity-60 font-medium flex justify-between">
-            <span>{{ todayWordCount }} / {{ wordGoal }} kata hari ini</span>
-            <span
-              v-if="todayWordCount >= wordGoal"
-              class="text-emerald-500 font-bold animate-pulse"
-              >🎉 Target Tercapai!</span
-            >
+          <div
+            v-if="todayWordCount >= wordGoal"
+            class="mt-1.5 flex items-center gap-1 justify-end text-[10px] text-emerald-500 font-black tracking-wide animate-pulse"
+          >
+            <Icon icon="solar:stars-bold" class="w-3 h-3" /> Target Terlampaui!
           </div>
         </div>
 
-        <!-- Profil Akun Pengguna & Aksi Log Out -->
+        <!-- Profil Akun Premium Card -->
         <div
-          class="flex items-center justify-between pt-4 border-t transition-colors duration-500"
-          :class="darkMode ? 'border-slate-800' : 'border-amber-200'"
+          class="flex items-center justify-between p-3 rounded-xl border transition-all duration-300"
+          :class="
+            themeClasses[currentTheme]?.profileCard ||
+            themeClasses['dark'].profileCard
+          "
         >
           <div class="flex items-center gap-3 min-w-0">
             <div
               :class="
-                darkMode
-                  ? 'from-indigo-500 to-pink-500'
-                  : 'from-orange-500 to-rose-500'
+                themeClasses[currentTheme]?.avatarBg ||
+                'bg-gradient-to-tr from-orange-500 to-rose-500'
               "
-              class="w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg shrink-0"
+              class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-xs shadow-md"
             >
-              <Icon icon="solar:user-bold" class="w-5 h-5 text-white" />
+              {{
+                currentUser?.email
+                  ? currentUser.email.charAt(0).toUpperCase()
+                  : "M"
+              }}
             </div>
             <div class="truncate">
-              <h4
-                class="font-bold text-sm truncate"
-                :class="darkMode ? 'text-white' : 'text-slate-900'"
-              >
+              <h4 class="font-black text-xs truncate">
                 {{
                   currentUser?.email
                     ? currentUser.email.split("@")[0]
@@ -247,79 +367,84 @@
                 }}
               </h4>
               <div
-                class="flex items-center gap-1 text-xs text-emerald-500 font-semibold"
+                class="flex items-center gap-1 text-[10px] font-bold mt-0.5"
+                :class="
+                  themeClasses[currentTheme]?.syncText || 'text-emerald-500'
+                "
               >
                 <span
-                  class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
+                  class="w-1 h-1 rounded-full animate-ping"
+                  :class="
+                    themeClasses[currentTheme]?.syncDot || 'bg-emerald-500'
+                  "
                 />
-                Auto Saved
+                Cloud Synced
               </div>
             </div>
           </div>
 
           <button
             @click="handleLogout"
-            title="Keluar / Ganti Akun"
+            title="Keluar Aplikasi"
             :class="
-              darkMode
-                ? 'bg-slate-900 border-slate-800 text-red-400 hover:bg-red-950/30'
-                : 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100'
+              themeClasses[currentTheme]?.logoutBtn ||
+              themeClasses['dark'].logoutBtn
             "
-            class="h-9 px-3 rounded-xl border flex items-center gap-2 text-xs font-black tracking-wide hover:scale-105 active:scale-95 transition-all shadow-sm group shrink-0"
+            class="w-8 h-8 rounded-xl border flex items-center justify-center active:scale-95 transition-all shadow-xs shrink-0 group"
           >
             <Icon
-              icon="solar:logout-3-bold"
+              icon="solar:logout-3-bold-duotone"
               class="w-4 h-4 group-hover:translate-x-0.5 transition-transform"
             />
-            <span>Keluar</span>
           </button>
         </div>
       </div>
     </aside>
 
-    <!-- Komponen Kanan: Area Isi Kertas Jurnal -->
-    <main class="relative flex-1 p-3 sm:p-6 md:p-10 overflow-y-auto z-10">
-      <div class="max-w-4xl mx-auto">
+    <!-- AREA KANAN: LEMBARAN UTAMA KERTAS DIARY -->
+    <main
+      class="relative flex-1 p-3 sm:p-6 md:p-8 overflow-y-auto z-10 flex flex-col justify-center"
+    >
+      <div class="w-full max-w-4xl mx-auto flex-1 flex flex-col">
         <div
           :class="
-            darkMode
-              ? 'bg-slate-900 border-slate-800 text-white shadow-[0_30px_80px_rgba(0,0,0,0.5)]'
-              : 'bg-white border-amber-200 text-black shadow-[0_30px_60px_rgba(217,119,6,0.06)]'
+            themeClasses[currentTheme]?.mainPaper ||
+            themeClasses['dark'].mainPaper
           "
-          class="rounded-3xl md:rounded-[32px] border p-4 sm:p-8 md:p-12 relative overflow-hidden transition-all duration-500 min-h-[calc(100vh-120px)] md:min-h-[580px]"
+          class="rounded-2xl md:rounded-[28px] border p-4 sm:p-8 md:p-12 flex-1 flex flex-col relative transition-all duration-500 min-h-[calc(100vh-120px)] md:min-h-[600px]"
         >
-          <!-- Garis Margin Merah Buku Diary -->
+          <!-- Garis Margin Merah Buku Diary Tradisional -->
           <div
-            class="hidden md:block absolute left-16 top-0 bottom-0 w-[1.5px] bg-red-400/30 z-20 pointer-events-none"
-          />
-
-          <!-- Pola Garis-Garis Buku Tradisional -->
-          <div
-            class="absolute inset-0 pointer-events-none z-0"
-            style="
-              background-image: repeating-linear-gradient(
-                to bottom,
-                transparent,
-                transparent 34px,
-                rgba(148, 163, 184, 0.07) 35px
-              );
-              background-size: 100% 35px;
-              margin-top: 30px;
+            class="hidden md:block absolute left-16 top-0 bottom-0 w-[1px] z-20 pointer-events-none"
+            :class="
+              currentTheme === 'dark' ? 'bg-rose-500/15' : 'bg-rose-500/25'
             "
           />
 
-          <div class="relative z-10 h-full">
+          <!-- Pola Garis-Garis Buku Jurnal -->
+          <div
+            class="absolute inset-0 pointer-events-none z-0 opacity-40"
+            :class="currentTheme === 'dark' ? 'opacity-15' : 'opacity-35'"
+            :style="{
+              backgroundImage: `repeating-linear-gradient(to bottom, transparent, transparent 34px, ${currentTheme === 'dark' ? 'rgba(148,163,184,0.15)' : 'rgba(100,116,139,0.12)'} 35px)`,
+              backgroundSize: '100% 35px',
+              marginTop: '36px',
+            }"
+          />
+
+          <!-- Area Slot Pengisian Data Halaman -->
+          <div class="relative z-10 flex-1 flex flex-col">
             <slot />
           </div>
         </div>
       </div>
     </main>
 
-    <!-- BARU: Modal Numpad PIN Pengunci Jurnal Spesifik -->
+    <!-- Modal Numpad PIN Pengunci Jurnal Spesifik -->
     <ModalLockJournal
       :is-open="lockModalState.isOpen"
       :correct-pin="lockModalState.correctPin"
-      :dark-mode="darkMode"
+      :dark-mode="currentTheme === 'dark'"
       @success="handlePinSuccess"
       @close="closeLockModal"
     />
@@ -329,17 +454,171 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { Icon } from "@iconify/vue";
-import { useDiaryTheme } from "~/composables/useDiaryTheme";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 
-const { darkMode, toggleTheme } = useDiaryTheme();
 const { $fbAuth } = useNuxtApp();
 const router = useRouter();
+
+const currentTheme = useState<string>("diary-active-theme", () => "dark");
 
 const currentUser = ref<any>(null);
 const isSidebarOpen = ref(false);
 
-// State Global Shared untuk Menghubungkan Trigger antara index.vue dan layout
+// Penambahan Properti Warna Ikon & Komponen Mikro di dalam Objek Tema
+const themeClasses: Record<string, any> = {
+  dark: {
+    wrapper: "dark bg-slate-950 text-slate-100",
+    bgGradient:
+      "bg-[radial-gradient(circle_at_top_left,_#1e1b4b,_#0f172a,_#020617)]",
+    glowTop: "bg-indigo-600/15",
+    glowBottom: "bg-pink-600/10",
+    mobileHeader: "bg-slate-950/70 border-slate-900/60 text-white",
+    mobileBtn: "bg-slate-900 text-indigo-400 border-slate-800",
+    sidebar:
+      "bg-slate-950/80 md:bg-slate-950/40 border-slate-900/80 text-slate-200",
+    borderDashed: "border-slate-900",
+    borderSimple: "border-slate-900",
+    quoteBox: "bg-slate-900/30 border-slate-900 text-slate-300",
+    navLink:
+      "bg-slate-900/20 border-slate-900/60 text-slate-300 hover:bg-slate-900/80 hover:text-white",
+    progressBg: "bg-slate-900 border border-slate-800",
+    progressBar: "bg-gradient-to-r from-orange-500 via-rose-500 to-indigo-500",
+    profileCard: "bg-slate-900/40 border-slate-900/80 text-white",
+    avatarBg: "bg-gradient-to-tr from-orange-500 to-rose-500",
+    logoutBtn:
+      "bg-slate-800/50 border-slate-800 text-slate-400 hover:text-red-400 hover:bg-red-950/20",
+    mainPaper:
+      "bg-slate-900/60 border-slate-900/80 text-white shadow-[0_35px_70px_rgba(0,0,0,0.6)] backdrop-blur-md",
+    iconPrimary: "text-orange-500",
+    iconSecondary: "text-rose-500",
+    syncText: "text-emerald-400",
+    syncDot: "bg-emerald-400",
+    mobileClose:
+      "bg-slate-900/70 border-slate-800 text-indigo-400 hover:text-white",
+  },
+  cream: {
+    wrapper: "bg-amber-50/40 text-slate-900",
+    bgGradient:
+      "bg-[radial-gradient(circle_at_top_left,_#fffbeb,_#fef3c7,_#fdf4ff)]",
+    glowTop: "bg-orange-300/30",
+    glowBottom: "bg-rose-200/20",
+    mobileHeader: "bg-white/70 border-amber-200/60 text-slate-900 shadow-xs",
+    mobileBtn: "bg-amber-100 text-amber-900 border-transparent",
+    sidebar:
+      "bg-white/90 md:bg-white/40 border-amber-200/70 text-slate-800 shadow-xl shadow-amber-900/5",
+    borderDashed: "border-amber-200/60",
+    borderSimple: "border-amber-200/50",
+    quoteBox: "bg-amber-50/50 border-amber-200/50 text-slate-700",
+    navLink:
+      "bg-amber-50/30 border-amber-200/40 text-slate-700 hover:bg-amber-100/60 hover:text-slate-900",
+    progressBg: "bg-amber-100 border border-amber-200/60",
+    progressBar: "bg-gradient-to-r from-amber-500 to-orange-600",
+    profileCard: "bg-white/80 border-amber-200/60 shadow-sm text-slate-900",
+    avatarBg: "bg-amber-600",
+    logoutBtn: "bg-rose-50 border-rose-200/60 text-rose-600 hover:bg-rose-100",
+    mainPaper:
+      "bg-white border-amber-200 text-black shadow-[0_30px_70px_rgba(217,119,6,0.08)]",
+    iconPrimary: "text-amber-600",
+    iconSecondary: "text-orange-600",
+    syncText: "text-emerald-600",
+    syncDot: "bg-emerald-600",
+    mobileClose:
+      "bg-white/80 border-amber-200 text-amber-700 hover:text-amber-900",
+  },
+  pink: {
+    wrapper: "bg-pink-50/40 text-pink-950",
+    bgGradient:
+      "bg-[radial-gradient(circle_at_top_left,_#fff5f5,_#ffe4e6,_#fae8ff)]",
+    glowTop: "bg-pink-300/30",
+    glowBottom: "bg-rose-300/20",
+    mobileHeader: "bg-white/70 border-pink-200/60 text-pink-900 shadow-xs",
+    mobileBtn: "bg-pink-100 text-pink-900 border-transparent",
+    sidebar:
+      "bg-white/90 md:bg-white/40 border-pink-200/70 text-pink-900 shadow-xl shadow-pink-900/5",
+    borderDashed: "border-pink-200/60",
+    borderSimple: "border-pink-200/50",
+    quoteBox: "bg-pink-50/60 border-pink-200/50 text-pink-800",
+    navLink:
+      "bg-pink-50/30 border-pink-200/40 text-pink-800 hover:bg-pink-100/60 hover:text-pink-950",
+    progressBg: "bg-pink-100 border border-pink-200/60",
+    progressBar: "bg-gradient-to-r from-pink-500 to-rose-600",
+    profileCard: "bg-white/80 border-pink-200/60 shadow-sm text-pink-950",
+    avatarBg: "bg-pink-600",
+    logoutBtn: "bg-rose-100 border-rose-200/60 text-rose-700 hover:bg-rose-200",
+    mainPaper:
+      "bg-white border-pink-200 text-pink-950 shadow-[0_30px_70px_rgba(244,63,94,0.06)]",
+    iconPrimary: "text-pink-600",
+    iconSecondary: "text-rose-500",
+    syncText: "text-pink-600",
+    syncDot: "bg-pink-500",
+    mobileClose:
+      "bg-white/80 border-pink-200 text-pink-600 hover:text-pink-800",
+  },
+  blue: {
+    wrapper: "bg-sky-50/40 text-sky-950",
+    bgGradient:
+      "bg-[radial-gradient(circle_at_top_left,_#f0f9ff,_#e0f2fe,_#f0fdf4)]",
+    glowTop: "bg-sky-300/30",
+    glowBottom: "bg-indigo-200/20",
+    mobileHeader: "bg-white/70 border-sky-200/60 text-sky-900 shadow-xs",
+    mobileBtn: "bg-sky-100 text-sky-900 border-transparent",
+    sidebar:
+      "bg-white/90 md:bg-white/40 border-sky-200/70 text-sky-900 shadow-xl shadow-sky-900/5",
+    borderDashed: "border-sky-200/60",
+    borderSimple: "border-sky-200/50",
+    quoteBox: "bg-sky-50/60 border-sky-200/50 text-sky-800",
+    navLink:
+      "bg-sky-50/30 border-sky-200/40 text-sky-800 hover:bg-sky-100/60 hover:text-sky-950",
+    progressBg: "bg-sky-100 border border-sky-200/60",
+    progressBar: "bg-gradient-to-r from-sky-500 to-indigo-600",
+    profileCard: "bg-white/80 border-sky-200/60 shadow-sm text-sky-950",
+    avatarBg: "bg-sky-600",
+    logoutBtn: "bg-rose-50 border-rose-200/60 text-rose-600 hover:bg-rose-100",
+    mainPaper:
+      "bg-white border-sky-200 text-sky-950 shadow-[0_30px_70px_rgba(14,165,233,0.06)]",
+    iconPrimary: "text-sky-600",
+    iconSecondary: "text-indigo-500",
+    syncText: "text-sky-600",
+    syncDot: "bg-sky-500",
+    mobileClose: "bg-white/80 border-sky-200 text-sky-600 hover:text-sky-800",
+  },
+  green: {
+    wrapper: "bg-emerald-50/40 text-emerald-950",
+    bgGradient:
+      "bg-[radial-gradient(circle_at_top_left,_#f0fdf4,_#dcfce7,_#fef9c3)]",
+    glowTop: "bg-emerald-300/20",
+    glowBottom: "bg-teal-200/20",
+    mobileHeader:
+      "bg-white/70 border-emerald-200/60 text-emerald-900 shadow-xs",
+    mobileBtn: "bg-emerald-100 text-emerald-900 border-transparent",
+    sidebar:
+      "bg-white/90 md:bg-white/40 border-emerald-200/70 text-emerald-900 shadow-xl shadow-emerald-900/5",
+    borderDashed: "border-emerald-200/60",
+    borderSimple: "border-emerald-200/50",
+    quoteBox: "bg-emerald-50/60 border-emerald-200/50 text-emerald-800",
+    navLink:
+      "bg-emerald-50/30 border-emerald-200/40 text-emerald-800 hover:bg-emerald-100/60 hover:text-emerald-950",
+    progressBg: "bg-emerald-100 border border-emerald-200/60",
+    progressBar: "bg-gradient-to-r from-emerald-500 to-teal-600",
+    profileCard: "bg-white/80 border-emerald-200/60 shadow-sm text-emerald-950",
+    avatarBg: "bg-emerald-600",
+    logoutBtn: "bg-rose-50 border-rose-200/60 text-rose-600 hover:bg-rose-100",
+    mainPaper:
+      "bg-white border-emerald-200 text-emerald-950 shadow-[0_30px_70px_rgba(16,185,129,0.06)]",
+    iconPrimary: "text-emerald-600",
+    iconSecondary: "text-teal-600",
+    syncText: "text-emerald-600",
+    syncDot: "bg-emerald-500",
+    mobileClose:
+      "bg-white/80 border-emerald-200 text-emerald-600 hover:text-emerald-800",
+  },
+};
+
+const setTheme = (themeName: string) => {
+  currentTheme.value = themeName;
+};
+
+// Modal State & Handlers
 const lockModalState = useState("global-lock-modal", () => ({
   isOpen: false,
   correctPin: "",
