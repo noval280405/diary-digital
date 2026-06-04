@@ -39,7 +39,8 @@
     >
       <div class="flex items-center gap-3">
         <div
-          class="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 via-rose-500 to-indigo-500 flex items-center justify-center shadow-md"
+          :class="currentThemeClasses.btnGradient"
+          class="w-11 h-11 rounded-xl bg-gradient-to flex items-center justify-center shadow-lg shrink-0"
         >
           <Icon
             icon="solar:book-bookmark-bold-duotone"
@@ -96,7 +97,8 @@
         >
           <div class="flex items-center gap-3 min-w-0">
             <div
-              class="w-11 h-11 rounded-xl bg-gradient-to-tr from-orange-500 via-rose-500 to-indigo-500 flex items-center justify-center shadow-lg shrink-0"
+              :class="currentThemeClasses.btnGradient"
+              class="w-11 h-11 rounded-xl bg-gradient-to flex items-center justify-center shadow-lg shrink-0"
             >
               <Icon
                 icon="solar:book-bookmark-bold-duotone"
@@ -495,6 +497,7 @@ const themeClasses: Record<string, any> = {
     syncDot: "bg-emerald-400",
     mobileClose:
       "bg-slate-900/70 border-slate-800 text-indigo-400 hover:text-white",
+    btnGradient: "bg-gradient-to-tr from-indigo-600 to-violet-500",
   },
   cream: {
     wrapper: "bg-amber-50/40 text-slate-900",
@@ -524,6 +527,7 @@ const themeClasses: Record<string, any> = {
     syncDot: "bg-emerald-600",
     mobileClose:
       "bg-white/80 border-amber-200 text-amber-700 hover:text-amber-900",
+    btnGradient: "bg-gradient-to-tr from-orange-500 to-amber-500",
   },
   pink: {
     wrapper: "bg-pink-50/40 text-pink-950",
@@ -553,6 +557,7 @@ const themeClasses: Record<string, any> = {
     syncDot: "bg-pink-500",
     mobileClose:
       "bg-white/80 border-pink-200 text-pink-600 hover:text-pink-800",
+    btnGradient: "bg-gradient-to-tr from-pink-500 to-rose-500",
   },
   blue: {
     wrapper: "bg-sky-50/40 text-sky-950",
@@ -581,6 +586,7 @@ const themeClasses: Record<string, any> = {
     syncText: "text-sky-600",
     syncDot: "bg-sky-500",
     mobileClose: "bg-white/80 border-sky-200 text-sky-600 hover:text-sky-800",
+    btnGradient: "bg-gradient-to-tr from-sky-500 to-indigo-500",
   },
   green: {
     wrapper: "bg-emerald-50/40 text-emerald-950",
@@ -611,8 +617,13 @@ const themeClasses: Record<string, any> = {
     syncDot: "bg-emerald-500",
     mobileClose:
       "bg-white/80 border-emerald-200 text-emerald-600 hover:text-emerald-800",
+    btnGradient: "bg-gradient-to-tr from-emerald-500 to-teal-500",
   },
 };
+
+const currentThemeClasses = computed(() => {
+  return themeClasses[currentTheme.value] || themeClasses["dark"];
+});
 
 const setTheme = (themeName: string) => {
   currentTheme.value = themeName;
