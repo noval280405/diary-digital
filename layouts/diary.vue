@@ -10,7 +10,7 @@
       class="fixed inset-0 pointer-events-none z-0 transition-all duration-700"
       :class="
         themeClasses[currentTheme]?.bgGradient ||
-        themeClasses['dark'].bgGradient
+        themeClasses['cream'].bgGradient
       "
     />
 
@@ -18,14 +18,14 @@
     <div
       class="fixed -top-40 left-1/4 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none z-0 transition-all duration-700 animate-pulse"
       :class="
-        themeClasses[currentTheme]?.glowTop || themeClasses['dark'].glowTop
+        themeClasses[currentTheme]?.glowTop || themeClasses['cream'].glowTop
       "
     />
     <div
       class="fixed -bottom-20 right-1/4 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none z-0 transition-all duration-700"
       :class="
         themeClasses[currentTheme]?.glowBottom ||
-        themeClasses['dark'].glowBottom
+        themeClasses['cream'].glowBottom
       "
     />
 
@@ -33,7 +33,7 @@
     <header
       :class="
         themeClasses[currentTheme]?.mobileHeader ||
-        themeClasses['dark'].mobileHeader
+        themeClasses['cream'].mobileHeader
       "
       class="md:hidden sticky top-0 w-full z-40 flex items-center justify-between p-4 border-b backdrop-blur-md transition-colors duration-500"
     >
@@ -57,7 +57,7 @@
         @click="isSidebarOpen = !isSidebarOpen"
         :class="
           themeClasses[currentTheme]?.mobileBtn ||
-          themeClasses['dark'].mobileBtn
+          themeClasses['cream'].mobileBtn
         "
         class="w-10 h-10 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-xs border"
       >
@@ -82,7 +82,7 @@
     <!-- SIDEBAR: Efek Glassmorphic Mewah & Rapi -->
     <aside
       :class="[
-        themeClasses[currentTheme]?.sidebar || themeClasses['dark'].sidebar,
+        themeClasses[currentTheme]?.sidebar || themeClasses['cream'].sidebar,
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
       ]"
       class="fixed inset-y-0 left-0 w-76 md:sticky md:h-screen border-r backdrop-blur-xl p-5 flex flex-col justify-between z-50 md:z-10 transition-transform duration-300 ease-in-out"
@@ -149,23 +149,6 @@
               themeClasses[currentTheme]?.borderSimple || 'border-slate-800'
             "
           >
-            <!-- Gelap (Dark) -->
-            <button
-              @click="setTheme('dark')"
-              :class="
-                currentTheme === 'dark'
-                  ? 'ring-2 ring-indigo-500 scale-105'
-                  : ''
-              "
-              class="w-full h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center transition-all"
-              title="Tema Gelap"
-            >
-              <Icon
-                v-if="currentTheme === 'dark'"
-                icon="solar:check-circle-bold"
-                class="w-3.5 h-3.5 text-indigo-400"
-              />
-            </button>
             <!-- Krem (Cream) -->
             <button
               @click="setTheme('cream')"
@@ -228,6 +211,24 @@
                 v-if="currentTheme === 'green'"
                 icon="solar:check-circle-bold"
                 class="w-3.5 h-3.5 text-emerald-600"
+              />
+            </button>
+
+            <!-- Gelap (Dark) -->
+            <button
+              @click="setTheme('dark')"
+              :class="
+                currentTheme === 'dark'
+                  ? 'ring-2 ring-indigo-500 scale-105'
+                  : ''
+              "
+              class="w-full h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center transition-all"
+              title="Tema Gelap"
+            >
+              <Icon
+                v-if="currentTheme === 'dark'"
+                icon="solar:check-circle-bold"
+                class="w-3.5 h-3.5 text-indigo-400"
               />
             </button>
           </div>
@@ -461,44 +462,13 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 const { $fbAuth } = useNuxtApp();
 const router = useRouter();
 
-const currentTheme = useState<string>("diary-active-theme", () => "dark");
+const currentTheme = useState<string>("diary-active-theme", () => "cream");
 
 const currentUser = ref<any>(null);
 const isSidebarOpen = ref(false);
 
 // Penambahan Properti Warna Ikon & Komponen Mikro di dalam Objek Tema
 const themeClasses: Record<string, any> = {
-  dark: {
-    wrapper: "dark bg-slate-950 text-slate-100",
-    bgGradient:
-      "bg-[radial-gradient(circle_at_top_left,_#1e1b4b,_#0f172a,_#020617)]",
-    glowTop: "bg-indigo-600/15",
-    glowBottom: "bg-pink-600/10",
-    mobileHeader: "bg-slate-950/70 border-slate-900/60 text-white",
-    mobileBtn: "bg-slate-900 text-indigo-400 border-slate-800",
-    sidebar:
-      "bg-slate-950/80 md:bg-slate-950/40 border-slate-900/80 text-slate-200",
-    borderDashed: "border-slate-900",
-    borderSimple: "border-slate-900",
-    quoteBox: "bg-slate-900/30 border-slate-900 text-slate-300",
-    navLink:
-      "bg-slate-900/20 border-slate-900/60 text-slate-300 hover:bg-slate-900/80 hover:text-white",
-    progressBg: "bg-slate-900 border border-slate-800",
-    progressBar: "bg-gradient-to-r from-orange-500 via-rose-500 to-indigo-500",
-    profileCard: "bg-slate-900/40 border-slate-900/80 text-white",
-    avatarBg: "bg-gradient-to-tr from-orange-500 to-rose-500",
-    logoutBtn:
-      "bg-slate-800/50 border-slate-800 text-slate-400 hover:text-red-400 hover:bg-red-950/20",
-    mainPaper:
-      "bg-slate-900/60 border-slate-900/80 text-white shadow-[0_35px_70px_rgba(0,0,0,0.6)] backdrop-blur-md",
-    iconPrimary: "text-orange-500",
-    iconSecondary: "text-rose-500",
-    syncText: "text-emerald-400",
-    syncDot: "bg-emerald-400",
-    mobileClose:
-      "bg-slate-900/70 border-slate-800 text-indigo-400 hover:text-white",
-    btnGradient: "bg-gradient-to-tr from-indigo-600 to-violet-500",
-  },
   cream: {
     wrapper: "bg-amber-50/40 text-slate-900",
     bgGradient:
@@ -619,10 +589,41 @@ const themeClasses: Record<string, any> = {
       "bg-white/80 border-emerald-200 text-emerald-600 hover:text-emerald-800",
     btnGradient: "bg-gradient-to-tr from-emerald-500 to-teal-500",
   },
+  dark: {
+    wrapper: "dark bg-slate-950 text-slate-100",
+    bgGradient:
+      "bg-[radial-gradient(circle_at_top_left,_#1e1b4b,_#0f172a,_#020617)]",
+    glowTop: "bg-indigo-600/15",
+    glowBottom: "bg-pink-600/10",
+    mobileHeader: "bg-slate-950/70 border-slate-900/60 text-white",
+    mobileBtn: "bg-slate-900 text-indigo-400 border-slate-800",
+    sidebar:
+      "bg-slate-950/80 md:bg-slate-950/40 border-slate-900/80 text-slate-200",
+    borderDashed: "border-slate-900",
+    borderSimple: "border-slate-900",
+    quoteBox: "bg-slate-900/30 border-slate-900 text-slate-300",
+    navLink:
+      "bg-slate-900/20 border-slate-900/60 text-slate-300 hover:bg-slate-900/80 hover:text-white",
+    progressBg: "bg-slate-900 border border-slate-800",
+    progressBar: "bg-gradient-to-r from-orange-500 via-rose-500 to-indigo-500",
+    profileCard: "bg-slate-900/40 border-slate-900/80 text-white",
+    avatarBg: "bg-gradient-to-tr from-orange-500 to-rose-500",
+    logoutBtn:
+      "bg-slate-800/50 border-slate-800 text-slate-400 hover:text-red-400 hover:bg-red-950/20",
+    mainPaper:
+      "bg-slate-900/60 border-slate-900/80 text-white shadow-[0_35px_70px_rgba(0,0,0,0.6)] backdrop-blur-md",
+    iconPrimary: "text-orange-500",
+    iconSecondary: "text-rose-500",
+    syncText: "text-emerald-400",
+    syncDot: "bg-emerald-400",
+    mobileClose:
+      "bg-slate-900/70 border-slate-800 text-indigo-400 hover:text-white",
+    btnGradient: "bg-gradient-to-tr from-indigo-600 to-violet-500",
+  },
 };
 
 const currentThemeClasses = computed(() => {
-  return themeClasses[currentTheme.value] || themeClasses["dark"];
+  return themeClasses[currentTheme.value] || themeClasses["cream"];
 });
 
 const setTheme = (themeName: string) => {

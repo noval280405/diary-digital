@@ -1223,7 +1223,7 @@ const prevPage = () => {
 // =========================================================================
 // INTEGRASI TEMA & MANAJEMEN AKSI SIDEBAR (TERINTEGRASI CLOUD)
 // =========================================================================
-const currentTheme = useState<string>("diary-active-theme", () => "dark");
+const currentTheme = useState<string>("diary-active-theme", () => "cream");
 
 const themeStyles: Record<string, any> = {
   dark: {
@@ -1335,7 +1335,7 @@ const filteredPages = computed(() => {
 });
 
 const currentThemeClasses = computed(() => {
-  return themeStyles[currentTheme.value] || themeStyles["dark"];
+  return themeStyles[currentTheme.value] || themeStyles["cream"];
 });
 
 // AKSI MUTASI DATA AMAN & SINKRON CLOUD (SINKRON SISI USER INTERFACE)
