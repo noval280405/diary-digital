@@ -135,107 +135,127 @@
         </div>
 
         <!-- PILIHAN WARNA TEMA (Tema Palettes) -->
-        <div class="space-y-2">
-          <label
-            class="text-[10px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5"
-          >
+        <!-- BUTTON TAMPILKAN WARNA -->
+        <button
+          @click="showThemePicker = !showThemePicker"
+          class="mt-4 w-full flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-bold transition-all"
+          :class="
+            themeClasses[currentTheme]?.navLink || themeClasses['dark'].navLink
+          "
+        >
+          <span class="flex items-center gap-2">
             <Icon
               icon="solar:palette-bold-duotone"
               :class="themeClasses[currentTheme]?.iconPrimary"
-              class="w-3.5 h-3.5"
+              class="w-4 h-4"
             />
-            Warna Jurnal
-          </label>
-          <div
-            class="grid grid-cols-5 gap-2 bg-slate-500/5 p-1.5 rounded-xl border"
-            :class="
-              themeClasses[currentTheme]?.borderSimple || 'border-slate-800'
-            "
-          >
-            <!-- Krem (Cream) -->
-            <button
-              @click="setTheme('cream')"
-              :class="
-                currentTheme === 'cream'
-                  ? 'ring-2 ring-amber-600 scale-105'
-                  : ''
-              "
-              class="w-full h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center transition-all"
-              title="Tema Krem"
-            >
-              <Icon
-                v-if="currentTheme === 'cream'"
-                icon="solar:check-circle-bold"
-                class="w-3.5 h-3.5 text-amber-700"
-              />
-            </button>
-            <!-- Pink (Rose) -->
-            <button
-              @click="setTheme('pink')"
-              :class="
-                currentTheme === 'pink' ? 'ring-2 ring-pink-500 scale-105' : ''
-              "
-              class="w-full h-8 rounded-lg bg-pink-50 border border-pink-200 flex items-center justify-center transition-all"
-              title="Tema Pink"
-            >
-              <Icon
-                v-if="currentTheme === 'pink'"
-                icon="solar:check-circle-bold"
-                class="w-3.5 h-3.5 text-pink-600"
-              />
-            </button>
-            <!-- Biru (Sky) -->
-            <button
-              @click="setTheme('blue')"
-              :class="
-                currentTheme === 'blue' ? 'ring-2 ring-sky-500 scale-105' : ''
-              "
-              class="w-full h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center transition-all"
-              title="Tema Biru"
-            >
-              <Icon
-                v-if="currentTheme === 'blue'"
-                icon="solar:check-circle-bold"
-                class="w-3.5 h-3.5 text-sky-600"
-              />
-            </button>
-            <!-- Ijo (Emerald/Green) -->
-            <button
-              @click="setTheme('green')"
-              :class="
-                currentTheme === 'green'
-                  ? 'ring-2 ring-emerald-500 scale-105'
-                  : ''
-              "
-              class="w-full h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center transition-all"
-              title="Tema Ijo"
-            >
-              <Icon
-                v-if="currentTheme === 'green'"
-                icon="solar:check-circle-bold"
-                class="w-3.5 h-3.5 text-emerald-600"
-              />
-            </button>
+            Ganti Warna
+          </span>
 
-            <!-- Gelap (Dark) -->
-            <button
-              @click="setTheme('dark')"
+          <Icon
+            :icon="
+              showThemePicker
+                ? 'solar:alt-arrow-up-linear'
+                : 'solar:alt-arrow-down-linear'
+            "
+            class="w-4 h-4"
+          />
+        </button>
+
+        <!-- PILIHAN WARNA -->
+        <Transition name="fade">
+          <div v-if="showThemePicker" class="mt-3">
+            <div
+              class="grid grid-cols-5 gap-2 bg-slate-500/5 p-1.5 rounded-xl border"
               :class="
-                currentTheme === 'dark'
-                  ? 'ring-2 ring-indigo-500 scale-105'
-                  : ''
+                themeClasses[currentTheme]?.borderSimple || 'border-slate-800'
               "
-              class="w-full h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center transition-all"
-              title="Tema Gelap"
             >
-              <Icon
-                v-if="currentTheme === 'dark'"
-                icon="solar:check-circle-bold"
-                class="w-3.5 h-3.5 text-indigo-400"
-              />
-            </button>
+              <!-- cream -->
+              <button
+                @click="setTheme('cream')"
+                :class="
+                  currentTheme === 'cream'
+                    ? 'ring-2 ring-amber-600 scale-105'
+                    : ''
+                "
+                class="w-full h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center transition-all"
+              >
+                <Icon
+                  v-if="currentTheme === 'cream'"
+                  icon="solar:check-circle-bold"
+                  class="w-3.5 h-3.5 text-amber-700"
+                />
+              </button>
+
+              <!-- pink -->
+              <button
+                @click="setTheme('pink')"
+                :class="
+                  currentTheme === 'pink'
+                    ? 'ring-2 ring-pink-500 scale-105'
+                    : ''
+                "
+                class="w-full h-8 rounded-lg bg-pink-50 border border-pink-200 flex items-center justify-center transition-all"
+              >
+                <Icon
+                  v-if="currentTheme === 'pink'"
+                  icon="solar:check-circle-bold"
+                  class="w-3.5 h-3.5 text-pink-600"
+                />
+              </button>
+
+              <!-- blue -->
+              <button
+                @click="setTheme('blue')"
+                :class="
+                  currentTheme === 'blue' ? 'ring-2 ring-sky-500 scale-105' : ''
+                "
+                class="w-full h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center transition-all"
+              >
+                <Icon
+                  v-if="currentTheme === 'blue'"
+                  icon="solar:check-circle-bold"
+                  class="w-3.5 h-3.5 text-sky-600"
+                />
+              </button>
+
+              <!-- green -->
+              <button
+                @click="setTheme('green')"
+                :class="
+                  currentTheme === 'green'
+                    ? 'ring-2 ring-emerald-500 scale-105'
+                    : ''
+                "
+                class="w-full h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center transition-all"
+              >
+                <Icon
+                  v-if="currentTheme === 'green'"
+                  icon="solar:check-circle-bold"
+                  class="w-3.5 h-3.5 text-emerald-600"
+                />
+              </button>
+
+              <!-- dark -->
+              <button
+                @click="setTheme('dark')"
+                :class="
+                  currentTheme === 'dark'
+                    ? 'ring-2 ring-indigo-500 scale-105'
+                    : ''
+                "
+                class="w-full h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center transition-all"
+              >
+                <Icon
+                  v-if="currentTheme === 'dark'"
+                  icon="solar:check-circle-bold"
+                  class="w-3.5 h-3.5 text-indigo-400"
+                />
+              </button>
+            </div>
           </div>
-        </div>
+        </Transition>
 
         <!-- Quotes Area -->
         <div
@@ -462,6 +482,7 @@
 import { ref, computed, onMounted } from "vue";
 import { Icon } from "@iconify/vue";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+const showThemePicker = ref(false);
 
 const { $fbAuth } = useNuxtApp();
 const router = useRouter();
