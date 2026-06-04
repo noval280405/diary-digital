@@ -1,116 +1,120 @@
 <template>
   <NuxtLayout name="diary">
     <template #sidebar-content>
-      <!-- Jurnal Baru -->
-      <div
-        class="space-y-3 pt-4 border-t transition-colors duration-500"
-        :class="darkMode ? 'border-slate-800/60' : 'border-amber-200/60'"
-      >
-        <label
-          :class="darkMode ? 'text-indigo-400' : 'text-amber-700'"
-          class="text-xs uppercase tracking-[0.25em] font-black block"
+      <div class="space-y-6 px-1 py-2">
+        <!-- Jurnal Baru -->
+        <div
+          class="space-y-3 pt-2 border-t transition-colors duration-500"
+          :class="darkMode ? 'border-slate-800/60' : 'border-amber-200/60'"
         >
-          ✦ Jurnal Baru
-        </label>
-        <div class="flex gap-2">
-          <input
-            v-model="newBookTitle"
-            placeholder="Nama rak jurnal..."
-            :class="
-              darkMode
-                ? 'bg-slate-900/90 border-slate-800/80 text-slate-100 focus:ring-2 focus:ring-indigo-500'
-                : 'bg-amber-50/50 border-amber-200 text-slate-800 focus:ring-2 focus:ring-orange-400 shadow-sm'
-            "
-            class="flex-1 px-4 py-2.5 border rounded-2xl text-sm outline-none transition-all duration-300 placeholder:text-slate-400"
-            @keyup.enter="createNewBook"
-          />
-          <button
-            @click="createNewBook"
-            :class="
-              darkMode
-                ? 'from-indigo-600 to-violet-500'
-                : 'from-orange-500 to-amber-500'
-            "
-            class="bg-gradient-to-tr hover:brightness-110 active:scale-95 transition-all px-4 rounded-2xl font-black text-white shadow-md text-lg"
+          <label
+            :class="darkMode ? 'text-indigo-400' : 'text-amber-700'"
+            class="text-xs uppercase tracking-[0.25em] font-black block"
           >
-            +
-          </button>
-        </div>
-      </div>
-
-      <!-- Rak Jurnal -->
-      <div class="space-y-3 mt-6">
-        <label
-          :class="darkMode ? 'text-slate-400' : 'text-amber-800/70'"
-          class="text-xs uppercase tracking-[0.25em] font-black block"
-        >
-          📚 Rak Jurnal
-        </label>
-
-        <!-- Kotak Pencarian Teks di Sidebar -->
-        <div class="relative mb-3">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Cari cerita lama..."
-            :class="
-              darkMode
-                ? 'bg-slate-900/60 border-slate-800 text-white focus:ring-1 focus:ring-indigo-500'
-                : 'bg-amber-50/40 border-amber-200 text-slate-800 focus:ring-1 focus:ring-orange-400'
-            "
-            class="w-full pl-8 pr-3 py-1.5 border rounded-xl text-xs outline-none transition-all placeholder:text-slate-400"
-          />
-          <Icon
-            icon="solar:magnifer-bold"
-            class="w-3.5 h-3.5 absolute left-2.5 top-2.5 opacity-40"
-          />
+            ✦ Jurnal Baru
+          </label>
+          <div class="flex gap-2">
+            <input
+              v-model="newBookTitle"
+              placeholder="Nama rak jurnal..."
+              :class="
+                darkMode
+                  ? 'bg-slate-900/90 border-slate-800/80 text-slate-100 focus:ring-2 focus:ring-indigo-500'
+                  : 'bg-amber-50/50 border-amber-200 text-slate-800 focus:ring-2 focus:ring-orange-400 shadow-sm'
+              "
+              class="flex-1 px-4 py-2.5 border rounded-2xl text-sm outline-none transition-all duration-300 placeholder:text-slate-400"
+              @keyup.enter="createNewBook"
+            />
+            <button
+              @click="createNewBook"
+              :class="
+                darkMode
+                  ? 'from-indigo-600 to-violet-500'
+                  : 'from-orange-500 to-amber-500'
+              "
+              class="bg-gradient-to-tr hover:brightness-110 active:scale-95 transition-all px-4 rounded-2xl font-black text-white shadow-md text-lg"
+            >
+              +
+            </button>
+          </div>
         </div>
 
-        <div class="space-y-2.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+        <!-- Rak Jurnal -->
+        <div class="space-y-3">
+          <label
+            :class="darkMode ? 'text-slate-400' : 'text-amber-800/70'"
+            class="text-xs uppercase tracking-[0.25em] font-black block"
+          >
+            📚 Rak Jurnal
+          </label>
+
+          <!-- Kotak Pencarian Teks di Sidebar -->
+          <div class="relative mb-3">
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Cari cerita lama..."
+              :class="
+                darkMode
+                  ? 'bg-slate-900/60 border-slate-800 text-white focus:ring-1 focus:ring-indigo-500'
+                  : 'bg-amber-50/40 border-amber-200 text-slate-800 focus:ring-1 focus:ring-orange-400'
+              "
+              class="w-full pl-8 pr-3 py-1.5 border rounded-xl text-xs outline-none transition-all placeholder:text-slate-400"
+            />
+            <Icon
+              icon="solar:magnifer-bold"
+              class="w-3.5 h-3.5 absolute left-2.5 top-2.5 opacity-40"
+            />
+          </div>
+
           <div
-            v-for="(book, i) in notebooks"
-            :key="book.id"
-            @click="selectBook(i)"
-            :class="
-              activeBookIndex === i
-                ? darkMode
-                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 border-indigo-400 text-white'
-                  : 'bg-gradient-to-r from-orange-500 to-amber-500 border-orange-400 text-white shadow-md'
-                : darkMode
-                  ? 'bg-slate-900/40 border-slate-900/80 text-slate-300 hover:bg-slate-900/80'
-                  : 'bg-amber-50/40 border-amber-100 text-slate-700 hover:bg-white'
-            "
-            class="group flex items-center justify-between p-3.5 rounded-2xl cursor-pointer transition-all duration-300 border relative overflow-hidden"
+            class="space-y-2.5 max-h-48 md:max-h-56 overflow-y-auto pr-1 custom-scrollbar"
           >
             <div
-              v-if="activeBookIndex === i"
-              class="absolute left-0 top-0 bottom-0 w-1 bg-white/70"
-            />
-            <div class="truncate font-bold flex items-center gap-2.5">
-              <span>{{ activeBookIndex === i ? "📖" : "📔" }}</span>
-              <span class="truncate text-sm tracking-wide">{{
-                book.title
-              }}</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span
-                :class="
-                  activeBookIndex === i
-                    ? 'bg-white/20 text-white'
-                    : darkMode
-                      ? 'bg-slate-800 text-indigo-400'
-                      : 'bg-amber-100 text-amber-900'
-                "
-                class="px-2 py-0.5 rounded-full text-xs font-black"
-              >
-                {{ book.pages ? book.pages.length : 0 }}
-              </span>
-              <button
-                @click.stop="deleteBook(i)"
-                class="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-red-400 hover:text-red-500"
-              >
-                ✕
-              </button>
+              v-for="(book, i) in notebooks"
+              :key="book.id"
+              @click="selectBook(i)"
+              :class="
+                activeBookIndex === i
+                  ? darkMode
+                    ? 'bg-gradient-to-r from-indigo-600 to-violet-600 border-indigo-400 text-white'
+                    : 'bg-gradient-to-r from-orange-500 to-amber-500 border-orange-400 text-white shadow-md'
+                  : darkMode
+                    ? 'bg-slate-900/40 border-slate-900/80 text-slate-300 hover:bg-slate-900/80'
+                    : 'bg-amber-50/40 border-amber-100 text-slate-700 hover:bg-white'
+              "
+              class="group flex items-center justify-between p-3.5 rounded-2xl cursor-pointer transition-all duration-300 border relative overflow-hidden"
+            >
+              <div
+                v-if="activeBookIndex === i"
+                class="absolute left-0 top-0 bottom-0 w-1 bg-white/70"
+              />
+              <div class="truncate font-bold flex items-center gap-2.5">
+                <span>{{ activeBookIndex === i ? "📖" : "📔" }}</span>
+                <span class="truncate text-sm tracking-wide">{{
+                  book.title
+                }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span
+                  :class="
+                    activeBookIndex === i
+                      ? 'bg-white/20 text-white'
+                      : darkMode
+                        ? 'bg-slate-800 text-indigo-400'
+                        : 'bg-amber-100 text-amber-900'
+                  "
+                  class="px-2 py-0.5 rounded-full text-xs font-black"
+                >
+                  {{ book.pages ? book.pages.length : 0 }}
+                </span>
+                <button
+                  @click.stop="deleteBook(i)"
+                  class="md:opacity-0 group-hover:opacity-100 transition-opacity p-1 text-red-400 hover:text-red-500"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -119,44 +123,47 @@
 
     <!-- Konten Utama Jurnal -->
     <div
-      class="pl-0 md:pl-12 min-h-[500px] flex flex-col justify-between relative"
+      class="w-full min-h-[calc(100vh-180px)] md:min-h-[500px] flex flex-col justify-between relative px-2 sm:px-4 md:pl-8"
     >
       <div>
+        <!-- Header: Responsif Flex-Col ke Flex-Row -->
         <div
-          class="flex flex-wrap items-center justify-between gap-4 border-b pb-6 mb-8"
+          class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5 mb-6 md:mb-8"
           :class="darkMode ? 'border-slate-800/80' : 'border-amber-200/60'"
         >
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3 md:gap-4">
             <div
               :class="
                 darkMode
                   ? 'from-indigo-500 to-pink-500'
                   : 'from-orange-500 to-rose-500'
               "
-              class="w-14 h-14 rounded-3xl bg-gradient-to-br flex items-center justify-center shadow-lg shrink-0"
+              class="w-12 h-12 md:w-14 md:h-14 rounded-2xl md:rounded-3xl bg-gradient-to-br flex items-center justify-center shadow-lg shrink-0"
             >
               <Icon
                 icon="solar:book-bookmark-bold-duotone"
-                class="w-8 h-8 text-white"
+                class="w-6 h-6 md:w-8 md:h-8 text-white"
               />
             </div>
-            <div>
+            <div class="min-w-0">
               <h1
-                class="text-2xl md:text-3xl font-black tracking-tight"
+                class="text-xl md:text-3xl font-black tracking-tight truncate"
                 :class="darkMode ? 'text-white' : 'text-slate-900'"
               >
                 {{ currentBook.title || "Mulai Menulis" }}
               </h1>
-              <p class="text-sm opacity-60 font-semibold mt-0.5">
+              <p class="text-xs md:text-sm opacity-60 font-semibold mt-0.5">
                 {{ filteredPages.length }} Lembar
                 {{ searchQuery ? "Ditemukan" : "Tersimpan" }}
               </p>
             </div>
           </div>
 
-          <!-- Navigasi Halaman & Tombol Kunci PIN -->
-          <div class="flex items-center gap-3">
-            <!-- Tombol Status & Manajemen Kunci PIN Per Halaman (Hanya muncul saat membaca) -->
+          <!-- Navigasi Halaman & Tombol PIN (Paling Optimal di Mobile) -->
+          <div
+            class="flex flex-row items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto"
+          >
+            <!-- Tombol Status & Kunci PIN -->
             <button
               v-if="!isWritingMode && currentPage.text"
               @click="togglePageLock"
@@ -173,15 +180,14 @@
                     ? 'solar:shield-keyhole-bold-duotone'
                     : 'solar:key-bold-duotone'
                 "
-                class="w-4 h-4"
+                class="w-3.5 h-3.5"
               />
-              <span>{{
-                currentPage.isLocked ? "Hapus PIN" : "Kunci PIN"
-              }}</span>
+              <span>{{ currentPage.isLocked ? "Hapus PIN" : "Kunci" }}</span>
             </button>
 
+            <!-- Paginasi -->
             <div
-              class="flex items-center gap-1.5 p-1 rounded-2xl border"
+              class="flex items-center gap-1 p-1 rounded-xl border ml-auto sm:ml-0"
               :class="
                 darkMode
                   ? 'bg-slate-900/50 border-slate-800'
@@ -195,13 +201,14 @@
                   !filteredPages.length ||
                   isWritingMode
                 "
-                class="p-2 rounded-xl border disabled:opacity-20 active:scale-95 transition-all"
+                class="p-1.5 rounded-lg border disabled:opacity-20 active:scale-95 transition-all"
               >
-                <Icon icon="solar:alt-arrow-left-bold" class="w-4 h-4" />
+                <Icon icon="solar:alt-arrow-left-bold" class="w-3.5 h-3.5" />
               </button>
-              <span class="text-xs font-black px-2 text-center min-w-[55px]">
-                {{ filteredPages.length ? currentPageIndex + 1 : 0 }} /
-                {{ filteredPages.length }}
+              <span class="text-xs font-black px-1.5 text-center min-w-[45px]">
+                {{ filteredPages.length ? currentPageIndex + 1 : 0 }}/{{
+                  filteredPages.length
+                }}
               </span>
               <button
                 @click="nextPage"
@@ -210,9 +217,9 @@
                   !filteredPages.length ||
                   isWritingMode
                 "
-                class="p-2 rounded-xl border disabled:opacity-20 active:scale-95 transition-all"
+                class="p-1.5 rounded-lg border disabled:opacity-20 active:scale-95 transition-all"
               >
-                <Icon icon="solar:alt-arrow-right-bold" class="w-4 h-4" />
+                <Icon icon="solar:alt-arrow-right-bold" class="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -224,40 +231,40 @@
             <div
               v-if="currentPage.text"
               :key="currentPageIndex"
-              class="space-y-6"
+              class="space-y-5"
             >
-              <!-- KONDISI 1 - Jika Halaman Dikunci & Belum Dimasukkan PIN yang Benar -->
+              <!-- KONDISI 1 - Jika Terkunci -->
               <div
                 v-if="currentPage.isLocked && !isCurrentPageUnlocked"
-                class="flex flex-col items-center justify-center py-12 text-center space-y-4 animate-fadeIn"
+                class="flex flex-col items-center justify-center py-10 md:py-16 text-center space-y-4 animate-fadeIn px-2"
               >
                 <div
-                  class="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500 animate-bounce"
+                  class="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500 animate-bounce"
                 >
                   <Icon
                     icon="solar:lock-keyhole-bold-duotone"
-                    class="w-10 h-10"
+                    class="w-8 h-8"
                   />
                 </div>
                 <div>
                   <h3
-                    class="text-lg font-black"
+                    class="text-base md:text-lg font-black"
                     :class="darkMode ? 'text-white' : 'text-slate-900'"
                   >
                     Lembaran Rahasia Terkunci
                   </h3>
-                  <p class="text-xs opacity-60 max-w-xs mx-auto mt-1">
+                  <p class="text-xs opacity-60 max-w-xs mx-auto mt-1 px-4">
                     Masukkan 6 digit PIN kamu atau gunakan opsi reset jika lupa.
                   </p>
                 </div>
-                <div class="flex flex-col gap-2 items-center">
+                <div class="flex flex-col gap-2 items-center w-full">
                   <input
                     v-model="inputPin"
                     type="text"
                     maxlength="6"
                     placeholder="••••••"
                     style="-webkit-text-security: disc; text-security: disc"
-                    class="w-40 text-center text-xl font-black px-3 py-2.5 rounded-xl border tracking-widest focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all"
+                    class="w-36 md:w-40 text-center text-lg md:text-xl font-black px-3 py-2 rounded-xl border tracking-widest focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all"
                     :class="[
                       inputPin.length > 0
                         ? 'bg-rose-50/50 border-rose-400 text-rose-600 dark:bg-rose-950/20 dark:border-rose-500 dark:text-rose-400 animate-pulse'
@@ -272,25 +279,23 @@
                     class="text-xs text-rose-500 font-bold flex items-center gap-1 mt-1"
                   >
                     <Icon icon="solar:danger-bold" class="w-3.5 h-3.5" /> PIN
-                    salah, silakan coba lagi!
+                    salah!
                   </p>
 
-                  <!-- BARU: Tombol Lupa PIN -->
                   <button
                     @click="showResetModal = true"
-                    class="text-xs font-bold underline mt-3 opacity-50 hover:opacity-100 transition-opacity text-slate-500 dark:text-slate-400"
+                    class="text-[11px] md:text-xs font-bold underline mt-4 opacity-50 hover:opacity-100 transition-opacity text-slate-500 dark:text-slate-400"
                   >
-                    Lupa PIN Lembaran Ini? Reset dengan Password
+                    Lupa PIN? Reset dengan Password
                   </button>
                 </div>
               </div>
 
-              <!-- KONDISI 2 - Tampilan Halaman Normal (Terbuka atau Tidak Dikunci) -->
-              <div v-else class="space-y-6">
-                <!-- Tampilan Lencana Mood di Lembaran Cerita -->
+              <!-- KONDISI 2 - Tampilan Halaman Terbuka -->
+              <div v-else class="space-y-4 md:space-y-6">
                 <div
                   v-if="currentPage.mood"
-                  class="flex items-center gap-2 animate-fadeIn"
+                  class="flex flex-wrap items-center gap-2 animate-fadeIn"
                 >
                   <span
                     :class="
@@ -298,23 +303,23 @@
                         ? 'bg-slate-900 border-slate-800 text-slate-300'
                         : 'bg-amber-100/60 border-amber-200 text-amber-900'
                     "
-                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black border"
                   >
                     <span>{{ currentPage.mood }}</span>
                     <span>Suasana Hati</span>
                   </span>
                   <span
                     v-if="currentPage.createdAt"
-                    class="text-[11px] opacity-40 font-medium"
+                    class="text-[10px] md:text-[11px] opacity-40 font-medium"
                   >
                     •
                     {{
                       new Date(currentPage.createdAt).toLocaleDateString(
                         "id-ID",
                         {
-                          weekday: "long",
+                          weekday: "short",
                           day: "numeric",
-                          month: "long",
+                          month: "short",
                           year: "numeric",
                         },
                       )
@@ -324,30 +329,30 @@
 
                 <p
                   :class="
-                    darkMode ? 'text-slate-100' : 'text-slate-800 font-medium'
+                    darkMode ? 'text-slate-200' : 'text-slate-800 font-medium'
                   "
-                  class="whitespace-pre-wrap text-lg md:text-xl font-serif italic text-justify leading-[35px]"
+                  class="whitespace-pre-wrap text-base md:text-xl font-serif italic text-justify leading-[28px] md:leading-[35px] px-0.5"
                 >
                   "{{ currentPage.text }}"
                 </p>
 
-                <!-- Lampiran Foto -->
+                <!-- Lampiran Foto Responsif -->
                 <div
                   v-if="currentPage.image"
                   :class="
                     darkMode
-                      ? 'border-slate-800 bg-slate-900/60 shadow-black/40'
-                      : 'border-amber-200 bg-amber-50/40 shadow-amber-900/5'
+                      ? 'border-slate-800 bg-slate-900/60'
+                      : 'border-amber-200 bg-amber-50/40'
                   "
-                  class="p-3 pb-6 rounded-2xl border-2 shadow-xl inline-block transform -rotate-1 transition-transform hover:rotate-0"
+                  class="p-2 pb-4 rounded-xl border-2 shadow-md max-w-full sm:max-w-md inline-block transform -rotate-1 transition-transform hover:rotate-0"
                 >
                   <img
                     :src="currentPage.image"
-                    class="max-h-72 rounded-xl object-cover"
+                    class="max-h-52 md:max-h-72 w-full rounded-lg object-cover"
                     alt="Attachment"
                   />
                   <div
-                    class="mt-3 text-center font-serif text-xs opacity-40 tracking-widest"
+                    class="mt-2.5 text-center font-serif text-[10px] opacity-40 tracking-widest"
                   >
                     ✦ MEMORI TERLAMPIR ✦
                   </div>
@@ -358,29 +363,28 @@
             <!-- Halaman Kosong -->
             <div
               v-else
-              class="text-center py-16 flex flex-col items-center space-y-3"
+              class="text-center py-12 flex flex-col items-center space-y-3 px-4"
             >
               <Icon
                 icon="solar:pen-new-square-bold-duotone"
                 :class="darkMode ? 'text-indigo-400/60' : 'text-orange-500/60'"
-                class="w-16 h-16 animate-bounce"
+                class="w-12 h-12 animate-bounce"
               />
-              <p class="font-serif italic text-slate-500 max-w-xs">
+              <p class="font-serif text-sm italic text-slate-500 max-w-xs">
                 {{
                   searchQuery
-                    ? "Tidak ada lembaran yang cocok dengan pencarian kata kuncimu."
-                    : "Lembar ini masih kosong. Siap menampung cerita seru petualanganmu hari ini."
+                    ? "Tidak ada lembaran yang cocok dengan kata kunci."
+                    : "Lembar ini masih kosong. Siap menampung cerita seru hari ini."
                 }}
               </p>
             </div>
           </transition>
         </div>
 
-        <!-- Mode Input Menulis Jurnal -->
-        <div v-else class="space-y-4 animate-fadeIn">
-          <!-- Komponen Pemilih Mood Saat Menulis -->
+        <!-- Mode Input Menulis Jurnal (Responsif) -->
+        <div v-else class="space-y-4 animate-fadeIn px-0.5">
           <div
-            class="p-4 rounded-2xl border transition-all"
+            class="p-3 md:p-4 rounded-2xl border transition-all"
             :class="
               darkMode
                 ? 'bg-slate-900/40 border-slate-800'
@@ -388,11 +392,11 @@
             "
           >
             <label
-              class="text-[10px] font-black uppercase tracking-[0.15em] block mb-2.5 opacity-60"
+              class="text-[10px] font-black uppercase tracking-[0.15em] block mb-2 opacity-60"
             >
               Bagaimana suasana hatimu hari ini?
             </label>
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-1.5 md:gap-2">
               <button
                 v-for="m in moodList"
                 :key="m.emoji"
@@ -401,16 +405,16 @@
                 :class="[
                   selectedMood === m.emoji
                     ? darkMode
-                      ? 'bg-indigo-600/30 border-indigo-500 scale-105 text-white'
-                      : 'bg-orange-100 border-orange-400 scale-105 text-orange-900 font-bold'
+                      ? 'bg-indigo-600/30 border-indigo-500 text-white font-bold'
+                      : 'bg-orange-100 border-orange-400 text-orange-900 font-bold'
                     : darkMode
-                      ? 'bg-slate-950/80 border-slate-900/60 opacity-50 hover:opacity-100 text-slate-400'
-                      : 'bg-white border-amber-100 opacity-60 hover:opacity-100 text-slate-700',
+                      ? 'bg-slate-950/80 border-slate-900/60 opacity-60 text-slate-400'
+                      : 'bg-white border-amber-100 opacity-70 text-slate-700',
                 ]"
-                class="flex items-center gap-1.5 px-3 py-1.5 border rounded-xl text-xs font-medium transition-all duration-200"
+                class="flex items-center gap-1 px-2.5 py-1 border rounded-xl text-xs transition-all duration-200"
               >
                 <span>{{ m.emoji }}</span>
-                <span>{{ m.label }}</span>
+                <span class="text-[11px]">{{ m.label }}</span>
               </button>
             </div>
           </div>
@@ -423,17 +427,17 @@
                 ? 'text-slate-100 placeholder-slate-700'
                 : 'text-slate-800 placeholder-slate-400 font-medium'
             "
-            class="w-full h-64 p-2 outline-none text-lg font-serif resize-none bg-transparent leading-[35px]"
+            class="w-full h-56 md:h-64 p-1 outline-none text-base md:text-lg font-serif resize-none bg-transparent leading-[30px] md:leading-[35px]"
           />
 
-          <!-- Lampiran Gambar -->
+          <!-- Lampiran Gambar Mobile friendly -->
           <div
             :class="
               darkMode
                 ? 'bg-slate-900/40 border-slate-800'
                 : 'bg-amber-50/40 border-amber-200'
             "
-            class="flex items-center justify-between p-4 rounded-2xl border border-dashed"
+            class="flex flex-row items-center justify-between p-3 rounded-2xl border border-dashed gap-4"
           >
             <label
               :class="
@@ -441,13 +445,13 @@
                   ? 'bg-slate-800 border-slate-700 text-slate-200'
                   : 'bg-white border-amber-200 text-slate-700 shadow-sm'
               "
-              class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black cursor-pointer border active:scale-95 transition-transform"
+              class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black cursor-pointer border active:scale-95 transition-transform shrink-0"
             >
               <Icon
                 icon="solar:camera-add-bold-duotone"
                 class="w-4 h-4 text-orange-500"
               />
-              <span>{{ imagePreview ? "Ganti Foto" : "Sematkan Gambar" }}</span>
+              <span>{{ imagePreview ? "Ganti" : "Foto" }}</span>
               <input
                 type="file"
                 accept="image/*"
@@ -458,12 +462,12 @@
 
             <div
               v-if="imagePreview"
-              class="relative rounded-lg overflow-hidden border"
+              class="relative rounded-lg overflow-hidden border shrink-0"
             >
-              <img :src="imagePreview" class="h-12 w-20 object-cover" />
+              <img :src="imagePreview" class="h-10 w-16 object-cover" />
               <button
                 @click="imagePreview = null"
-                class="absolute inset-0 bg-black/50 text-white flex items-center justify-center text-xs opacity-0 hover:opacity-100 transition-opacity"
+                class="absolute inset-0 bg-black/50 text-white flex items-center justify-center text-[10px]"
               >
                 Hapus
               </button>
@@ -472,9 +476,9 @@
         </div>
       </div>
 
-      <!-- Navigasi Aksi Simpan / Batal -->
+      <!-- Navigasi Bawah: Aksi Simpan / Batal -->
       <div
-        class="flex justify-end gap-3 pt-6 mt-8 border-t"
+        class="flex justify-end gap-2.5 pt-4 mt-6 md:mt-8 border-t w-full"
         :class="darkMode ? 'border-slate-800/80' : 'border-amber-200/60'"
       >
         <button
@@ -486,7 +490,7 @@
               ? 'from-indigo-600 to-violet-600'
               : 'from-orange-500 to-amber-500'
           "
-          class="bg-gradient-to-r px-5 py-2.5 rounded-xl text-white font-black text-xs flex items-center gap-2 shadow-md disabled:opacity-40"
+          class="bg-gradient-to-r w-full sm:w-auto justify-center px-5 py-3 sm:py-2.5 rounded-xl text-white font-black text-xs flex items-center gap-2 shadow-md disabled:opacity-40 active:scale-95 transition-transform"
         >
           <Icon icon="solar:pen-bold-duotone" class="w-4 h-4" /> TULIS JURNAL
         </button>
@@ -499,7 +503,7 @@
               ? 'bg-slate-800 text-slate-400'
               : 'bg-amber-100 text-amber-800'
           "
-          class="px-4 py-2.5 rounded-xl font-black text-xs"
+          class="w-1/2 sm:w-auto text-center justify-center px-4 py-3 sm:py-2.5 rounded-xl font-black text-xs transition-colors"
         >
           BATAL
         </button>
@@ -512,18 +516,17 @@
               ? 'from-emerald-600 to-teal-600'
               : 'from-emerald-500 to-teal-500'
           "
-          class="bg-gradient-to-r px-5 py-2.5 rounded-xl text-white font-black text-xs flex items-center gap-2 shadow-md"
+          class="bg-gradient-to-r w-1/2 sm:w-auto justify-center px-4 py-3 sm:py-2.5 rounded-xl text-white font-black text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-transform"
         >
           <Icon icon="solar:check-square-bold-duotone" class="w-4 h-4" /> SIMPAN
-          LEMBARAN
         </button>
       </div>
     </div>
 
-    <!-- BARU: MODAL DIALOG RESET PIN VIA PASSWORD ACCOUNT -->
+    <!-- MODAL DIALOG RESET PIN (Paling Sempurna di Mobile & Desktop) -->
     <div
       v-if="showResetModal"
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
+      class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn"
     >
       <div
         :class="
@@ -531,45 +534,42 @@
             ? 'bg-slate-900 border-slate-800 text-white'
             : 'bg-white border-amber-200 text-slate-800'
         "
-        class="w-full max-w-md p-6 rounded-3xl border shadow-2xl space-y-4"
+        class="w-full sm:max-w-md p-5 sm:p-6 rounded-t-3xl sm:rounded-3xl border-t sm:border shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
       >
         <div
           class="flex items-center gap-3 border-b pb-3"
           :class="darkMode ? 'border-slate-800' : 'border-amber-100'"
         >
           <div class="p-2 rounded-xl bg-orange-500/10 text-orange-500">
-            <Icon icon="solar:shield-warning-bold-duotone" class="w-6 h-6" />
+            <Icon icon="solar:shield-warning-bold-duotone" class="w-5 h-5" />
           </div>
           <div>
-            <h3 class="font-black text-base">Verifikasi Pemilik Akun</h3>
-            <p class="text-[11px] opacity-60">
-              Masukkan password login untuk menyetel ulang PIN lembaran ini.
+            <h3 class="font-black text-sm md:text-base">Verifikasi Akun</h3>
+            <p class="text-[10px] md:text-[11px] opacity-60">
+              Gunakan password akun untuk setel ulang PIN.
             </p>
           </div>
         </div>
 
-        <div class="space-y-3.5 text-xs">
-          <!-- Email Field (Read Only) -->
+        <div class="space-y-3 text-xs">
           <div class="space-y-1">
             <label class="font-bold opacity-70">Email Terdaftar</label>
             <input
               :value="currentUser?.email"
               type="text"
               disabled
-              class="w-full px-3 py-2 rounded-xl border bg-slate-100 dark:bg-slate-950 opacity-60 cursor-not-allowed font-medium"
+              class="w-full px-3 py-2 rounded-xl border bg-slate-100 dark:bg-slate-950 opacity-60 cursor-not-allowed font-medium text-xs"
             />
           </div>
-          <!-- Password Field -->
           <div class="space-y-1">
             <label class="font-bold opacity-70">Password Akun Login</label>
             <input
               v-model="resetPassword"
               type="password"
-              placeholder="Masukkan password akun kamu..."
-              class="w-full px-3 py-2 rounded-xl border bg-transparent outline-none focus:ring-1 focus:ring-orange-400 dark:focus:ring-indigo-500"
+              placeholder="Masukkan password akun..."
+              class="w-full px-3 py-2.5 sm:py-2 rounded-xl border bg-transparent text-sm sm:text-xs outline-none focus:ring-1 focus:ring-orange-400 dark:focus:ring-indigo-500"
             />
           </div>
-          <!-- New PIN Field -->
           <div class="space-y-1">
             <label class="font-bold opacity-70">Buat 6-Digit PIN Baru</label>
             <input
@@ -577,7 +577,7 @@
               type="text"
               maxlength="6"
               placeholder="Contoh: 123456"
-              class="w-full px-3 py-2 rounded-xl border bg-transparent outline-none focus:ring-1 focus:ring-orange-400 dark:focus:ring-indigo-500 tracking-wider"
+              class="w-full px-3 py-2.5 sm:py-2 rounded-xl border bg-transparent text-sm sm:text-xs outline-none focus:ring-1 focus:ring-orange-400 dark:focus:ring-indigo-500 tracking-wider"
             />
           </div>
 
@@ -590,26 +590,25 @@
           </p>
         </div>
 
-        <!-- Tombol Aksi Modal -->
-        <div class="flex justify-end gap-2.5 pt-2 text-xs">
+        <div class="flex flex-row justify-end gap-2 pt-2 text-xs">
           <button
             @click="closeResetModal"
             :disabled="isResetLoading"
-            class="px-4 py-2 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40"
+            class="w-1/2 sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
           >
             BATAL
           </button>
           <button
             @click="handleResetPinWithPassword"
             :disabled="isResetLoading"
-            class="px-4 py-2 rounded-xl font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 flex items-center gap-1.5 disabled:opacity-40 shadow-sm"
+            class="w-1/2 sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center gap-1.5 shadow-sm"
           >
             <Icon
               v-if="isResetLoading"
               icon="solar:spinner-bold"
               class="w-3.5 h-3.5 animate-spin"
             />
-            <span>{{ isResetLoading ? "Memproses..." : "UPDATE PIN" }}</span>
+            <span>UPDATE</span>
           </button>
         </div>
       </div>
@@ -653,7 +652,7 @@ const isCurrentPageUnlocked = ref(false);
 const inputPin = ref("");
 const pinError = ref(false);
 
-// BARU: State Pengaturan Modal Reset Lupa PIN via Password
+// State Pengaturan Modal Reset Lupa PIN via Password
 const showResetModal = ref(false);
 const resetPassword = ref("");
 const resetNewPin = ref("");
@@ -718,7 +717,6 @@ const currentBook = computed(
   () => notebooks.value[activeBookIndex.value] || { title: "", pages: [] },
 );
 
-// Logika memfilter halaman berdasarkan kotak pencarian secara real-time
 const filteredPages = computed(() => {
   if (!currentBook.value || !currentBook.value.pages) return [];
   return currentBook.value.pages.filter((page: any) => {
@@ -726,12 +724,11 @@ const filteredPages = computed(() => {
   });
 });
 
-// Membaca halaman aktif dari daftar halaman yang sudah difilter
 const currentPage = computed(
   () => filteredPages.value[currentPageIndex.value] || {},
 );
 
-// FIX ANTI-GABAL: Auto-lock instan menyala kembali saat berpindah koordinat halaman/buku
+// Auto-lock instan menyala kembali saat berpindah koordinat halaman/buku
 watch(
   [currentPageIndex, activeBookIndex],
   () => {
@@ -742,12 +739,10 @@ watch(
   { immediate: true },
 );
 
-// Watcher otomatis mereset index jika user mengetik sesuatu di pencarian
 watch(searchQuery, () => {
   currentPageIndex.value = 0;
 });
 
-// Logika memverifikasi input PIN otomatis saat user mengetik 6 angka
 const checkPinInput = () => {
   if (inputPin.value.length === 6) {
     if (inputPin.value === currentPage.value.pin) {
@@ -755,12 +750,11 @@ const checkPinInput = () => {
       pinError.value = false;
     } else {
       pinError.value = true;
-      inputPin.value = ""; // Bersihkan otomatis jika salah ketik
+      inputPin.value = "";
     }
   }
 };
 
-// Logika mengaktifkan atau mematikan proteksi gembok PIN secara umum
 const togglePageLock = async () => {
   if (currentPage.value.isLocked) {
     if (isCurrentPageUnlocked.value) {
@@ -815,7 +809,6 @@ const togglePageLock = async () => {
   }
 };
 
-// BARU: Eksekusi Reset / Update PIN dengan verifikasi Firebase Auth Password
 const handleResetPinWithPassword = async () => {
   resetErrorMsg.value = "";
 
@@ -834,45 +827,33 @@ const handleResetPinWithPassword = async () => {
 
   isResetLoading.value = true;
   try {
-    // 1. Buat kredensial login ulang dari Email & Password user yang aktif
     const credential = EmailAuthProvider.credential(
       currentUser.value.email,
       resetPassword.value,
     );
-
-    // 2. Lakukan Re-authentication ke Firebase Auth Server
     await reauthenticateWithCredential($fbAuth.currentUser!, credential);
 
-    // 3. Jika lolos pasword benar, ganti PIN di state halaman aktif
     currentPage.value.pin = resetNewPin.value;
-    currentPage.value.isLocked = true; // Pastikan statusnya tetap terkunci aman
-    isCurrentPageUnlocked.value = true; // Langsung tampilkan teks halaman setelah sukses reset
+    currentPage.value.isLocked = true;
+    isCurrentPageUnlocked.value = true;
 
-    // 4. Cadangkan perubahan PIN baru ke Firestore Cloud
     await saveToFirebase();
-
-    alert(
-      "🔄 PIN Berhasil Diperbarui! Lembaran rahasia kamu kini aman dengan kombinasi PIN baru.",
-    );
+    alert("🔄 PIN Berhasil Diperbarui!");
     closeResetModal();
   } catch (error: any) {
-    console.error(error);
     if (
       error.code === "auth/wrong-password" ||
       error.code === "auth/invalid-credential"
     ) {
-      resetErrorMsg.value =
-        "Password akun yang kamu masukkan salah! Akses ditolak.";
+      resetErrorMsg.value = "Password salah! Akses ditolak.";
     } else {
-      resetErrorMsg.value =
-        "Gagal memverifikasi akun. Periksa koneksi internetmu.";
+      resetErrorMsg.value = "Gagal memverifikasi akun.";
     }
   } finally {
     isResetLoading.value = false;
   }
 };
 
-// BARU: Fungsi menutup modal reset PIN dan mengosongkan form
 const closeResetModal = () => {
   showResetModal.value = false;
   resetPassword.value = "";
@@ -880,7 +861,6 @@ const closeResetModal = () => {
   resetErrorMsg.value = "";
 };
 
-// Aksi Rak Jurnal
 const createNewBook = async () => {
   if (!newBookTitle.value.trim()) return;
   notebooks.value.push({
@@ -912,7 +892,6 @@ const deleteBook = async (i: number) => {
   await saveToFirebase();
 };
 
-// Aksi Menulis
 const startWriting = () => {
   newText.value = "";
   imagePreview.value = null;
@@ -954,7 +933,6 @@ const handleImageUpload = (e: any) => {
   reader.readAsDataURL(file);
 };
 
-// Navigasi Lembaran Buku
 const nextPage = () => {
   if (currentPageIndex.value < filteredPages.value.length - 1)
     currentPageIndex.value++;

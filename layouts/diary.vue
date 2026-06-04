@@ -3,7 +3,7 @@
     :class="[
       darkMode ? 'dark bg-slate-950 text-white' : 'bg-amber-50 text-slate-900',
     ]"
-    class="min-h-screen flex transition-all duration-500 font-sans relative overflow-hidden"
+    class="min-h-screen flex flex-col md:flex-row transition-all duration-500 font-sans relative overflow-hidden"
   >
     <!-- Efek Latar Belakang Gradasi -->
     <div
@@ -21,57 +21,130 @@
       :class="darkMode ? 'bg-indigo-500' : 'bg-orange-300'"
     />
 
-    <!-- Komponen Kiri: Sidebar -->
-    <aside
+    <!-- HEADER TOP BAR (Khusus Mobile: Muncul Hanya di Layar HP) -->
+    <header
       :class="
         darkMode
-          ? 'bg-slate-950/70 border-slate-800 text-slate-200'
-          : 'bg-white/80 border-amber-200 text-slate-800 shadow-xl shadow-amber-900/5'
+          ? 'bg-slate-950/80 border-slate-900 text-white'
+          : 'bg-white/90 border-amber-200 text-slate-900 shadow-sm'
       "
-      class="relative w-80 border-r backdrop-blur-xl p-6 flex flex-col justify-between shadow-2xl z-10 transition-colors duration-500"
+      class="md:hidden sticky top-0 w-full z-40 flex items-center justify-between p-4 border-b backdrop-blur-md"
+    >
+      <div class="flex items-center gap-2.5">
+        <div
+          :class="
+            darkMode
+              ? 'from-indigo-500 to-pink-500'
+              : 'from-orange-500 to-rose-500'
+          "
+          class="w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center shadow"
+        >
+          <Icon
+            icon="solar:book-bookmark-bold-duotone"
+            class="w-5 h-5 text-white"
+          />
+        </div>
+        <span class="font-black text-sm tracking-wide">My Diary</span>
+      </div>
+
+      <!-- Tombol Trigger Buka Sidebar di HP -->
+      <button
+        @click="isSidebarOpen = !isSidebarOpen"
+        :class="
+          darkMode
+            ? 'bg-slate-900 border-slate-800 text-indigo-400'
+            : 'bg-amber-100 border-amber-200 text-amber-900'
+        "
+        class="w-10 h-10 border rounded-xl flex items-center justify-center active:scale-95 transition-transform shadow-sm"
+      >
+        <Icon
+          :icon="
+            isSidebarOpen
+              ? 'solar:close-square-bold-duotone'
+              : 'solar:hamburger-menu-bold-duotone'
+          "
+          class="w-5 h-5"
+        />
+      </button>
+    </header>
+
+    <!-- BACKDROP OVERLAY (Gelap di HP saat Sidebar Aktif Terbuka) -->
+    <div
+      v-if="isSidebarOpen"
+      @click="isSidebarOpen = false"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
+    />
+
+    <!-- Komponen Kiri: Sidebar -->
+    <aside
+      :class="[
+        darkMode
+          ? 'bg-slate-950/95 md:bg-slate-950/70 border-slate-800 text-slate-200'
+          : 'bg-white md:bg-white/80 border-amber-200 text-slate-800 shadow-xl shadow-amber-900/5',
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+      ]"
+      class="fixed inset-y-0 left-0 w-80 md:sticky md:h-screen border-r backdrop-blur-xl p-6 flex flex-col justify-between shadow-2xl md:shadow-none z-50 md:z-10 transition-transform duration-300 ease-in-out"
     >
       <div class="space-y-5">
-        <!-- Identitas Aplikasi & Tombol Ganti Tema -->
+        <!-- Identitas Aplikasi, Ganti Tema, & TOMBOL TUTUP MENU -->
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3 min-w-0">
             <div
               :class="
                 darkMode
                   ? 'from-indigo-500 to-pink-500'
                   : 'from-orange-500 to-rose-500'
               "
-              class="w-14 h-14 rounded-3xl bg-gradient-to-br flex items-center justify-center shadow-lg shrink-0"
+              class="w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-md shrink-0"
             >
               <Icon
                 icon="solar:book-bookmark-bold-duotone"
-                class="w-8 h-8 text-white"
+                class="w-6 h-6 text-white"
               />
             </div>
-            <div>
+            <div class="truncate">
               <h2
-                class="font-bold text-lg"
+                class="font-bold text-base truncate"
                 :class="darkMode ? 'text-white' : 'text-slate-900'"
               >
                 My Diary
               </h2>
-              <p class="text-xs opacity-60">Personal Journal</p>
+              <p class="text-[11px] opacity-60">Personal Journal</p>
             </div>
           </div>
 
-          <button
-            @click="toggleTheme"
-            :class="
-              darkMode
-                ? 'bg-slate-900 border-slate-800 text-yellow-400 hover:bg-slate-800'
-                : 'bg-amber-100 border-amber-300 text-amber-900 hover:bg-amber-200'
-            "
-            class="w-11 h-11 rounded-xl border flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-sm"
-          >
-            <Icon
-              :icon="darkMode ? 'solar:moon-stars-bold' : 'solar:sun-bold'"
-              class="w-5 h-5"
-            />
-          </button>
+          <!-- Aksi Kanan Atas Sidebar (Tema & Tutup) -->
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button
+              @click="toggleTheme"
+              :class="
+                darkMode
+                  ? 'bg-slate-900 border-slate-800 text-yellow-400'
+                  : 'bg-amber-100 border-amber-300 text-amber-900'
+              "
+              class="w-10 h-10 rounded-xl border flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-sm"
+              title="Ganti Tema"
+            >
+              <Icon
+                :icon="darkMode ? 'solar:moon-stars-bold' : 'solar:sun-bold'"
+                class="w-4 h-4"
+              />
+            </button>
+
+            <!-- BARU: Tombol Tutup Menu Eksklusif Mobile (X) -->
+            <button
+              @click="isSidebarOpen = false"
+              :class="
+                darkMode
+                  ? 'bg-rose-950/40 border-rose-900/50 text-rose-400'
+                  : 'bg-rose-50 border-rose-200 text-rose-600'
+              "
+              class="md:hidden w-10 h-10 rounded-xl border flex items-center justify-center font-black active:scale-95 transition-all shadow-sm"
+              title="Tutup Menu"
+            >
+              <Icon icon="solar:close-square-bold" class="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         <!-- Kutipan Bijak (Quotes) -->
@@ -92,18 +165,28 @@
           </div>
         </div>
 
-        <!-- DI SINI: Tombol Navigasi Menu Analisis & Ekspor Statistik -->
-        <NuxtLink 
+        <!-- Tombol Navigasi Menu Analisis & Ekspor Statistik -->
+        <NuxtLink
           to="/stats"
-          :class="darkMode ? 'bg-slate-900/50 border-slate-800 text-slate-300 hover:bg-slate-800' : 'bg-amber-100/40 border-amber-200 text-slate-700 hover:bg-amber-100'"
+          @click="isSidebarOpen = false"
+          :class="
+            darkMode
+              ? 'bg-slate-900/50 border-slate-800 text-slate-300 hover:bg-slate-800'
+              : 'bg-amber-100/40 border-amber-200 text-slate-700 hover:bg-amber-100'
+          "
           class="w-full p-3 rounded-xl border flex items-center gap-2.5 text-xs font-black uppercase tracking-wider transition-all shadow-sm"
         >
-          <Icon icon="solar:graph-up-bold-duotone" class="w-4 h-4 text-orange-500" />
+          <Icon
+            icon="solar:graph-up-bold-duotone"
+            class="w-4 h-4 text-orange-500"
+          />
           <span>Lihat Analisis & Ekspor</span>
         </NuxtLink>
 
         <!-- Tempat Menyisipkan Konten Tambahan Sidebar dari Index Halaman -->
-        <slot name="sidebar-content" />
+        <div @click="isSidebarOpen = false">
+          <slot name="sidebar-content" />
+        </div>
       </div>
 
       <div class="space-y-4">
@@ -195,7 +278,7 @@
     </aside>
 
     <!-- Komponen Kanan: Area Isi Kertas Jurnal -->
-    <main class="relative flex-1 p-6 md:p-10 overflow-y-auto z-10">
+    <main class="relative flex-1 p-3 sm:p-6 md:p-10 overflow-y-auto z-10">
       <div class="max-w-4xl mx-auto">
         <div
           :class="
@@ -203,14 +286,14 @@
               ? 'bg-slate-900 border-slate-800 text-white shadow-[0_30px_80px_rgba(0,0,0,0.5)]'
               : 'bg-white border-amber-200 text-black shadow-[0_30px_60px_rgba(217,119,6,0.06)]'
           "
-          class="rounded-[32px] border p-8 md:p-12 relative overflow-hidden transition-all duration-500 min-h-[580px]"
+          class="rounded-3xl md:rounded-[32px] border p-4 sm:p-8 md:p-12 relative overflow-hidden transition-all duration-500 min-h-[calc(100vh-120px)] md:min-h-[580px]"
         >
-          <!-- Garis Margin Merah Khas Buku Diary Fisik -->
+          <!-- Garis Margin Merah Buku Diary -->
           <div
-            class="absolute left-16 top-0 bottom-0 w-[1.5px] bg-red-400/30 z-20 pointer-events-none"
+            class="hidden md:block absolute left-16 top-0 bottom-0 w-[1.5px] bg-red-400/30 z-20 pointer-events-none"
           />
 
-          <!-- Pola Garis-Garis Buku Bergaris Tradisional -->
+          <!-- Pola Garis-Garis Buku Tradisional -->
           <div
             class="absolute inset-0 pointer-events-none z-0"
             style="
@@ -221,7 +304,7 @@
                 rgba(148, 163, 184, 0.07) 35px
               );
               background-size: 100% 35px;
-              margin-top: 50px;
+              margin-top: 30px;
             "
           />
 
@@ -245,6 +328,7 @@ const { $fbAuth } = useNuxtApp();
 const router = useRouter();
 
 const currentUser = ref<any>(null);
+const isSidebarOpen = ref(false);
 
 const quotes = [
   "Writing is the painting of the voice.",
@@ -258,7 +342,6 @@ const quote = ref("");
 onMounted(() => {
   quote.value = quotes[Math.floor(Math.random() * quotes.length)];
 
-  // Pantau sesi user di tingkat layout agar profil sinkron sepanjang waktu
   onAuthStateChanged($fbAuth, (user) => {
     if (user) {
       currentUser.value = user;
@@ -266,16 +349,12 @@ onMounted(() => {
   });
 });
 
-// Mengakses data notebooks global tersinkronisasi dari halaman utama
 const notebooks = useState<any[]>("global-notebooks", () => []);
-
-// Target kata harian standar
 const wordGoal = ref(500);
 
-// Hitung total kata yang ditulis khusus hari ini secara real-time
 const todayWordCount = computed(() => {
   let totalWords = 0;
-  const todayStr = new Date().toDateString(); 
+  const todayStr = new Date().toDateString();
 
   notebooks.value.forEach((book: any) => {
     if (book.pages && Array.isArray(book.pages)) {
@@ -285,24 +364,21 @@ const todayWordCount = computed(() => {
           : todayStr;
 
         if (pageDate === todayStr && page.text) {
-          // Membersihkan tumpukan spasi kosong dan menghitung jumlah kata yang valid
           const words = page.text.trim().split(/\s+/);
           totalWords += words.filter((w: string) => w.length > 0).length;
         }
       });
-    } 
+    }
   });
 
   return totalWords;
 });
 
-// Mengubah jumlah kalkulasi kata harian ke persentase bar visual
 const writingProgress = computed(() => {
   if (wordGoal.value === 0) return 0;
   return (todayWordCount.value / wordGoal.value) * 100;
 });
 
-// Aksi keluar akun pengguna
 const handleLogout = async () => {
   await signOut($fbAuth);
   router.push("/login");
