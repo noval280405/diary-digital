@@ -192,7 +192,7 @@
         </div>
       </div>
 
-      <!-- KONDISI PERTAMA: JURNAL DIKUNCI TOTAL (RESEP/TAKTIK RAHASIA) -->
+      <!-- KONDISI PERTAMA: JURNAL DIKUNCI TOTAL -->
       <div
         v-if="currentBook.isLocked && !isJournalUnlocked && !isWritingMode"
         class="flex flex-col items-center justify-center py-16 text-center space-y-4 px-4 flex-1 animate-fadeIn"
@@ -232,6 +232,13 @@
           <p v-if="journalPinError" class="text-xs text-red-500 font-bold mt-1">
             ❌ PIN Salah! Akses rahasia ditolak.
           </p>
+
+          <button
+            @click="showJournalResetModal = true"
+            class="text-[11px] md:text-xs font-bold underline mt-4 opacity-50 hover:opacity-100 transition-opacity text-slate-500 dark:text-slate-400"
+          >
+            Lupa PIN Jurnal? Reset dengan Password
+          </button>
         </div>
       </div>
 
@@ -241,11 +248,10 @@
         <div>
           <!-- Mode Tampilan Normal Membaca Lembaran Cerita -->
           <div v-if="!isWritingMode">
-            <!-- Header Paginasi & Proteksi PIN Lembar Halaman (6 Digit Bawaan Kamu) -->
+            <!-- Header Paginasi & Proteksi PIN Lembar Halaman -->
             <div
               class="flex flex-row items-center justify-between gap-2.5 w-full mb-6"
             >
-              <!-- Tombol Tambah PIN Halaman Tunggal -->
               <!-- Tombol Status & Kunci PIN Lembaran Halaman -->
               <button
                 v-if="!isWritingMode && currentPage.text"
@@ -257,7 +263,6 @@
                     : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
                 "
               >
-                <!-- Warna Icon di-lock menggunakan kode warna soft pastel pastel yang cerah dan kontras -->
                 <Icon
                   :icon="
                     currentPage.isLocked
@@ -329,7 +334,7 @@
                 :key="currentPageIndex"
                 class="space-y-5"
               >
-                <!-- PROTEKSI HALAMAN TUNGGAL (6 Digit PIN Milikmu) -->
+                <!-- PROTEKSI HALAMAN TUNGGAL -->
                 <div
                   v-if="currentPage.isLocked && !isCurrentPageUnlocked"
                   class="flex flex-col items-center justify-center py-10 md:py-16 text-center space-y-4 animate-fadeIn px-2"
@@ -628,96 +633,194 @@
       </div>
     </div>
 
-    <!-- MODAL DIALOG RESET PIN (Proteksi Akun Tingkat Lanjut) -->
-    <div
-      v-if="showResetModal"
-      class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn"
-    >
+    <!-- CLIENT ONLY WRAPPER UNTUK MODAL AGAR AMAN DARI HYDRATION MISMATCH -->
+    <ClientOnly>
+      <!-- MODAL DIALOG 1: RESET PIN HALAMAN (Bawaan) -->
       <div
-        :class="
-          darkMode
-            ? 'bg-slate-900 border-slate-800 text-white'
-            : 'bg-white border-amber-200 text-slate-800'
-        "
-        class="w-full sm:max-w-md p-5 sm:p-6 rounded-t-3xl sm:rounded-3xl border-t sm:border shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+        v-if="showResetModal"
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn"
       >
         <div
-          class="flex items-center gap-3 border-b pb-3"
-          :class="darkMode ? 'border-slate-800' : 'border-amber-100'"
+          :class="
+            darkMode
+              ? 'bg-slate-900 border-slate-800 text-white'
+              : 'bg-white border-amber-200 text-slate-800'
+          "
+          class="w-full sm:max-w-md p-5 sm:p-6 rounded-t-3xl sm:rounded-3xl border-t sm:border shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
         >
-          <div class="p-2 rounded-xl bg-orange-500/10 text-orange-500">
-            <Icon icon="solar:shield-warning-bold-duotone" class="w-5 h-5" />
+          <div
+            class="flex items-center gap-3 border-b pb-3"
+            :class="darkMode ? 'border-slate-800' : 'border-amber-100'"
+          >
+            <div class="p-2 rounded-xl bg-orange-500/10 text-orange-500">
+              <Icon icon="solar:shield-warning-bold-duotone" class="w-5 h-5" />
+            </div>
+            <div>
+              <h3 class="font-black text-sm md:text-base">Verifikasi Akun</h3>
+              <p class="text-[10px] md:text-[11px] opacity-60">
+                Gunakan password akun untuk setel ulang PIN Halaman.
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 class="font-black text-sm md:text-base">Verifikasi Akun</h3>
-            <p class="text-[10px] md:text-[11px] opacity-60">
-              Gunakan password akun untuk setel ulang PIN.
+
+          <div class="space-y-3 text-xs">
+            <div class="space-y-1">
+              <label class="font-bold opacity-70">Email Terdaftar</label>
+              <input
+                :value="currentUser?.email"
+                type="text"
+                disabled
+                class="w-full px-3 py-2 rounded-xl border bg-slate-100 dark:bg-slate-950 opacity-60 cursor-not-allowed font-medium text-xs"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="font-bold opacity-70">Password Akun Login</label>
+              <input
+                v-model="resetPassword"
+                type="password"
+                placeholder="Masukkan password akun..."
+                class="w-full px-3 py-2.5 sm:py-2 rounded-xl border bg-transparent text-sm sm:text-xs outline-none focus:ring-1 focus:ring-orange-400 dark:focus:ring-indigo-500"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="font-bold opacity-70">Buat 6-Digit PIN Baru</label>
+              <input
+                v-model="resetNewPin"
+                type="text"
+                maxlength="6"
+                placeholder="Contoh: 123456"
+                class="w-full px-3 py-2.5 sm:py-2 rounded-xl border bg-transparent text-sm sm:text-xs outline-none focus:ring-1 focus:ring-orange-400 dark:focus:ring-indigo-500 tracking-wider"
+              />
+            </div>
+
+            <p
+              v-if="resetErrorMsg"
+              class="text-xs text-red-500 font-bold flex items-center gap-1"
+            >
+              <Icon icon="solar:danger-bold" class="w-3.5 h-3.5" />
+              {{ resetErrorMsg }}
             </p>
           </div>
-        </div>
 
-        <div class="space-y-3 text-xs">
-          <div class="space-y-1">
-            <label class="font-bold opacity-70">Email Terdaftar</label>
-            <input
-              :value="currentUser?.email"
-              type="text"
-              disabled
-              class="w-full px-3 py-2 rounded-xl border bg-slate-100 dark:bg-slate-950 opacity-60 cursor-not-allowed font-medium text-xs"
-            />
+          <div class="flex flex-row justify-end gap-2 pt-2 text-xs">
+            <button
+              @click="closeResetModal"
+              :disabled="isResetLoading"
+              class="w-1/2 sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+            >
+              BATAL
+            </button>
+            <button
+              @click="handleResetPinWithPassword"
+              :disabled="isResetLoading"
+              class="w-1/2 sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center gap-1.5 shadow-sm"
+            >
+              <Icon
+                v-if="isResetLoading"
+                icon="solar:spinner-bold"
+                class="w-3.5 h-3.5 animate-spin"
+              />
+              <span>UPDATE</span>
+            </button>
           </div>
-          <div class="space-y-1">
-            <label class="font-bold opacity-70">Password Akun Login</label>
-            <input
-              v-model="resetPassword"
-              type="password"
-              placeholder="Masukkan password akun..."
-              class="w-full px-3 py-2.5 sm:py-2 rounded-xl border bg-transparent text-sm sm:text-xs outline-none focus:ring-1 focus:ring-orange-400 dark:focus:ring-indigo-500"
-            />
-          </div>
-          <div class="space-y-1">
-            <label class="font-bold opacity-70">Buat 6-Digit PIN Baru</label>
-            <input
-              v-model="resetNewPin"
-              type="text"
-              maxlength="6"
-              placeholder="Contoh: 123456"
-              class="w-full px-3 py-2.5 sm:py-2 rounded-xl border bg-transparent text-sm sm:text-xs outline-none focus:ring-1 focus:ring-orange-400 dark:focus:ring-indigo-500 tracking-wider"
-            />
-          </div>
-
-          <p
-            v-if="resetErrorMsg"
-            class="text-xs text-red-500 font-bold flex items-center gap-1"
-          >
-            <Icon icon="solar:danger-bold" class="w-3.5 h-3.5" />
-            {{ resetErrorMsg }}
-          </p>
-        </div>
-
-        <div class="flex flex-row justify-end gap-2 pt-2 text-xs">
-          <button
-            @click="closeResetModal"
-            :disabled="isResetLoading"
-            class="w-1/2 sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-          >
-            BATAL
-          </button>
-          <button
-            @click="handleResetPinWithPassword"
-            :disabled="isResetLoading"
-            class="w-1/2 sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center gap-1.5 shadow-sm"
-          >
-            <Icon
-              v-if="isResetLoading"
-              icon="solar:spinner-bold"
-              class="w-3.5 h-3.5 animate-spin"
-            />
-            <span>UPDATE</span>
-          </button>
         </div>
       </div>
-    </div>
+
+      <!-- MODAL DIALOG 2: RESET PIN RAK JURNAL GLOBAL -->
+      <div
+        v-if="showJournalResetModal"
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn"
+      >
+        <div
+          :class="
+            darkMode
+              ? 'bg-slate-900 border-slate-800 text-white'
+              : 'bg-white border-amber-200 text-slate-800'
+          "
+          class="w-full sm:max-w-md p-5 sm:p-6 rounded-t-3xl sm:rounded-3xl border-t sm:border shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+        >
+          <div
+            class="flex items-center gap-3 border-b pb-3"
+            :class="darkMode ? 'border-slate-800' : 'border-amber-100'"
+          >
+            <div class="p-2 rounded-xl bg-red-500/10 text-red-500">
+              <Icon icon="solar:shield-keyhole-bold-duotone" class="w-5 h-5" />
+            </div>
+            <div>
+              <h3 class="font-black text-sm md:text-base">
+                Reset Gembok Jurnal
+              </h3>
+              <p class="text-[10px] md:text-[11px] opacity-60">
+                Otorisasi password untuk mengatur ulang PIN rak gembok jurnal.
+              </p>
+            </div>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div class="space-y-1">
+              <label class="font-bold opacity-70">Email Terdaftar</label>
+              <input
+                :value="currentUser?.email"
+                type="text"
+                disabled
+                class="w-full px-3 py-2 rounded-xl border bg-slate-100 dark:bg-slate-950 opacity-60 cursor-not-allowed font-medium text-xs"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="font-bold opacity-70">Password Akun Login</label>
+              <input
+                v-model="resetJournalPassword"
+                type="password"
+                placeholder="Masukkan password akun..."
+                class="w-full px-3 py-2.5 sm:py-2 rounded-xl border bg-transparent text-sm sm:text-xs outline-none focus:ring-1 focus:ring-red-400 dark:focus:ring-indigo-500"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="font-bold opacity-70"
+                >Buat 6-Digit PIN Jurnal Baru</label
+              >
+              <input
+                v-model="resetNewJournalPin"
+                type="text"
+                maxlength="6"
+                placeholder="Contoh: 654321"
+                class="w-full px-3 py-2.5 sm:py-2 rounded-xl border bg-transparent text-sm sm:text-xs outline-none focus:ring-1 focus:ring-red-400 dark:focus:ring-indigo-500 tracking-wider"
+              />
+            </div>
+
+            <p
+              v-if="resetJournalErrorMsg"
+              class="text-xs text-red-500 font-bold flex items-center gap-1"
+            >
+              <Icon icon="solar:danger-bold" class="w-3.5 h-3.5" />
+              {{ resetJournalErrorMsg }}
+            </p>
+          </div>
+
+          <div class="flex flex-row justify-end gap-2 pt-2 text-xs">
+            <button
+              @click="closeJournalResetModal"
+              :disabled="isJournalResetLoading"
+              class="w-1/2 sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+            >
+              BATAL
+            </button>
+            <button
+              @click="handleResetJournalPinWithPassword"
+              :disabled="isJournalResetLoading"
+              class="w-1/2 sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl font-black text-white bg-gradient-to-r from-red-500 to-rose-500 flex items-center justify-center gap-1.5 shadow-sm"
+            >
+              <Icon
+                v-if="isJournalResetLoading"
+                icon="solar:spinner-bold"
+                class="w-3.5 h-3.5 animate-spin"
+              />
+              <span>RE-SET PIN</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </ClientOnly>
   </NuxtLayout>
 </template>
 
@@ -893,6 +996,96 @@ const toggleJournalLock = async () => {
     );
     await saveToFirebase();
   }
+};
+
+// =========================================================================
+// 1. STATE REAKTIF UNTUK RESET PIN GEMBOK JURNAL (Letakkan di bagian atas bersama ref lainnya)
+// =========================================================================
+const showJournalResetModal = ref(false);
+const resetJournalPassword = ref("");
+const resetNewJournalPin = ref("");
+const isJournalResetLoading = ref(false);
+const resetJournalErrorMsg = ref("");
+
+// =========================================================================
+// 2. LOGIKA UTAMA RESET PIN GEMBOK JURNAL (Letakkan di atas atau di bawah fungsi toggleJournalLock)
+// =========================================================================
+const handleResetJournalPinWithPassword = async () => {
+  // Reset pesan error setiap kali tombol ditekan
+  resetJournalErrorMsg.value = "";
+
+  // Validasi input awal lokal
+  if (!resetJournalPassword.value) {
+    resetJournalErrorMsg.value = "Password akun login wajib diisi!";
+    return;
+  }
+  if (
+    !resetNewJournalPin.value ||
+    resetNewJournalPin.value.length !== 6 ||
+    isNaN(Number(resetNewJournalPin.value))
+  ) {
+    resetJournalErrorMsg.value = "PIN baru wajib berupa 6 digit angka baku!";
+    return;
+  }
+
+  // Aktifkan status loading pada tombol modal
+  isJournalResetLoading.value = true;
+
+  try {
+    // 1. Buat kredensial autentikasi menggunakan email user aktif dan password yang diinput
+    const credential = EmailAuthProvider.credential(
+      currentUser.value.email,
+      resetJournalPassword.value,
+    );
+
+    // 2. Lakukan re-autentikasi ke Firebase Auth untuk memastikan ini benar-benar pemilik akun
+    await reauthenticateWithCredential($fbAuth.currentUser!, credential);
+
+    // 3. Jika lolos verifikasi password, perbarui PIN pada rak jurnal yang sedang aktif saat ini
+    currentBook.value.journalPin = resetNewJournalPin.value;
+    currentBook.value.isLocked = true;
+
+    // 4. Langsung berikan izin akses masuk agar gembok merah terbuka otomatis
+    isJournalUnlocked.value = true;
+
+    // 5. Cadangkan perubahan struktur data baru ke Cloud Firestore via fungsi otomatis kamu
+    await saveToFirebase();
+
+    // Beri umpan balik sukses ke pengguna
+    alert(
+      `🎉 Sukses! PIN Gembok untuk jurnal "${currentBook.value.title}" berhasil di-reset.`,
+    );
+
+    // Tutup jendela modal dan bersihkan form ketikan
+    closeJournalResetModal();
+  } catch (error: any) {
+    console.error("Gagal melakukan reset PIN Jurnal:", error);
+
+    // Tangani pesan error spesifik dari Firebase
+    if (
+      error.code === "auth/wrong-password" ||
+      error.code === "auth/invalid-credential"
+    ) {
+      resetJournalErrorMsg.value = "Password salah! Akses verifikasi ditolak.";
+    } else if (error.code === "auth/too-many-requests") {
+      resetJournalErrorMsg.value =
+        "Terlalu banyak percobaan salah. Silakan coba beberapa saat lagi.";
+    } else {
+      resetJournalErrorMsg.value =
+        "Terjadi kesalahan sistem saat memverifikasi akun.";
+    }
+  } finally {
+    // Matikan efek loading tombol
+    isJournalResetLoading.value = false;
+  }
+};
+
+// Fungsi pembantu untuk menutup modal dan membersihkan sisa teks inputan
+const closeJournalResetModal = () => {
+  showJournalResetModal.value = false;
+  resetJournalPassword.value = "";
+  resetNewJournalPin.value = "";
+  resetJournalErrorMsg.value = "";
 };
 
 const currentPage = computed(
