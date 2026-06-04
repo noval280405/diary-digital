@@ -417,9 +417,6 @@
 
                   <!-- Baris Kalimat Teks Diary Utama -->
                   <p
-                    :class="
-                      darkMode ? 'text-slate-200' : 'text-slate-800 font-medium'
-                    "
                     class="whitespace-pre-wrap text-base md:text-xl font-serif italic text-justify leading-[28px] md:leading-[35px] px-0.5"
                   >
                     "{{ currentPage.text }}"
