@@ -131,7 +131,7 @@
               />
             </button>
 
-            <!-- BARU: Tombol Tutup Menu Eksklusif Mobile (X) -->
+            <!-- Tombol Tutup Menu Mobile (X) -->
             <button
               @click="isSidebarOpen = false"
               :class="
@@ -314,6 +314,15 @@
         </div>
       </div>
     </main>
+
+    <!-- BARU: Modal Numpad PIN Pengunci Jurnal Spesifik -->
+    <ModalLockJournal
+      :is-open="lockModalState.isOpen"
+      :correct-pin="lockModalState.correctPin"
+      :dark-mode="darkMode"
+      @success="handlePinSuccess"
+      @close="closeLockModal"
+    />
   </div>
 </template>
 
@@ -329,6 +338,26 @@ const router = useRouter();
 
 const currentUser = ref<any>(null);
 const isSidebarOpen = ref(false);
+
+// State Global Shared untuk Menghubungkan Trigger antara index.vue dan layout
+const lockModalState = useState("global-lock-modal", () => ({
+  isOpen: false,
+  correctPin: "",
+  onSuccessCallback: null as (() => void) | null,
+}));
+
+const closeLockModal = () => {
+  lockModalState.value.isOpen = false;
+  lockModalState.value.correctPin = "";
+  lockModalState.value.onSuccessCallback = null;
+};
+
+const handlePinSuccess = () => {
+  if (lockModalState.value.onSuccessCallback) {
+    lockModalState.value.onSuccessCallback();
+  }
+  closeLockModal();
+};
 
 const quotes = [
   "Writing is the painting of the voice.",
