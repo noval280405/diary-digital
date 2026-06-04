@@ -79,15 +79,18 @@
       class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-40 md:hidden transition-opacity duration-300"
     />
 
-    <!-- SIDEBAR: Efek Glassmorphic Mewah & Rapi -->
+    <!-- SIDEBAR: Perbaikan Kelas Kontainer Utama -->
     <aside
       :class="[
         themeClasses[currentTheme]?.sidebar || themeClasses['cream'].sidebar,
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
       ]"
-      class="fixed inset-y-0 left-0 w-76 md:sticky md:h-screen border-r backdrop-blur-xl p-5 flex flex-col justify-between z-50 md:z-10 transition-transform duration-300 ease-in-out"
+      class="fixed inset-y-0 left-0 w-76 h-[100dvh] md:sticky md:top-0 md:h-screen border-r backdrop-blur-xl flex flex-col justify-between z-50 md:z-10 transition-transform duration-300 ease-in-out"
     >
-      <div class="space-y-6">
+      <!-- AREA KONTEN ATAS: Dipaksa overflow secara independen -->
+      <div
+        class="flex-1 overflow-y-auto min-h-0 p-5 space-y-6 custom-sidebar-scroll"
+      >
         <!-- Brand Header Area -->
         <div
           class="flex items-center justify-between pb-2 border-b border-dashed"
@@ -291,9 +294,9 @@
         </div>
       </div>
 
-      <!-- Bagian Bawah Sidebar (Target Menulis & Akun) -->
+      <!-- AREA KONTEN BAWAH: Tetap terkunci static di bawah -->
       <div
-        class="space-y-4 pt-4 border-t"
+        class="space-y-4 p-5 border-t shrink-0 bg-inherit"
         :class="themeClasses[currentTheme]?.borderDashed || 'border-slate-800'"
       >
         <!-- Progress Menulis -->
@@ -455,6 +458,7 @@
 </template>
 
 <script setup lang="ts">
+// (Semua kode script setup kamu tetap sama seperti sebelumnya, tidak ada perubahan di sini)
 import { ref, computed, onMounted } from "vue";
 import { Icon } from "@iconify/vue";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -463,11 +467,9 @@ const { $fbAuth } = useNuxtApp();
 const router = useRouter();
 
 const currentTheme = useState<string>("diary-active-theme", () => "cream");
-
 const currentUser = ref<any>(null);
 const isSidebarOpen = ref(false);
 
-// Penambahan Properti Warna Ikon & Komponen Mikro di dalam Objek Tema
 const themeClasses: Record<string, any> = {
   cream: {
     wrapper: "bg-amber-50/40 text-slate-900",
@@ -622,15 +624,13 @@ const themeClasses: Record<string, any> = {
   },
 };
 
-const currentThemeClasses = computed(() => {
-  return themeClasses[currentTheme.value] || themeClasses["cream"];
-});
-
+const currentThemeClasses = computed(
+  () => themeClasses[currentTheme.value] || themeClasses["cream"],
+);
 const setTheme = (themeName: string) => {
   currentTheme.value = themeName;
 };
 
-// Modal State & Handlers
 const lockModalState = useState("global-lock-modal", () => ({
   isOpen: false,
   correctPin: "",
@@ -661,7 +661,6 @@ const quote = ref("");
 
 onMounted(() => {
   quote.value = quotes[Math.floor(Math.random() * quotes.length)];
-
   onAuthStateChanged($fbAuth, (user) => {
     if (user) {
       currentUser.value = user;
@@ -675,14 +674,12 @@ const wordGoal = ref(500);
 const todayWordCount = computed(() => {
   let totalWords = 0;
   const todayStr = new Date().toDateString();
-
   notebooks.value.forEach((book: any) => {
     if (book.pages && Array.isArray(book.pages)) {
       book.pages.forEach((page: any) => {
         const pageDate = page.createdAt
           ? new Date(page.createdAt).toDateString()
           : todayStr;
-
         if (pageDate === todayStr && page.text) {
           const words = page.text.trim().split(/\s+/);
           totalWords += words.filter((w: string) => w.length > 0).length;
@@ -690,7 +687,6 @@ const todayWordCount = computed(() => {
       });
     }
   });
-
   return totalWords;
 });
 
@@ -704,3 +700,17 @@ const handleLogout = async () => {
   router.push("/login");
 };
 </script>
+
+<!-- TAMBAHKAN STYLE BERIKUT UNTUK FORCING SCROLLBAR PADA MOBILE BROWSER -->
+<style scoped>
+.custom-sidebar-scroll {
+  /* Memaksa engine browser mengizinkan scrolling sentuh (touch) */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Menyembunyikan track scrollbar bawaan di Firefox */
+}
+
+/* Menyembunyikan track scrollbar di Chrome, Safari, dan Edge */
+.custom-sidebar-scroll::-webkit-scrollbar {
+  display: none;
+}
+</style>

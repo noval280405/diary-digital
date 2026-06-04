@@ -2,6 +2,7 @@
   <NuxtLayout name="diary">
     <template #sidebar-content>
       <div class="space-y-6 px-1 py-2 font-sans">
+        <!-- SECTION: JURNAL BARU -->
         <div
           class="space-y-3 pt-4 border-t border-dashed transition-colors duration-500"
           :class="currentThemeClasses.border"
@@ -31,6 +32,9 @@
           </div>
         </div>
 
+        <div class="my-9 border-t border-slate-300 dark:border-slate-800"></div>
+
+        <!-- SECTION: RAK JURNAL -->
         <div class="space-y-3">
           <label
             :class="currentThemeClasses.textLabel"
@@ -43,6 +47,7 @@
             Rak Jurnal
           </label>
 
+          <!-- Fitur Pencarian -->
           <div class="relative mb-3">
             <input
               v-model="searchQuery"
@@ -58,11 +63,13 @@
             />
           </div>
 
+          <!-- LIST CONTAINER (Menggunakan displayedNotebooks) -->
           <div
             class="space-y-2.5 max-h-48 md:max-h-56 overflow-y-auto pr-1 custom-scrollbar"
           >
+            <!-- Iterasi menggunakan data yang sudah difilter/dipotong -->
             <div
-              v-for="(book, i) in filteredNotebooks"
+              v-for="(book, i) in displayedNotebooks"
               :key="book.id"
               @click="selectBook(book)"
               :class="
@@ -119,12 +126,37 @@
               </div>
             </div>
 
+            <!-- State ketika pencarian kosong -->
             <div
               v-if="filteredNotebooks.length === 0"
               class="text-center py-4 text-[11px] opacity-40 italic"
             >
               Jurnal tidak ditemukan
             </div>
+          </div>
+
+          <!-- MENU INTERAKTIF: BUKA / SEMBUNYIKAN JURNAL -->
+          <!-- Hanya muncul jika total jurnal lebih dari 5 dan user tidak sedang mencari sesuatu -->
+          <div v-if="filteredNotebooks.length > 5 && !searchQuery" class="pt-1">
+            <button
+              @click="showAllNotebooks = !showAllNotebooks"
+              :class="currentThemeClasses.textLabel"
+              class="w-full py-2 text-[10px] font-bold tracking-wider uppercase border border-dashed rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all flex items-center justify-center gap-1.5"
+            >
+              <span>
+                {{
+                  showAllNotebooks
+                    ? "Sembunyikan Jurnal"
+                    : `Lihat Semua Jurnal (${filteredNotebooks.length})`
+                }}
+              </span>
+              <span
+                class="text-[8px] inline-block transition-transform duration-300"
+                :class="{ 'rotate-180': showAllNotebooks }"
+              >
+                ▼
+              </span>
+            </button>
           </div>
         </div>
       </div>
@@ -1387,6 +1419,22 @@ const deleteBook = async (clickedBook: any) => {
     await saveToFirebase();
   }
 };
+
+// Tulis ini jika belum ada di script kamu
+const showAllNotebooks = ref(false);
+
+const displayedNotebooks = computed(() => {
+  // Jika sedang mengetik di kolom pencarian, otomatis buka semua yang cocok
+  if (searchQuery.value) {
+    return filteredNotebooks.value;
+  }
+  // Jika tombol lihat semua diklik, tampilkan seluruh isi rak
+  if (showAllNotebooks.value) {
+    return filteredNotebooks.value;
+  }
+  // Kondisi default awal: batasi hanya 5 judul jurnal
+  return filteredNotebooks.value.slice(0, 5);
+});
 </script>
 
 <style scoped>
