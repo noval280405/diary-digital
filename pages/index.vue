@@ -1,48 +1,55 @@
 <template>
   <NuxtLayout name="diary">
     <template #sidebar-content>
-      <div class="space-y-6 px-1 py-2 font-sans">
+      <div class="space-y-6 px-1 py-2 font-sans selection:bg-indigo-500/30">
         <!-- SECTION: JURNAL BARU -->
         <div
           class="space-y-3 pt-4 border-t border-dashed transition-colors duration-500"
-          :class="currentThemeClasses.border"
+          :class="currentThemeClasses.borderDashed"
         >
           <label
             :class="currentThemeClasses.textLabel"
-            class="text-[10px] uppercase tracking-[0.25em] font-black block flex items-center gap-1.5"
+            class="text-xs uppercase tracking-[0.25em] font-black block flex items-center gap-1.5 opacity-80"
           >
-            <Icon icon="solar:folder-add-bold-duotone" class="w-3.5 h-3.5" />
+            <Icon
+              icon="solar:folder-add-bold-duotone"
+              class="w-4 h-4 text-indigo-500"
+            />
             Jurnal Baru
           </label>
           <div class="flex gap-2">
             <input
               v-model="newBookTitle"
               placeholder="Nama rak jurnal..."
-              :class="currentThemeClasses.input"
-              class="flex-1 px-4 py-2.5 border rounded-2xl text-xs outline-none transition-all duration-300 placeholder:text-slate-400"
+              :class="currentThemeClasses.input || currentThemeClasses.navLink"
+              class="flex-1 px-4 py-3 border rounded-2xl text-sm outline-none transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/30"
               @keyup.enter="createNewBook"
             />
             <button
               @click="createNewBook"
               :class="currentThemeClasses.btnGradient"
-              class="hover:brightness-110 active:scale-95 transition-all px-4 rounded-2xl font-black text-white shadow-md text-base"
+              class="hover:brightness-110 hover:scale-[1.03] active:scale-95 transition-all px-5 rounded-2xl font-black text-current shadow-md text-xl bg-gradient-to-br flex items-center justify-center shrink-0"
             >
               +
             </button>
           </div>
         </div>
 
-        <div class="my-9 border-t border-slate-300 dark:border-slate-800"></div>
+        <!-- Pembatas Line Premium -->
+        <div
+          class="my-6 border-t border-dashed opacity-30"
+          :class="currentThemeClasses.borderDashed"
+        ></div>
 
         <!-- SECTION: RAK JURNAL -->
-        <div class="space-y-3">
+        <div class="space-y-4">
           <label
             :class="currentThemeClasses.textLabel"
-            class="text-[10px] uppercase tracking-[0.25em] font-black block flex items-center gap-1.5"
+            class="text-xs uppercase tracking-[0.25em] font-black block flex items-center gap-1.5 opacity-80"
           >
             <Icon
               icon="solar:bookmark-opened-bold-duotone"
-              class="w-3.5 h-3.5"
+              class="w-4 h-4 text-rose-500"
             />
             Rak Jurnal
           </label>
@@ -53,45 +60,45 @@
               v-model="searchQuery"
               type="text"
               placeholder="Cari cerita lama..."
-              :class="currentThemeClasses.inputSearch"
-              class="w-full pl-8 pr-3 py-2 border rounded-xl text-xs outline-none transition-all placeholder:text-slate-400"
+              :class="currentThemeClasses.input || currentThemeClasses.navLink"
+              class="w-full pl-10 pr-3 py-2.5 border rounded-xl text-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/20"
             />
             <Icon
               icon="solar:magnifer-bold"
-              :class="currentThemeClasses.icon"
-              class="w-3.5 h-3.5 absolute left-2.5 top-2.5 opacity-60"
+              :class="currentThemeClasses.iconPrimary"
+              class="w-4 h-4 absolute left-3.5 top-3.5 opacity-60"
             />
           </div>
 
-          <!-- LIST CONTAINER (Menggunakan displayedNotebooks) -->
+          <!-- LIST CONTAINER -->
           <div
-            class="space-y-2.5 max-h-48 md:max-h-56 overflow-y-auto pr-1 custom-scrollbar"
+            class="space-y-3 max-h-60 md:max-h-72 overflow-y-auto pr-1 custom-scrollbar"
           >
-            <!-- Iterasi menggunakan data yang sudah difilter/dipotong -->
             <div
               v-for="(book, i) in displayedNotebooks"
               :key="book.id"
               @click="selectBook(book)"
               :class="
                 notebooks[activeBookIndex]?.id === book.id
-                  ? currentThemeClasses.itemActive
-                  : currentThemeClasses.itemInactive
+                  ? currentThemeClasses.btnGradient +
+                    ' border-transparent shadow-md ring-1 ring-white/10'
+                  : currentThemeClasses.navLink +
+                    ' hover:border-slate-400/40 dark:hover:border-slate-700/50'
               "
-              class="group flex items-center justify-between p-3.5 rounded-2xl cursor-pointer transition-all duration-300 border relative overflow-hidden"
+              class="group flex items-center justify-between p-3.5 rounded-2xl cursor-pointer transition-all duration-300 border relative overflow-hidden bg-gradient-to-br"
             >
+              <!-- Indikator Glow Samping (Hanya Muncul saat Aktif) -->
               <div
                 v-if="notebooks[activeBookIndex]?.id === book.id"
-                class="absolute left-0 top-0 bottom-0 w-1 bg-white/70"
+                class="absolute left-0 top-0 bottom-0 w-1.5 bg-white shadow-[2px_0_8px_rgba(255,255,255,0.7)]"
               />
+
+              <!-- Kiri: Judul / Input Inline Edit -->
               <div
-                class="truncate font-bold flex items-center gap-2.5 flex-1 min-w-0"
+                class="truncate font-bold flex items-center gap-3 flex-1 min-w-0 z-10"
               >
                 <span
-                  :class="
-                    notebooks[activeBookIndex]?.id === book.id
-                      ? 'text-white'
-                      : currentThemeClasses.icon
-                  "
+                  class="text-xl filter drop-shadow-xs shrink-0 select-none"
                 >
                   {{
                     book.isLocked
@@ -101,47 +108,86 @@
                         : "📔"
                   }}
                 </span>
-                <span class="truncate text-xs font-bold tracking-wide">{{
-                  book.title
-                }}</span>
+                <!-- Mode Edit Inline -->
+                <input
+                  v-if="editingBookId === book.id"
+                  v-model="editingBookTitle"
+                  @click.stop
+                  @keyup.enter="saveBookTitle(book)"
+                  @keyup.esc="cancelEdit"
+                  class="w-full bg-white/20 dark:bg-slate-950/40 border-2 border-indigo-500/50 rounded-xl px-3 py-1.5 text-sm outline-none text-current font-bold transition-all shadow-inner backdrop-blur-xs"
+                  ref="editInputRef"
+                />
+                <!-- Mode Teks Biasa -->
+                <span v-else class="truncate text-sm tracking-wide">
+                  {{ book.title }}
+                </span>
               </div>
 
-              <div class="flex items-center gap-2 shrink-0">
+              <!-- Kanan: Badge Halaman & Aksi (Dibuat Selalu Kelihatan & Berwarna Kontras) -->
+              <div class="flex items-center gap-2 shrink-0 z-10 pl-2">
+                <!-- Jumlah Halaman -->
                 <span
-                  :class="
-                    notebooks[activeBookIndex]?.id === book.id
-                      ? 'bg-white/20 text-white'
-                      : currentThemeClasses.badge
-                  "
-                  class="px-2 py-0.5 rounded-full text-[10px] font-black font-mono"
+                  v-if="editingBookId !== book.id"
+                  class="px-2.5 py-1 rounded-xl text-[15px] font-black font-mono shadow-3xs"
                 >
                   {{ book?.pages?.length || 0 }}
                 </span>
-                <button
-                  @click.stop="deleteBook(book)"
-                  class="md:opacity-0 group-hover:opacity-100 transition-opacity p-1 text-red-400 hover:text-red-500"
-                >
-                  ✕
-                </button>
+
+                <!-- GRUP TOMBOL UTAMA (Selalu Tampil Tanpa Perlu Hover) -->
+                <div class="flex items-center gap-1">
+                  <!-- Tombol Edit / Simpan -->
+                  <button
+                    v-if="editingBookId === book.id"
+                    @click.stop="saveBookTitle(book)"
+                    class="p-2 rounded-xl border border-transparent transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+                    title="Simpan Nama"
+                  >
+                    <Icon
+                      icon="solar:check-circle-bold-duotone"
+                      class="w-6 h-6"
+                    />
+                  </button>
+                  <button
+                    v-else
+                    @click.stop="startEditBook(book)"
+                    class="p-2 rounded-xl border border-transparent transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+                    title="Ubah Nama"
+                  >
+                    <Icon icon="solar:pen-2-bold-duotone" class="w-6 h-6" />
+                  </button>
+
+                  <!-- Tombol Hapus (Dibuat Berwarna Merah Tegas) -->
+                  <button
+                    @click.stop="deleteBook(book)"
+                    class="p-2 rounded-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+                    title="Hapus Jurnal"
+                  >
+                    <Icon icon="solar:close-square-linear" class="w-6 h-6" />
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- State ketika pencarian kosong -->
+            <!-- State Kosong -->
             <div
               v-if="filteredNotebooks.length === 0"
-              class="text-center py-4 text-[11px] opacity-40 italic"
+              class="text-center py-6 text-xs opacity-40 italic flex flex-col items-center gap-1"
             >
-              Jurnal tidak ditemukan
+              <Icon
+                icon="solar:ghost-bold-duotone"
+                class="w-6 h-6 opacity-60 text-slate-400"
+              />
+              <span>Jurnal tidak ditemukan</span>
             </div>
           </div>
 
           <!-- MENU INTERAKTIF: BUKA / SEMBUNYIKAN JURNAL -->
-          <!-- Hanya muncul jika total jurnal lebih dari 5 dan user tidak sedang mencari sesuatu -->
           <div v-if="filteredNotebooks.length > 5 && !searchQuery" class="pt-1">
             <button
               @click="showAllNotebooks = !showAllNotebooks"
               :class="currentThemeClasses.textLabel"
-              class="w-full py-2 text-[10px] font-bold tracking-wider uppercase border border-dashed rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all flex items-center justify-center gap-1.5"
+              class="w-full py-2.5 text-xs font-bold tracking-wider uppercase border border-dashed rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900/60 transition-all flex items-center justify-center gap-1.5"
             >
               <span>
                 {{
@@ -151,7 +197,7 @@
                 }}
               </span>
               <span
-                class="text-[8px] inline-block transition-transform duration-300"
+                class="text-[10px] inline-block transition-transform duration-300"
                 :class="{ 'rotate-180': showAllNotebooks }"
               >
                 ▼
@@ -843,6 +889,7 @@ import {
   onAuthStateChanged,
   EmailAuthProvider,
   reauthenticateWithCredential,
+  getAuth,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
@@ -1435,6 +1482,74 @@ const displayedNotebooks = computed(() => {
   // Kondisi default awal: batasi hanya 5 judul jurnal
   return filteredNotebooks.value.slice(0, 5);
 });
+
+import { nextTick } from "vue";
+import { updateDoc } from "firebase/firestore";
+
+const editingBookId = ref<string | null>(null);
+const editingBookTitle = ref("");
+const editInputRef = ref<HTMLInputElement | null>(null);
+
+const startEditBook = async (book: any) => {
+  editingBookId.value = book.id;
+  editingBookTitle.value = book.title;
+  await nextTick();
+  if (editInputRef.value) editInputRef.value.focus();
+};
+
+const cancelEdit = () => {
+  editingBookId.value = null;
+  editingBookTitle.value = "";
+};
+
+// --- FUNGSI UPDATE UNTUK STRUKTUR ARRAY DI DALAM DOKUMEN ---
+const saveBookTitle = async (book: any) => {
+  const cleanTitle = editingBookTitle.value.trim();
+
+  if (!cleanTitle || cleanTitle === book.title) {
+    cancelEdit();
+    return;
+  }
+
+  // Ambil ID User yang sedang login (asumsi ID dokumen di user_diaries menggunakan UID milik user)
+  const user = $fbAuth.currentUser;
+  if (!user) {
+    alert("Sesi Anda telah habis. Silakan login kembali.");
+    return;
+  }
+
+  try {
+    // 1. Arahkan ke dokumen user di dalam collection "user_diaries"
+    // (Ganti user.uid di bawah dengan ID dokumen yang sesuai jika kamu menggunakan ID custom)
+    const userDocRef = doc($fbDb, "user_diaries", user.uid);
+
+    // 2. Duplikat array notebooks lokal untuk dimanipulasi
+    const updatedNotebooks = notebooks.value.map((item: any) => {
+      if (item.id === book.id) {
+        // Ganti judul pada item jurnal yang di-edit
+        return { ...item, title: cleanTitle };
+      }
+      return item;
+    });
+
+    // 3. Update field 'notebooks' secara utuh kembali ke Cloud Firestore
+    await updateDoc(userDocRef, {
+      notebooks: updatedNotebooks,
+    });
+
+    // 4. Jika database sukses, perbarui state lokal utama agar UI langsung berubah
+    book.title = cleanTitle;
+
+    console.log(
+      "Array notebooks di database user_diaries berhasil diperbarui.",
+    );
+  } catch (error) {
+    console.error("Gagal memperbarui array notebooks di Firestore:", error);
+    alert("Gagal menyimpan perubahan ke cloud.");
+  } finally {
+    cancelEdit();
+  }
+};
 </script>
 
 <style scoped>
