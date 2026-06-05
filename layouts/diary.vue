@@ -35,7 +35,7 @@
         themeClasses[currentTheme]?.mobileHeader ||
         themeClasses['cream'].mobileHeader
       "
-      class="md:hidden sticky top-0 w-full z-40 flex items-center justify-between p-4 border-b backdrop-blur-md transition-colors duration-500"
+      class="md:hidden fixed top-0 left-0 right-0 w-full z-50 flex items-center justify-between p-4 border-b backdrop-blur-md transition-colors duration-500"
     >
       <div class="flex items-center gap-3">
         <div
