@@ -547,77 +547,70 @@
           </div>
 
           <!-- MODE EDITOR MENULIS JURNAL BARU -->
-          <div v-else class="space-y-4 animate-fadeIn px-0.5">
-            <!-- Pilihan Emosi Mood Tracker -->
+          <div v-else class="space-y-5 animate-fadeIn px-0.5">
             <div
-              class="p-3 md:p-4 rounded-2xl border transition-all shadow-sm"
-              :class="
-                darkMode
-                  ? 'bg-slate-900/40 border-slate-800'
-                  : 'bg-amber-50/50 border-amber-200'
-              "
+              class="p-4 rounded-2xl border shadow-xs transition-all duration-300"
+              :class="[
+                currentThemeClasses.itemInactive,
+                currentThemeClasses.border,
+              ]"
             >
               <label
-                class="text-[10px] font-black uppercase tracking-[0.15em] block mb-2 opacity-60"
+                class="text-[10px] font-black uppercase tracking-[0.15em] block mb-3 opacity-80"
                 :class="currentThemeClasses.textLabel"
               >
                 Bagaimana suasana hatimu hari ini?
               </label>
-              <div class="flex flex-wrap gap-1.5 md:gap-2">
+
+              <div class="flex flex-wrap gap-2">
                 <button
                   v-for="m in moodList"
                   :key="m.emoji"
                   type="button"
                   @click="selectedMood = m.emoji"
-                  :class="[
+                  :class="
                     selectedMood === m.emoji
-                      ? darkMode
-                        ? 'bg-indigo-600/30 border-indigo-500 text-white font-bold'
-                        : 'bg-orange-100 border-orange-400 text-orange-900 font-bold'
-                      : darkMode
-                        ? 'bg-slate-950/80 border-slate-900/60 opacity-60 text-slate-400'
-                        : 'bg-white border-amber-100 opacity-70 text-slate-700',
-                  ]"
-                  class="flex items-center gap-1 px-2.5 py-1 border rounded-xl text-xs transition-all duration-200 active:scale-95"
+                      ? currentThemeClasses.btnGradient +
+                        ' text-white font-black shadow-sm ring-2 ring-offset-2 ring-indigo-500/20'
+                      : currentTheme === 'dark'
+                        ? 'bg-slate-950/40 text-slate-300 border-slate-800/80'
+                        : 'bg-white/80 text-slate-700 border-current/10'
+                  "
+                  class="flex items-center gap-1.5 px-3 py-1.5 border rounded-xl text-xs transition-all duration-200 active:scale-95 hover:scale-[1.02]"
                 >
-                  <span>{{ m.emoji }}</span>
+                  <span class="text-sm filter drop-shadow-xs">{{
+                    m.emoji
+                  }}</span>
                   <span class="text-[11px]">{{ m.label }}</span>
                 </button>
               </div>
             </div>
 
-            <!-- Tempat Mengetik Cerita -->
             <textarea
               v-model="newText"
               placeholder="Tuangkan isi pikiran, rencana, atau petualangan serumu hari ini di sini..."
+              class="w-full h-56 md:h-64 p-2 outline-none text-base md:text-lg font-serif resize-none bg-transparent leading-[32px] md:leading-[38px] placeholder:text-slate-400/70"
               :class="
-                darkMode
-                  ? 'text-slate-100 placeholder-slate-700'
-                  : 'text-slate-800 placeholder-slate-400 font-medium'
+                currentTheme === 'dark'
+                  ? 'text-slate-100'
+                  : 'text-slate-800 font-medium'
               "
-              class="w-full h-56 md:h-64 p-1 outline-none text-base md:text-lg font-serif resize-none bg-transparent leading-[30px] md:leading-[35px]"
             />
 
-            <!-- Pilihan Input Lampiran File Gambar -->
             <div
-              :class="
-                darkMode
-                  ? 'bg-slate-900/40 border-slate-800'
-                  : 'bg-amber-50/40 border-amber-200'
-              "
-              class="flex flex-row items-center justify-between p-3 rounded-2xl border border-dashed gap-4 shadow-sm"
+              class="flex flex-row items-center justify-between p-3 rounded-2xl border border-dashed gap-4 shadow-xs transition-all duration-300"
+              :class="[
+                currentThemeClasses.itemInactive,
+                currentThemeClasses.border,
+              ]"
             >
               <label
-                :class="
-                  darkMode
-                    ? 'bg-slate-800 border-slate-700 text-slate-200'
-                    : 'bg-white border-amber-200 text-slate-700 shadow-sm'
-                "
-                class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black cursor-pointer border active:scale-95 transition-transform shrink-0"
+                class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black cursor-pointer border active:scale-95 transition-all hover:brightness-95 shadow-3xs"
               >
                 <Icon
                   icon="solar:camera-add-bold-duotone"
-                  class="w-4 h-4 text-orange-500"
+                  class="w-4 h-4"
+                  :class="currentThemeClasses.icon"
                 />
                 <span>{{ imagePreview ? "Ganti Foto" : "Unggah Foto" }}</span>
                 <input
@@ -630,13 +623,13 @@
 
               <div
                 v-if="imagePreview"
-                class="relative rounded-lg overflow-hidden border shrink-0 shadow-sm"
-                :class="darkMode ? 'border-slate-800' : 'border-amber-200'"
+                class="relative rounded-xl overflow-hidden border shrink-0 shadow-md group transition-all"
+                :class="currentThemeClasses.border"
               >
-                <img :src="imagePreview" class="h-10 w-16 object-cover" />
+                <img :src="imagePreview" class="h-11 w-18 object-cover" />
                 <button
                   @click="imagePreview = null"
-                  class="absolute inset-0 bg-black/60 text-white flex items-center justify-center text-[10px] font-bold"
+                  class="absolute inset-0 bg-black/60 text-white flex items-center justify-center text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   Hapus
                 </button>
