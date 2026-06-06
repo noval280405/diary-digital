@@ -1,40 +1,44 @@
 <template>
   <NuxtLayout name="diary">
+    <div class="h-[72px] md:hidden"></div>
     <div class="space-y-8 print-container">
-     <!-- Header Area -->
       <div
-        class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6 no-print"
-        :class="darkMode ? 'border-slate-800' : 'border-amber-100'"
+        class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6 no-print transition-colors duration-500"
+        :class="
+          currentThemeClasses.border || 'border-slate-200 dark:border-slate-800'
+        "
       >
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2 mb-1">
             <span
-              class="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse"
+              class="flex h-2 w-2 rounded-full animate-pulse bg-current transition-colors duration-500"
+              :class="currentThemeClasses.icon"
             />
             <span
               class="text-[10px] font-black uppercase tracking-widest opacity-60"
-              >Personal Workspace</span
+              :class="currentThemeClasses.textLabel"
             >
+              Personal Workspace
+            </span>
           </div>
-          <!-- Judul dengan Gradasi Oranye & Grey yang Dijamin Kelihatan -->
           <h2
-            class="block text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight bg-gradient-to-r from-orange-500 via-slate-500 to-slate-400 dark:from-orange-400 dark:via-slate-300 dark:to-slate-400 bg-clip-text text-transparent"
+            class="block text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight bg-clip-text text-transparent transition-all duration-500"
+            :class="currentThemeClasses.btnGradient"
           >
             Analisis Jurnal & Ekspor
           </h2>
-          <p class="text-xs opacity-60 mt-1">
+          <p class="text-xs opacity-60 mt-1 text-slate-500 dark:text-slate-400">
             Rangkuman perjalanan menulis dan manajemen data akunmu
           </p>
         </div>
 
-        <!-- Tombol Kembali Menulis Lebih Premium -->
         <NuxtLink
           to="/"
-          class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold tracking-wide border transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-sm group shrink-0"
+          class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold tracking-wide border transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-xs group shrink-0"
           :class="
-            darkMode
-              ? 'bg-slate-900 border-slate-800 text-slate-200 hover:bg-slate-800 hover:border-slate-700 hover:text-white'
-              : 'bg-white border-amber-200 text-slate-700 hover:bg-amber-50 hover:border-amber-300 hover:text-slate-900'
+            currentTheme === 'dark'
+              ? 'bg-slate-900 border-slate-800 text-slate-200 hover:bg-slate-800 hover:text-white'
+              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900'
           "
         >
           <Icon
@@ -45,24 +49,20 @@
         </NuxtLink>
       </div>
 
-      <!-- Grid Statistik Utama dengan Desain Kartu Kaca Premium -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <!-- Card 1: Total Kata -->
         <div
-          class="p-6 rounded-2xl border relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+          class="p-6 rounded-2xl border relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
           :class="
-            darkMode
-              ? 'bg-gradient-to-br from-slate-900/80 to-slate-950/40 border-slate-800/80'
-              : 'bg-gradient-to-br from-white to-orange-50/20 border-amber-200/70 shadow-sm shadow-amber-900/5'
+            currentTheme === 'dark'
+              ? 'bg-gradient-to-br from-slate-900/80 to-slate-950/40 border-slate-800/80 shadow-black/20'
+              : 'bg-gradient-to-br from-white to-orange-50/10 border-slate-200/60 shadow-xs'
           "
         >
-          <div
-            class="absolute right-4 top-4 opacity-10 dark:opacity-20 text-orange-500"
-          >
+          <div class="absolute right-4 top-4 opacity-15 text-orange-500">
             <Icon icon="solar:letter-opened-bold-duotone" class="w-12 h-12" />
           </div>
           <div
-            class="text-xs font-black uppercase opacity-60 tracking-wider mb-2 flex items-center gap-1.5"
+            class="text-xs font-black uppercase opacity-70 tracking-wider mb-2 flex items-center gap-1.5 text-slate-500 dark:text-slate-400"
           >
             <span class="w-1.5 h-1.5 rounded-full bg-orange-500" />
             Total Kata Ditulis
@@ -70,27 +70,24 @@
           <div class="text-4xl font-black tracking-tight text-orange-500 mb-1">
             {{ totalAllWords }}
           </div>
-          <p class="text-[11px] opacity-50">
+          <p class="text-[11px] opacity-50 text-slate-500 dark:text-slate-400">
             Dari semua lembaran kisah hidupmu
           </p>
         </div>
 
-        <!-- Card 2: Dominant Mood -->
         <div
-          class="p-6 rounded-2xl border relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+          class="p-6 rounded-2xl border relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
           :class="
-            darkMode
-              ? 'bg-gradient-to-br from-slate-900/80 to-slate-950/40 border-slate-800/80'
-              : 'bg-gradient-to-br from-white to-indigo-50/20 border-amber-200/70 shadow-sm shadow-amber-900/5'
+            currentTheme === 'dark'
+              ? 'bg-gradient-to-br from-slate-900/80 to-slate-950/40 border-slate-800/80 shadow-black/20'
+              : 'bg-gradient-to-br from-white to-indigo-50/10 border-slate-200/60 shadow-xs'
           "
         >
-          <div
-            class="absolute right-4 top-4 opacity-10 dark:opacity-20 text-indigo-500"
-          >
+          <div class="absolute right-4 top-4 opacity-15 text-indigo-500">
             <Icon icon="solar:heart-bold-duotone" class="w-12 h-12" />
           </div>
           <div
-            class="text-xs font-black uppercase opacity-60 tracking-wider mb-2 flex items-center gap-1.5"
+            class="text-xs font-black uppercase opacity-70 tracking-wider mb-2 flex items-center gap-1.5 text-slate-500 dark:text-slate-400"
           >
             <span class="w-1.5 h-1.5 rounded-full bg-indigo-500" />
             Mood Paling Sering
@@ -100,31 +97,29 @@
           >
             <span>{{ dominantMood.emoji }}</span>
             <span
-              class="text-sm font-black opacity-50 text-slate-500 dark:text-slate-400"
-              >({{ dominantMood.count }} Halaman)</span
+              class="text-sm font-black opacity-60 text-slate-500 dark:text-slate-400"
             >
+              ({{ dominantMood.count }} Halaman)
+            </span>
           </div>
-          <p class="text-[11px] opacity-50">
+          <p class="text-[11px] opacity-50 text-slate-500 dark:text-slate-400">
             Suasana hati yang mendominasi ceritamu
           </p>
         </div>
 
-        <!-- Card 3: Total Halaman -->
         <div
-          class="p-6 rounded-2xl border relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+          class="p-6 rounded-2xl border relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
           :class="
-            darkMode
-              ? 'bg-gradient-to-br from-slate-900/80 to-slate-950/40 border-slate-800/80'
-              : 'bg-gradient-to-br from-white to-emerald-50/20 border-amber-200/70 shadow-sm shadow-amber-900/5'
+            currentTheme === 'dark'
+              ? 'bg-gradient-to-br from-slate-900/80 to-slate-950/40 border-slate-800/80 shadow-black/20'
+              : 'bg-gradient-to-br from-white to-emerald-50/10 border-slate-200/60 shadow-xs'
           "
         >
-          <div
-            class="absolute right-4 top-4 opacity-10 dark:opacity-20 text-emerald-500"
-          >
+          <div class="absolute right-4 top-4 opacity-15 text-emerald-500">
             <Icon icon="solar:notebook-bold-duotone" class="w-12 h-12" />
           </div>
           <div
-            class="text-xs font-black uppercase opacity-60 tracking-wider mb-2 flex items-center gap-1.5"
+            class="text-xs font-black uppercase opacity-70 tracking-wider mb-2 flex items-center gap-1.5 text-slate-500 dark:text-slate-400"
           >
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             Total Halaman Cerita
@@ -132,39 +127,48 @@
           <div class="text-4xl font-black tracking-tight text-emerald-500 mb-1">
             {{ totalPagesCount }}
           </div>
-          <p class="text-[11px] opacity-50">
+          <p class="text-[11px] opacity-50 text-slate-500 dark:text-slate-400">
             Lembaran rahasia yang aman tersimpan
           </p>
         </div>
       </div>
 
-      <!-- Fitur Ekspor Jurnal Eksklusif -->
       <div
-        class="p-8 rounded-3xl border relative overflow-hidden no-print transition-all duration-500 shadow-xl"
+        class="p-6 md:p-8 rounded-3xl border relative overflow-hidden no-print transition-all duration-500 shadow-md"
         :class="
-          darkMode
-            ? 'bg-slate-900/40 border-slate-800 shadow-black/20'
-            : 'bg-amber-50/40 border-amber-200 shadow-amber-900/5'
+          currentTheme === 'dark'
+            ? 'bg-slate-900/40 border-slate-800/80 shadow-black/10'
+            : 'bg-white border-slate-200/80 shadow-slate-200/50'
         "
       >
-        <!-- Dekorasi Gradasi Belakang -->
         <div
           class="absolute -right-16 -bottom-16 w-48 h-48 rounded-full blur-3xl opacity-10"
-          :class="darkMode ? 'bg-indigo-500' : 'bg-orange-400'"
+          :class="currentTheme === 'dark' ? 'bg-indigo-500' : 'bg-orange-400'"
         />
 
         <div class="relative z-10">
           <div class="flex items-center gap-3 mb-2">
             <div
-              class="p-2.5 rounded-xl bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-md shadow-orange-500/20"
+              class="p-2.5 rounded-xl text-white shadow-md transition-all duration-500"
+              :class="[
+                currentThemeClasses.btnGradient,
+                currentTheme === 'dark'
+                  ? 'shadow-indigo-950/40'
+                  : 'shadow-current/10',
+              ]"
             >
               <Icon icon="solar:safe-2-bold-duotone" class="w-5 h-5" />
             </div>
             <div>
-              <h3 class="text-lg font-black tracking-tight">
+              <h3
+                class="text-lg font-black tracking-tight"
+                :class="
+                  currentTheme === 'dark' ? 'text-white' : 'text-slate-800'
+                "
+              >
                 Amankan & Cadangkan Data
               </h3>
-              <p class="text-xs opacity-60">
+              <p class="text-xs opacity-60 text-slate-500 dark:text-slate-400">
                 Pindahkan tulisan berhargamu ke komputer lokal agar tidak pernah
                 hilang.
               </p>
@@ -173,43 +177,50 @@
 
           <hr
             class="my-5 border-dashed"
-            :class="darkMode ? 'border-slate-800' : 'border-amber-200'"
+            :class="
+              currentThemeClasses.border ||
+              'border-slate-200 dark:border-slate-800'
+            "
           />
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- Tombol TXT Premium -->
             <button
               @click="exportToTXT"
-              class="w-full px-5 py-4 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-md shadow-orange-500/10 hover:shadow-orange-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 group"
+              class="w-full px-5 py-4 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-3 group border border-transparent"
+              :class="[
+                currentThemeClasses.btnGradient,
+                currentTheme === 'dark'
+                  ? 'shadow-indigo-950/30'
+                  : 'shadow-current/10',
+              ]"
             >
               <Icon
                 icon="solar:download-square-bold-duotone"
-                class="w-5 h-5 text-orange-100 group-hover:bounce"
+                class="w-5 h-5 opacity-90 group-hover:animate-bounce"
               />
-              Unduh Dokumen Mentah (.TXT)
+              <span>Unduh Dokumen Mentah (.TXT)</span>
             </button>
 
-            <!-- Tombol PDF Premium -->
             <button
               @click="triggerPrint"
-              class="w-full px-5 py-4 border text-xs font-black uppercase tracking-widest rounded-2xl shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 group"
+              class="w-full px-5 py-4 border text-xs font-black uppercase tracking-widest rounded-2xl shadow-xs hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-3 group"
               :class="
-                darkMode
-                  ? 'bg-slate-900 border-slate-800 text-slate-200 hover:bg-slate-800 hover:border-slate-700 hover:text-white'
-                  : 'bg-white border-amber-200 text-slate-700 hover:bg-amber-100/50 hover:border-amber-300 hover:text-slate-900'
+                currentTheme === 'dark'
+                  ? 'bg-slate-900 border-slate-800 text-slate-200 hover:bg-slate-800 hover:text-white'
+                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900'
               "
             >
               <Icon
                 icon="solar:printer-bold-duotone"
-                class="w-5 h-5 text-indigo-500"
+                class="w-5 h-5 transition-colors duration-500"
+                :class="currentThemeClasses.icon"
               />
-              Cetak Cetakan Fisik (PDF)
+              <span>Cetak Cetakan Fisik (PDF)</span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Preview Konten Cetak Khusus PDF (Hanya Muncul Saat Print Ditekan) -->
       <div class="hidden print-block space-y-6 mt-8 font-serif">
         <div class="border-b-2 border-slate-900 pb-4 text-center">
           <h1 class="text-2xl font-bold uppercase tracking-widest">
@@ -264,6 +275,47 @@ import { useDiaryTheme } from "~/composables/useDiaryTheme";
 
 const { darkMode } = useDiaryTheme();
 const notebooks = useState("global-notebooks", () => []);
+
+// --- TAMBAHKAN LOGIKA TEMA DI BAWAH INI AGAR TIDAK ERROR ---
+const currentTheme = useState("diary-active-theme", () => "cream");
+
+const themeStyles = {
+  dark: {
+    textLabel: "text-indigo-400",
+    border: "border-slate-900",
+    icon: "text-indigo-400",
+    btnGradient: "bg-gradient-to-tr from-indigo-600 to-violet-500",
+  },
+  cream: {
+    textLabel: "text-amber-700",
+    border: "border-amber-200/60",
+    icon: "text-amber-700",
+    btnGradient: "bg-gradient-to-tr from-orange-500 to-amber-500",
+  },
+  pink: {
+    textLabel: "text-pink-600",
+    border: "border-pink-200/60",
+    icon: "text-pink-600",
+    btnGradient: "bg-gradient-to-tr from-pink-500 to-rose-500",
+  },
+  blue: {
+    textLabel: "text-sky-600",
+    border: "border-sky-200/60",
+    icon: "text-sky-600",
+    btnGradient: "bg-gradient-to-tr from-sky-500 to-indigo-500",
+  },
+  green: {
+    textLabel: "text-emerald-600",
+    border: "border-emerald-200/60",
+    icon: "text-emerald-600",
+    btnGradient: "bg-gradient-to-tr from-emerald-500 to-teal-500",
+  },
+};
+// Computed untuk mengambil class sesuai tema aktif dengan aman
+const currentThemeClasses = computed(() => {
+  return themeStyles[currentTheme.value] || themeStyles["cream"];
+});
+// -----------------------------------------------------------
 
 // 1. Hitung total seluruh kata di semua buku
 const totalAllWords = computed(() => {
