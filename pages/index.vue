@@ -397,7 +397,6 @@
                 :key="currentPageIndex"
                 class="space-y-5"
               >
-                <!-- PROTEKSI HALAMAN TUNGGAL -->
                 <div
                   v-if="currentPage.isLocked && !isCurrentPageUnlocked"
                   class="flex flex-col items-center justify-center py-10 md:py-16 text-center space-y-4 animate-fadeIn px-2"
@@ -413,11 +412,17 @@
                   <div>
                     <h3
                       class="text-base md:text-lg font-black"
-                      :class="darkMode ? 'text-white' : 'text-slate-900'"
+                      :class="
+                        currentTheme === 'dark'
+                          ? 'text-white'
+                          : 'text-slate-900'
+                      "
                     >
                       Lembaran Rahasia Terkunci
                     </h3>
-                    <p class="text-xs opacity-60 max-w-xs mx-auto mt-1 px-4">
+                    <p
+                      class="text-xs opacity-60 max-w-xs mx-auto mt-1 px-4 text-slate-500 dark:text-slate-400"
+                    >
                       Masukkan 6 digit PIN pribadi kamu atau gunakan opsi reset
                       di bawah jika lupa.
                     </p>
@@ -433,7 +438,7 @@
                       :class="[
                         inputPin.length > 0
                           ? 'bg-rose-50/50 border-rose-400 text-rose-600 dark:bg-rose-950/20 dark:border-rose-500 dark:text-rose-400 animate-pulse'
-                          : darkMode
+                          : currentTheme === 'dark'
                             ? 'bg-slate-900 border-slate-700 text-slate-400'
                             : 'bg-slate-50 border-slate-300 text-slate-400',
                       ]"
@@ -456,59 +461,161 @@
                   </div>
                 </div>
 
-                <!-- TAMPILAN KONTEN ISI DIARY UTAMA (TERBUKA) -->
-                <div v-else class="space-y-4 md:space-y-6 animate-fadeIn">
-                  <!-- Tag Mood & Tanggal Penulisan -->
+                <div v-else-if="isEditingPage" class="space-y-5 animate-fadeIn">
                   <div
-                    v-if="currentPage.mood"
-                    class="flex flex-wrap items-center gap-2"
+                    class="flex items-center justify-between border-b pb-3 border-current/5"
                   >
                     <span
-                      :class="
-                        currentThemeClasses.badge +
-                        ' ' +
-                        currentThemeClasses.border
-                      "
-                      class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black border shadow-sm"
+                      class="text-xs font-bold text-orange-500 flex items-center gap-1.5"
                     >
-                      <span>{{ currentPage.mood }}</span>
-                      <span>Suasana Hati</span>
-                    </span>
-                    <span
-                      v-if="currentPage.createdAt"
-                      class="text-[10px] md:text-[11px] opacity-40 font-medium"
-                      :class="darkMode ? 'text-slate-400' : 'text-slate-600'"
-                    >
-                      •
-                      {{
-                        new Date(currentPage.createdAt).toLocaleDateString(
-                          "id-ID",
-                          {
-                            weekday: "short",
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          },
-                        )
-                      }}
+                      <span
+                        class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"
+                      />
+                      Sedang Memperbaiki Tulisan...
                     </span>
                   </div>
 
-                  <!-- Baris Kalimat Teks Diary Utama -->
+                  <div
+                    class="p-4 rounded-2xl border transition-all duration-300"
+                    :class="[
+                      currentThemeClasses.itemInactive,
+                      currentThemeClasses.border,
+                    ]"
+                  >
+                    <label
+                      class="text-[10px] font-black uppercase tracking-[0.15em] block mb-2.5 opacity-70"
+                      :class="currentThemeClasses.textLabel"
+                    >
+                      Ubah Suasana Hatimu untuk lembar ini:
+                    </label>
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        v-for="m in moodList"
+                        :key="m.emoji"
+                        type="button"
+                        @click="editMoodBuffer = m.emoji"
+                        :class="
+                          editMoodBuffer === m.emoji
+                            ? currentThemeClasses.btnGradient +
+                              ' text-white font-black shadow-xs ring-2 ring-offset-2 ring-indigo-500/20'
+                            : currentTheme === 'dark'
+                              ? 'bg-slate-950/40 text-slate-400 border-slate-800/80'
+                              : 'bg-white text-slate-700 border-slate-200/60'
+                        "
+                        class="flex items-center gap-1.5 px-3 py-1.5 border rounded-xl text-xs transition-all duration-200 active:scale-95"
+                      >
+                        <span class="text-sm">{{ m.emoji }}</span>
+                        <span class="text-[11px]">{{ m.label }}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    v-model="editTextBuffer"
+                    class="w-full h-56 md:h-64 p-3 border rounded-2xl outline-none text-base md:text-lg font-serif resize-none leading-[30px] md:leading-[35px]"
+                    :class="
+                      currentTheme === 'dark'
+                        ? 'bg-slate-950/60 border-slate-800 text-slate-100 placeholder-slate-700'
+                        : 'bg-white border-amber-200 text-slate-800 placeholder-slate-400 font-medium'
+                    "
+                    placeholder="Perbaiki kalimat typo atau tambah ceritamu di sini..."
+                  />
+
+                  <div class="flex items-center gap-2 justify-end">
+                    <button
+                      @click="cancelEditPage"
+                      class="px-3.5 py-2 rounded-xl text-xs font-bold border transition-all active:scale-95"
+                      :class="
+                        currentTheme === 'dark'
+                          ? 'border-slate-800 text-slate-400 hover:text-slate-300'
+                          : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                      "
+                    >
+                      Batal
+                    </button>
+                    <button
+                      @click="saveEditPage"
+                      class="px-4 py-2 text-white text-xs font-black rounded-xl shadow-xs transition-all active:scale-95 border border-transparent"
+                      :class="currentThemeClasses.btnGradient"
+                    >
+                      Simpan Perubahan
+                    </button>
+                  </div>
+                </div>
+
+                <div v-else class="space-y-4 md:space-y-6 animate-fadeIn">
+                  <div
+                    class="flex flex-wrap items-center justify-between gap-3 border-b pb-3 border-current/5"
+                  >
+                    <div
+                      v-if="currentPage.mood"
+                      class="flex flex-wrap items-center gap-2"
+                    >
+                      <span
+                        :class="[
+                          currentThemeClasses.badge,
+                          currentThemeClasses.border,
+                        ]"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black border shadow-sm"
+                      >
+                        <span>{{ currentPage.mood }}</span>
+                        <span>Suasana Hati</span>
+                      </span>
+                      <span
+                        v-if="currentPage.createdAt"
+                        class="text-[10px] md:text-[11px] opacity-40 font-medium"
+                        :class="
+                          currentTheme === 'dark'
+                            ? 'text-slate-400'
+                            : 'text-slate-600'
+                        "
+                      >
+                        •
+                        {{
+                          new Date(currentPage.createdAt).toLocaleDateString(
+                            "id-ID",
+                            {
+                              weekday: "short",
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            },
+                          )
+                        }}
+                      </span>
+                    </div>
+
+                    <button
+                      @click="startEditPage"
+                      class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all active:scale-95 hover:bg-current/5 shadow-3xs"
+                      :class="
+                        currentTheme === 'dark'
+                          ? 'border-slate-800 text-slate-300'
+                          : 'border-amber-200/80 text-slate-700 bg-white/60'
+                      "
+                    >
+                      <Icon
+                        icon="solar:pen-to-square-bold-duotone"
+                        class="w-3.5 h-3.5 text-orange-500"
+                      />
+                      <span>Edit Lembar</span>
+                    </button>
+                  </div>
+
                   <p
                     class="whitespace-pre-wrap text-base md:text-xl font-serif italic text-justify leading-[28px] md:leading-[35px] px-0.5"
                   >
                     "{{ currentPage.text }}"
                   </p>
 
-                  <!-- Lampiran Berkas Foto Polaroid Estetik -->
                   <div
                     v-if="currentPage.image"
-                    :class="
-                      currentThemeClasses.border +
-                      ' ' +
-                      (darkMode ? 'bg-slate-900/60' : 'bg-amber-50/40')
-                    "
+                    :class="[
+                      currentThemeClasses.border,
+                      currentTheme === 'dark'
+                        ? 'bg-slate-900/60'
+                        : 'bg-amber-50/40',
+                    ]"
                     class="p-2 pb-4 rounded-xl border-2 shadow-md max-w-full sm:max-w-md inline-block transform -rotate-1 transition-transform hover:rotate-0"
                   >
                     <img
@@ -518,7 +625,11 @@
                     />
                     <div
                       class="mt-2.5 text-center font-serif text-[10px] opacity-40 tracking-widest"
-                      :class="darkMode ? 'text-slate-400' : 'text-slate-600'"
+                      :class="
+                        currentTheme === 'dark'
+                          ? 'text-slate-400'
+                          : 'text-slate-600'
+                      "
                     >
                       ✦ MEMORI TERLAMPIR ✦
                     </div>
@@ -885,7 +996,18 @@ import {
   reauthenticateWithCredential,
   getAuth,
 } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  orderBy,
+} from "firebase/firestore";
 
 // Integrasi Utilitas & Firebase
 const { darkMode } = useDiaryTheme();
@@ -948,7 +1070,7 @@ const generateId = () =>
   "book_" + Date.now() + Math.random().toString(36).slice(2, 8);
 
 // =========================================================================
-// FIREBASE AUTH LIFECYCLE & DATABASES
+// FIREBASE AUTH LIFECYCLE & DATABASES (DIUBAH KE SUB-COLLECTION)
 // =========================================================================
 onMounted(() => {
   onAuthStateChanged($fbAuth, async (user) => {
@@ -961,15 +1083,17 @@ onMounted(() => {
   });
 });
 
+// Memuat data buku lama dari document user, sekaligus memuat isi halaman dari sub-collection 'notebooks'
 const loadUserDiary = async (uid: string) => {
   try {
     const docRef = doc($fbDb, "user_diaries", uid);
     const docSnap = await getDoc(docRef);
 
+    let baseBooks = [];
     if (docSnap.exists()) {
-      notebooks.value = docSnap.data().notebooks || [];
+      baseBooks = docSnap.data().notebooks || [];
     } else {
-      notebooks.value = [
+      baseBooks = [
         {
           id: generateId(),
           title: "Jurnal Utama Saya",
@@ -980,6 +1104,30 @@ const loadUserDiary = async (uid: string) => {
       ];
       await saveToFirebase();
     }
+
+    // Ambil semua halaman dari sub-collection 'notebooks'
+    const notebooksSubRef = collection($fbDb, "user_diaries", uid, "notebooks");
+    const q = query(notebooksSubRef, orderBy("createdAt", "asc"));
+    const querySnapshot = await getDocs(q);
+
+    const allDbPages: any[] = [];
+    querySnapshot.forEach((subDoc) => {
+      allDbPages.push({
+        id: subDoc.id,
+        ...subDoc.data(),
+      });
+    });
+
+    // Petakan halaman sub-collection ke dalam objek buku yang sesuai berdasarkan struktur awalmu
+    notebooks.value = baseBooks.map((book: any) => {
+      return {
+        ...book,
+        // Filter halaman yang milik buku ini (berdasarkan bookId), jika belum ada field-nya default ke semua halaman
+        pages: allDbPages.filter(
+          (page: any) => page.bookId === book.id || (!page.bookId && book.id),
+        ),
+      };
+    });
   } catch (e) {
     console.error("Gagal memuat data dari cloud: ", e);
   }
@@ -988,8 +1136,14 @@ const loadUserDiary = async (uid: string) => {
 const saveToFirebase = async () => {
   if (!currentUser.value) return;
   try {
+    // Menyimpan struktur metadata rak/buku (tanpa isi teks halaman raksasa agar dokumen utama tetap ringan)
+    const booksMetadata = notebooks.value.map((book: any) => {
+      const { pages, ...metadata } = book;
+      return metadata;
+    });
+
     await setDoc(doc($fbDb, "user_diaries", currentUser.value.uid), {
-      notebooks: notebooks.value,
+      notebooks: booksMetadata,
     });
   } catch (e) {
     console.error("Gagal mencadangkan ke cloud: ", e);
@@ -1139,6 +1293,15 @@ const checkPinInput = () => {
 };
 
 const togglePageLock = async () => {
+  if (!currentUser.value || !currentPage.value.id) return;
+  const pageDocRef = doc(
+    $fbDb,
+    "user_diaries",
+    currentUser.value.uid,
+    "notebooks",
+    currentPage.value.id,
+  );
+
   if (currentPage.value.isLocked) {
     if (isCurrentPageUnlocked.value) {
       const confirmDisable = confirm(
@@ -1150,8 +1313,9 @@ const togglePageLock = async () => {
           currentPage.value.isLocked = false;
           currentPage.value.pin = "";
           isCurrentPageUnlocked.value = false;
+
+          await updateDoc(pageDocRef, { isLocked: false, pin: "" });
           alert("🔒 Proteksi PIN telah dilepas.");
-          await saveToFirebase();
         } else if (confirmPin !== null) {
           alert("❌ PIN Salah!");
         }
@@ -1179,8 +1343,9 @@ const togglePageLock = async () => {
     currentPage.value.isLocked = true;
     currentPage.value.pin = newPin;
     isCurrentPageUnlocked.value = true;
+
+    await updateDoc(pageDocRef, { isLocked: true, pin: newPin });
     alert("🔐 Sukses terkunci aman!");
-    await saveToFirebase();
   }
 };
 
@@ -1208,11 +1373,18 @@ const handleResetPinWithPassword = async () => {
     );
     await reauthenticateWithCredential($fbAuth.currentUser!, credential);
 
+    const pageDocRef = doc(
+      $fbDb,
+      "user_diaries",
+      currentUser.value.uid,
+      "notebooks",
+      currentPage.value.id,
+    );
     currentPage.value.pin = resetNewPin.value;
     currentPage.value.isLocked = true;
     isCurrentPageUnlocked.value = true;
 
-    await saveToFirebase();
+    await updateDoc(pageDocRef, { isLocked: true, pin: resetNewPin.value });
     alert("🔄 PIN Berhasil Diperbarui!");
     closeResetModal();
   } catch (error: any) {
@@ -1237,7 +1409,7 @@ const closeResetModal = () => {
 };
 
 // =========================================================================
-// MANAJEMEN TULIS & HALAMAN CATATAN
+// MANAJEMEN TULIS & HALAMAN CATATAN (DIPERBARUI KE SUB-COLLECTION)
 // =========================================================================
 const startWriting = () => {
   newText.value = "";
@@ -1250,26 +1422,47 @@ const cancelWriting = () => {
   isWritingMode.value = false;
 };
 
+// MENAMBAH HALAMAN BARU LANGSUNG KE SUB-COLLECTION
 const savePage = async () => {
-  if (!newText.value.trim()) return;
+  if (!newText.value.trim() || !currentUser.value) return;
 
   if (!currentBook.value.pages) currentBook.value.pages = [];
 
-  currentBook.value.pages.push({
+  const newPageData = {
+    bookId: currentBook.value.id, // Menghubungkan halaman ke ID buku aktif
     text: newText.value,
     image: imagePreview.value,
     createdAt: Date.now(),
     mood: selectedMood.value,
     isLocked: false,
     pin: "",
-  });
+  };
 
-  currentPageIndex.value = currentBook.value.pages.length - 1;
-  newText.value = "";
-  imagePreview.value = null;
-  isWritingMode.value = false;
-  searchQuery.value = "";
-  await saveToFirebase();
+  try {
+    // Simpan langsung ke sub-collection 'notebooks' Firestore
+    const notebooksSubRef = collection(
+      $fbDb,
+      "user_diaries",
+      currentUser.value.uid,
+      "notebooks",
+    );
+    const docRef = await addDoc(notebooksSubRef, newPageData);
+
+    // Push ke array lokal lengkap dengan ID dokumen dari Firestore
+    currentBook.value.pages.push({
+      id: docRef.id,
+      ...newPageData,
+    });
+
+    currentPageIndex.value = currentBook.value.pages.length - 1;
+    newText.value = "";
+    imagePreview.value = null;
+    isWritingMode.value = false;
+    searchQuery.value = "";
+  } catch (e) {
+    console.error("Gagal menambahkan halaman baru ke sub-collection:", e);
+    alert("Gagal mencadangkan lembar baru ke cloud.");
+  }
 };
 
 const handleImageUpload = (e: any) => {
@@ -1449,6 +1642,25 @@ const deleteBook = async (clickedBook: any) => {
     originalIndex !== -1 &&
     confirm(`Hapus jurnal "${clickedBook.title}" beserta seluruh isinya?`)
   ) {
+    // Hapus juga halaman-halaman yang ada di dalam subcollection buku tersebut dari Firestore jika diperlukan
+    try {
+      const pToDelete = notebooks.value[originalIndex].pages || [];
+      for (const p of pToDelete) {
+        if (p.id) {
+          const pRef = doc(
+            $fbDb,
+            "user_diaries",
+            currentUser.value.uid,
+            "notebooks",
+            p.id,
+          );
+          await deleteDoc(pRef);
+        }
+      }
+    } catch (e) {
+      console.error("Gagal menghapus sub-pages dari cloud:", e);
+    }
+
     notebooks.value.splice(originalIndex, 1);
 
     if (notebooks.value.length === 0) {
@@ -1465,15 +1677,12 @@ const deleteBook = async (clickedBook: any) => {
 const showAllNotebooks = ref(false);
 
 const displayedNotebooks = computed(() => {
-  // Jika sedang mengetik di kolom pencarian, otomatis buka semua yang cocok
   if (searchQuery.value) {
     return filteredNotebooks.value;
   }
-  // Jika tombol lihat semua diklik, tampilkan seluruh isi rak
   if (showAllNotebooks.value) {
     return filteredNotebooks.value;
   }
-  // Kondisi default awal: batasi hanya 5 judul jurnal
   return filteredNotebooks.value.slice(0, 5);
 });
 
@@ -1496,7 +1705,6 @@ const cancelEdit = () => {
   editingBookTitle.value = "";
 };
 
-// --- FUNGSI UPDATE UNTUK STRUKTUR ARRAY DI DALAM DOKUMEN ---
 const saveBookTitle = async (book: any) => {
   const cleanTitle = editingBookTitle.value.trim();
 
@@ -1505,7 +1713,6 @@ const saveBookTitle = async (book: any) => {
     return;
   }
 
-  // Ambil ID User yang sedang login (asumsi ID dokumen di user_diaries menggunakan UID milik user)
   const user = $fbAuth.currentUser;
   if (!user) {
     alert("Sesi Anda telah habis. Silakan login kembali.");
@@ -1513,37 +1720,105 @@ const saveBookTitle = async (book: any) => {
   }
 
   try {
-    // 1. Arahkan ke dokumen user di dalam collection "user_diaries"
-    // (Ganti user.uid di bawah dengan ID dokumen yang sesuai jika kamu menggunakan ID custom)
     const userDocRef = doc($fbDb, "user_diaries", user.uid);
-
-    // 2. Duplikat array notebooks lokal untuk dimanipulasi
     const updatedNotebooks = notebooks.value.map((item: any) => {
       if (item.id === book.id) {
-        // Ganti judul pada item jurnal yang di-edit
         return { ...item, title: cleanTitle };
       }
       return item;
     });
 
-    // 3. Update field 'notebooks' secara utuh kembali ke Cloud Firestore
-    await updateDoc(userDocRef, {
-      notebooks: updatedNotebooks,
-    });
-
-    // 4. Jika database sukses, perbarui state lokal utama agar UI langsung berubah
+    notebooks.value = updatedNotebooks;
+    await saveToFirebase();
     book.title = cleanTitle;
 
-    console.log(
-      "Array notebooks di database user_diaries berhasil diperbarui.",
-    );
+    console.log("Judul jurnal di database user_diaries berhasil diperbarui.");
   } catch (error) {
-    console.error("Gagal memperbarui array notebooks di Firestore:", error);
+    console.error("Gagal memperbarui judul di Firestore:", error);
     alert("Gagal menyimpan perubahan ke cloud.");
   } finally {
     cancelEdit();
   }
 };
+
+// State untuk proses edit halaman catatan
+const isEditingPage = ref(false);
+const editTextBuffer = ref("");
+const editMoodBuffer = ref("");
+
+const startEditPage = () => {
+  if (currentPage.value && currentPage.value.text) {
+    editTextBuffer.value = currentPage.value.text;
+    editMoodBuffer.value = currentPage.value.mood || "😊";
+    isEditingPage.value = true;
+  }
+};
+
+const cancelEditPage = () => {
+  isEditingPage.value = false;
+  editTextBuffer.value = "";
+  editMoodBuffer.value = "";
+};
+
+// --- UPDATE DATA EDITED PAGE LANGSUNG BERDASARKAN TARGET ID DI SUB-COLLECTION ---
+const saveEditPage = async () => {
+  const cleanText = editTextBuffer.value.trim();
+
+  if (!cleanText) {
+    alert("Isi cerita tidak boleh kosong.");
+    return;
+  }
+
+  const user = $fbAuth.currentUser;
+  if (!user || !currentPage.value.id) {
+    alert("Sesi tidak valid atau halaman tidak ditemukan.");
+    return;
+  }
+
+  try {
+    // Arahkan pointer update langsung menuju ID dokumen halaman tersebut di sub-collection
+    const pageDocRef = doc(
+      $fbDb,
+      "user_diaries",
+      user.uid,
+      "notebooks",
+      currentPage.value.id,
+    );
+
+    console.log(
+      "Menyimpan lembar baru ke sub-collection dengan ID:",
+      currentPage.value.id,
+    );
+
+    // Kirim perubahan data spesifik ke Firestore
+    await updateDoc(pageDocRef, {
+      text: cleanText,
+      mood: editMoodBuffer.value,
+    });
+
+    // Sinkronkan state reaktif lokal seketika
+    currentPage.value.text = cleanText;
+    currentPage.value.mood = editMoodBuffer.value;
+
+    console.log(
+      "🔥 Tembakan updateDoc sukses, data sub-collection diperbarui!",
+    );
+    isEditingPage.value = false;
+  } catch (error) {
+    console.error("Gagal memperbarui halaman via sub-collection:", error);
+    alert("Gagal menyimpan perubahan lembaran ke cloud.");
+  }
+};
+
+// Reset otomatis jika user ganti halaman lewat paginasi saat sedang mengedit
+watch(
+  () => currentPageIndex.value,
+  () => {
+    isEditingPage.value = false;
+    editTextBuffer.value = "";
+    editMoodBuffer.value = "";
+  },
+);
 </script>
 
 <style scoped>
