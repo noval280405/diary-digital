@@ -209,6 +209,7 @@
     </template>
 
     <!-- AREA UTAMA: KERTAS ISI DIARY -->
+    <div class="h-[72px] md:hidden"></div>
     <div
       class="w-full min-h-[calc(100vh-180px)] md:min-h-[500px] flex flex-col justify-between relative px-2 sm:px-4 md:pl-8"
     >
