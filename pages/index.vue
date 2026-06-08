@@ -1003,7 +1003,6 @@ import {
   collection,
   getDocs,
   addDoc,
-  updateDoc,
   deleteDoc,
   query,
   orderBy,
@@ -1086,67 +1085,126 @@ onMounted(() => {
 // Memuat data buku lama dari document user, sekaligus memuat isi halaman dari sub-collection 'notebooks'
 const loadUserDiary = async (uid: string) => {
   try {
-    const docRef = doc($fbDb, "user_diaries", uid);
-    const docSnap = await getDoc(docRef);
+    console.log("Memulai penarikan data dari sub-collection notebooks...");
 
-    let baseBooks = [];
-    if (docSnap.exists()) {
-      baseBooks = docSnap.data().notebooks || [];
-    } else {
-      baseBooks = [
-        {
-          id: generateId(),
-          title: "Jurnal Utama Saya",
-          isLocked: false,
-          journalPin: "",
-          pages: [],
-        },
-      ];
-      await saveToFirebase();
-    }
-
-    // Ambil semua halaman dari sub-collection 'notebooks'
+    // 1. LANGSUNG tembak ke sub-collection 'notebooks' untuk mengambil daftar buku
     const notebooksSubRef = collection($fbDb, "user_diaries", uid, "notebooks");
-    const q = query(notebooksSubRef, orderBy("createdAt", "asc"));
-    const querySnapshot = await getDocs(q);
+    const qBooks = query(notebooksSubRef, orderBy("createdAt", "asc"));
+    const querySnapshotBooks = await getDocs(qBooks);
 
-    const allDbPages: any[] = [];
-    querySnapshot.forEach((subDoc) => {
-      allDbPages.push({
-        id: subDoc.id,
-        ...subDoc.data(),
+    let baseBooks: any[] = [];
+
+    querySnapshotBooks.forEach((docSnap) => {
+      baseBooks.push({
+        id: docSnap.id,
+        ...docSnap.data(),
+        pages: [], // Sediakan penampung halaman kosong terlebih dahulu
       });
     });
 
-    // Petakan halaman sub-collection ke dalam objek buku yang sesuai berdasarkan struktur awalmu
-    notebooks.value = baseBooks.map((book: any) => {
-      return {
-        ...book,
-        // Filter halaman yang milik buku ini (berdasarkan bookId), jika belum ada field-nya default ke semua halaman
-        pages: allDbPages.filter(
-          (page: any) => page.bookId === book.id || (!page.bookId && book.id),
-        ),
+    // 2. JIKA ternyata sub-collection kosong (user baru), buatkan buku default otomatis
+    if (baseBooks.length === 0) {
+      console.log("Belum ada buku di cloud, membuat buku default...");
+      const defaultBookId = "book_" + Date.now();
+      const defaultBook = {
+        id: defaultBookId,
+        title: "Jurnal Utama Saya",
+        isLocked: false,
+        journalPin: "",
+        createdAt: Date.now(),
       };
-    });
+
+      // Simpan dokumen buku baru ke sub-collection user_diaries/{uid}/notebooks/{defaultBookId}
+      const newBookDocRef = doc(
+        $fbDb,
+        "user_diaries",
+        uid,
+        "notebooks",
+        defaultBookId,
+      );
+      await setDoc(newBookDocRef, defaultBook);
+
+      baseBooks.push({
+        ...defaultBook,
+        pages: [],
+      });
+    }
+
+    // 3. AMBIL DATA HALAMAN (PAGES) UNTUK MASING-MASING BUKU
+    // Catatan: Pastikan di fungsi savePage kamu, data halaman disimpan ke sub-collection di dalam buku:
+    // path: user_diaries/{uid}/notebooks/{id_buku}/pages
+    const loadedBooks = await Promise.all(
+      baseBooks.map(async (book: any) => {
+        const pagesSubRef = collection(
+          $fbDb,
+          "user_diaries",
+          uid,
+          "notebooks",
+          book.id,
+          "pages",
+        );
+
+        try {
+          const qPages = query(pagesSubRef, orderBy("createdAt", "asc"));
+          const querySnapshotPages = await getDocs(qPages);
+
+          const bookPages: any[] = [];
+          querySnapshotPages.forEach((subDoc) => {
+            bookPages.push({
+              id: subDoc.id,
+              ...subDoc.data(),
+            });
+          });
+
+          return {
+            ...book,
+            pages: bookPages, // Masukkan data halaman yang berhasil ditarik
+          };
+        } catch (err) {
+          // Jika sub-collection 'pages' belum ada di Firestore, return buku dengan array kosong
+          return {
+            ...book,
+            pages: [],
+          };
+        }
+      }),
+    );
+
+    // 4. Set ke state global reaktif Nuxt kamu
+    notebooks.value = loadedBooks;
+
+    console.log(
+      "📊 [Sukses] Seluruh buku dan isi halamannya berhasil dimuat ke aplikasi!",
+    );
   } catch (e) {
-    console.error("Gagal memuat data dari cloud: ", e);
+    console.error("❌ Gagal total memuat data dari cloud: ", e);
   }
 };
-
 const saveToFirebase = async () => {
   if (!currentUser.value) return;
   try {
-    // Menyimpan struktur metadata rak/buku (tanpa isi teks halaman raksasa agar dokumen utama tetap ringan)
-    const booksMetadata = notebooks.value.map((book: any) => {
+    const uid = currentUser.value.uid;
+
+    // Lakukan looping untuk menyimpan setiap buku ke dalam sub-collection 'notebooks'
+    const savePromises = notebooks.value.map(async (book: any) => {
+      // Kita pisahkan 'pages' agar isi cerita halaman tidak ikut numpuk di metadata buku
       const { pages, ...metadata } = book;
-      return metadata;
+
+      // Jalur mutlak: user_diaries/{uid}/notebooks/{id_buku}
+      const bookDocRef = doc($fbDb, "user_diaries", uid, "notebooks", book.id);
+
+      // Gunakan setDoc dengan { merge: true } agar data metadata terupdate tanpa menghapus sub-collection 'pages' di dalamnya (jika ada)
+      return setDoc(bookDocRef, metadata, { merge: true });
     });
 
-    await setDoc(doc($fbDb, "user_diaries", currentUser.value.uid), {
-      notebooks: booksMetadata,
-    });
+    // Jalankan semua proses simpan secara paralel agar cepat
+    await Promise.all(savePromises);
+
+    console.log(
+      "🔥 Struktur rak buku berhasil dicadangkan ke sub-collection 'notebooks'!",
+    );
   } catch (e) {
-    console.error("Gagal mencadangkan ke cloud: ", e);
+    console.error("Gagal mencadangkan metadata ke sub-collection: ", e);
   }
 };
 
@@ -1635,41 +1693,72 @@ const selectBook = (clickedBook: any) => {
 };
 
 const deleteBook = async (clickedBook: any) => {
+  if (!currentUser.value) return;
+
+  // 1. Cari index buku di array lokal
   const originalIndex = notebooks.value.findIndex(
     (b: any) => b.id === clickedBook.id,
   );
-  if (
-    originalIndex !== -1 &&
-    confirm(`Hapus jurnal "${clickedBook.title}" beserta seluruh isinya?`)
-  ) {
-    // Hapus juga halaman-halaman yang ada di dalam subcollection buku tersebut dari Firestore jika diperlukan
-    try {
-      const pToDelete = notebooks.value[originalIndex].pages || [];
-      for (const p of pToDelete) {
-        if (p.id) {
-          const pRef = doc(
-            $fbDb,
-            "user_diaries",
-            currentUser.value.uid,
-            "notebooks",
-            p.id,
-          );
-          await deleteDoc(pRef);
-        }
-      }
-    } catch (e) {
-      console.error("Gagal menghapus sub-pages dari cloud:", e);
-    }
 
+  if (originalIndex === -1) return;
+
+  // Konfirmasi sebelum menghapus
+  if (
+    !confirm(
+      `Hapus jurnal "${clickedBook.title}" beserta seluruh isinya secara permanen?`,
+    )
+  ) {
+    return;
+  }
+
+  const uid = currentUser.value.uid;
+  const bookId = clickedBook.id;
+
+  try {
+    console.log(`Memulai proses penghapusan jurnal: ${bookId}`);
+
+    // 2. HAPUS SEMUA HALAMAN DI DALAM SUB-COLLECTION 'pages' TERLEBIH DAHULU
+    const pagesToDelete = notebooks.value[originalIndex].pages || [];
+
+    for (const p of pagesToDelete) {
+      if (p.id) {
+        // Path Mutlak Halaman: user_diaries/{uid}/notebooks/{bookId}/pages/{pageId}
+        const pageDocRef = doc(
+          $fbDb,
+          "user_diaries",
+          uid,
+          "notebooks",
+          bookId,
+          "pages",
+          p.id,
+        );
+        await deleteDoc(pageDocRef);
+      }
+    }
+    console.log("Semua lembar halaman di cloud berhasil dibersihkan.");
+
+    // 3. HAPUS DOKUMEN UTAMA BUKU ITU SENDIRI DI SUB-COLLECTION 'notebooks'
+    // Path Mutlak Buku: user_diaries/{uid}/notebooks/{bookId}
+    const bookDocRef = doc($fbDb, "user_diaries", uid, "notebooks", bookId);
+    await deleteDoc(bookDocRef);
+    console.log(`Dokumen jurnal ${bookId} berhasil dihapus dari cloud.`);
+
+    // 4. SINKRONISASI STATE LOKAL VUE
     notebooks.value.splice(originalIndex, 1);
 
+    // Amankan index aktif agar aplikasi tidak crash/nge-blank
     if (notebooks.value.length === 0) {
       activeBookIndex.value = 0;
     } else if (activeBookIndex.value >= notebooks.value.length) {
       activeBookIndex.value = notebooks.value.length - 1;
     }
+
     currentPageIndex.value = 0;
-    await saveToFirebase();
+
+    alert("✨ Jurnal dan seluruh isinya berhasil dihapus!");
+  } catch (e) {
+    console.error("Gagal menghapus jurnal dari cloud:", e);
+    alert("Terjadi kesalahan saat mencoba menghapus jurnal dari cloud.");
   }
 };
 
