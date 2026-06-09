@@ -1830,26 +1830,69 @@ const cancelEditPage = () => {
 
 // ✅ BARU & BEBAS NULL: Menyimpan edit teks & gambar ke /jurnals/{idjurnal}/notebooks/{idcatatan}
 const saveEditPage = async () => {
+  console.log("=== 🚀 START DEBUGGING SAVE EDIT PAGE ===");
+
   const cleanText = editTextBuffer.value.trim();
-  if (!cleanText) return;
+  if (!cleanText) {
+    alert("Isi cerita jurnal tidak boleh kosong.");
+    return;
+  }
 
   const user = $fbAuth.currentUser;
   const targetPage = currentPage.value;
 
-  if (!user || !targetPage || !targetPage.id || !currentBook.value.id) return;
+  if (!user || !targetPage || !targetPage.id || !currentBook.value.id) {
+    alert("Sesi masuk tidak valid atau lembaran tidak ditemukan di database.");
+    return;
+  }
 
   const upStore = uploadStore();
   const rawPiniaUrl = upStore.getUrlRef;
 
-  // 🛡️ STRATEGI FILTER BERLAPIS ANTI-NULL
+  // 🔍 SPY LOGS - Memeriksa isi setiap penampung data sebelum diolah
+  console.log("📸 [DATA SPY] Nilai di Pinia:", `"${rawPiniaUrl}"`);
+  console.log(
+    "📸 [DATA SPY] Nilai di Local Buffer:",
+    `"${editImageBuffer.value}"`,
+  );
+  console.log("📸 [DATA SPY] Nilai Asli Gambar Lama:", `"${targetPage.image}"`);
+
+  // ==========================================
+  // 👇 TARO DI SINI (TEPAT DI ATAS TRY CATCH) 👇
+  // ==========================================
+  // 🛡️ STRATEGI FILTER BERLAPIS ANTI-NULL (VERSI MENDUKUNG PENGHAPUSANNYA)
   let finalImageValue = null;
-  if (rawPiniaUrl && rawPiniaUrl.trim() !== "") {
+
+  if (isImageDeleted.value) {
+    // Jalur Utama: Jika user sengaja menekan tombol hapus gambar, paksa database jadi null!
+    finalImageValue = null;
+    console.log(
+      "🎯 [JALUR TERPILIH] User menghapus gambar. Set database menjadi null.",
+    );
+  } else if (rawPiniaUrl && rawPiniaUrl.trim() !== "") {
+    // Jalur 1: User baru saja mengunggah foto baru lewat komponen upload
     finalImageValue = rawPiniaUrl.trim();
+    console.log("🎯 [JALUR TERPILIH] Menggunakan URL Baru dari Pinia Store.");
   } else if (editImageBuffer.value && editImageBuffer.value.trim() !== "") {
+    // Jalur 2: Menggunakan link gambar yang ada di buffer lokal
     finalImageValue = editImageBuffer.value.trim();
+    console.log("🎯 [JALUR TERPILIH] Menggunakan URL dari editImageBuffer.");
   } else {
+    // Jalur 3: Tidak ada aksi apa-apa, selamatkan gambar lama agar tidak hilang
     finalImageValue = targetPage.image ? targetPage.image : null;
+    console.log(
+      "🎯 [JALUR TERPILIH] Tidak ada perubahan gambar. Pertahankan yang lama.",
+    );
   }
+  // ==========================================
+  // 👆 SELESAI PELETAKAN 👆
+  // ==========================================
+
+  console.log(
+    "📝 [HASIL AKHIR] Nilai finalImageValue yang akan dikirim:",
+    finalImageValue,
+  );
+  console.log("=== 📜 SELESAI ANALISIS DATA ===");
 
   try {
     // Jalur path baru: /user_diaries/{uid}/jurnals/{idjurnal}/notebooks/{idcatatan}
@@ -1866,7 +1909,7 @@ const saveEditPage = async () => {
     await updateDoc(pageDocRef, {
       text: cleanText,
       mood: editMoodBuffer.value,
-      image: finalImageValue,
+      image: finalImageValue, // 👈 Nilai hasil filter dikirim ke sini
     });
 
     // Sinkronisasi data ke state lokal Vue secara instan
@@ -1887,6 +1930,8 @@ const saveEditPage = async () => {
     }
 
     alert("✨ Lembaran cerita berhasil diperbarui!");
+
+    isImageDeleted.value = false; // 🧼 Reset penanda hapus setelah sukses
     upStore.setReset(); // Bersihkan sisa indikasi upload di Pinia
     isEditingPage.value = false;
   } catch (error) {
