@@ -1038,7 +1038,7 @@
 import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { Icon } from "@iconify/vue";
 import { useDiaryTheme } from "~/composables/useDiaryTheme";
-import { uploadStore } from "@/stores/uploadStore"; // ✅ 1. KUNCI UTAMA: Import store Pinia yang terlewat
+import { uploadStore } from "@/stores/uploadStore";
 import {
   onAuthStateChanged,
   EmailAuthProvider,
@@ -1065,7 +1065,7 @@ const router = useRouter();
 const currentUser = ref<any>(null);
 
 // =========================================================================
-// STATE UTAMA (Sudah Digabung & Menggunakan State Global Nuxt)
+// STATE UTAMA
 // =========================================================================
 const notebooks = useState<any[]>("global-notebooks", () => []);
 const activeBookIndex = ref(0);
@@ -1085,7 +1085,7 @@ const isCurrentPageUnlocked = ref(false);
 const inputPin = ref("");
 const pinError = ref(false);
 
-// State Pengaturan Modal Reset Lupa PIN via Password (Halaman Catatan)
+// State Pengaturan Modal Reset Lupa PIN via Password
 const showResetModal = ref(false);
 const resetPassword = ref("");
 const resetNewPin = ref("");
@@ -1113,12 +1113,11 @@ const moodList = [
   { emoji: "🤢", label: "Sakit" },
 ];
 
-// Generator ID Unik untuk Buku Baru
 const generateId = () =>
   "book_" + Date.now() + Math.random().toString(36).slice(2, 8);
 
 // =========================================================================
-// FIREBASE AUTH LIFECYCLE & DATABASES (SINKRON STRUKTUR HALAMAN LANGSUNG)
+// FIREBASE AUTH LIFECYCLE & LOAD DATA (STRUKTUR TINGKAT BARU)
 // =========================================================================
 onMounted(() => {
   onAuthStateChanged($fbAuth, async (user) => {
@@ -1131,84 +1130,97 @@ onMounted(() => {
   });
 });
 
-// Memuat dokumen halaman langsung dari sub-collection 'notebooks'
+// ✅ BARU: Memuat data bertingkat dari sub-collection jurnals -> notebooks
 const loadUserDiary = async (uid: string) => {
   try {
-    console.log(
-      "📂 Memulai sinkronisasi halaman langsung dari sub-collection notebooks...",
-    );
+    console.log("📂 Sinkronisasi data bertingkat dari cloud...");
 
-    // 1. Ambil SEMUA dokumen halaman langsung dari path: user_diaries/{uid}/notebooks
-    const notebooksSubRef = collection($fbDb, "user_diaries", uid, "notebooks");
-    const qPages = query(notebooksSubRef, orderBy("createdAt", "asc"));
-    const querySnapshotPages = await getDocs(qPages);
-
-    const allDbPages: any[] = [];
-    querySnapshotPages.forEach((subDoc) => {
-      allDbPages.push({
-        id: subDoc.id,
-        ...subDoc.data(),
-      });
-    });
-
-    // 2. Ambil metadata rak/struktur buku dari dokumen induk
-    const docRef = doc($fbDb, "user_diaries", uid);
-    const docSnap = await getDoc(docRef);
+    // 1. Ambil semua daftar Jurnal (Rak Buku) terlebih dahulu
+    const journalsRef = collection($fbDb, "user_diaries", uid, "jurnals");
+    const journalSnapshot = await getDocs(journalsRef);
 
     let baseBooks: any[] = [];
-    if (docSnap.exists() && docSnap.data().notebooks) {
-      baseBooks = docSnap.data().notebooks;
+
+    if (!journalSnapshot.empty) {
+      journalSnapshot.forEach((jDoc) => {
+        baseBooks.push({
+          id: jDoc.id,
+          ...jDoc.data(),
+          pages: [], // Siapkan wadah halaman lokal
+        });
+      });
     } else {
-      // Fallback buku jika kosong
-      baseBooks = [
-        {
-          id: "book_default",
-          title: "Jurnal Utama Saya",
-          isLocked: false,
-          journalPin: "",
-          pages: [],
-        },
-      ];
+      // Pembuatan awal jika database user masih kosong baru mendaftar
+      const defaultId = "book_default";
+      const defaultJournalRef = doc(
+        $fbDb,
+        "user_diaries",
+        uid,
+        "jurnals",
+        defaultId,
+      );
+      const defaultData = {
+        title: "Jurnal Utama Saya",
+        isLocked: false,
+        journalPin: "",
+        createdAt: Date.now(),
+      };
+      await setDoc(defaultJournalRef, defaultData);
+      baseBooks.push({ id: defaultId, ...defaultData, pages: [] });
     }
 
-    // 3. Kelompokkan halaman langsung berdasarkan bookId masing-masing
-    notebooks.value = baseBooks.map((book: any, index: number) => {
-      return {
-        ...book,
-        pages: allDbPages.filter((page: any) => {
-          return (
-            page.bookId === book.id ||
-            (index === 0 && (!page.bookId || page.bookId === "book_default"))
-          );
-        }),
-      };
-    });
+    // 2. Tarik lembaran 'notebooks' untuk masing-masing Jurnal yang ada
+    for (let book of baseBooks) {
+      const pagesRef = collection(
+        $fbDb,
+        "user_diaries",
+        uid,
+        "jurnals",
+        book.id,
+        "notebooks",
+      );
+      const qPages = query(pagesRef, orderBy("createdAt", "asc"));
+      const pagesSnapshot = await getDocs(qPages);
 
-    console.log(
-      "📊 [Sukses] Semua halaman berhasil ditarik dan dikelompokkan ke dalam jurnal!",
-    );
+      const pagesData: any[] = [];
+      pagesSnapshot.forEach((pDoc) => {
+        pagesData.push({
+          id: pDoc.id,
+          ...pDoc.data(),
+        });
+      });
+      book.pages = pagesData;
+    }
+
+    notebooks.value = baseBooks;
+    console.log("📊 [Sukses] Semua sub-collection terkelompok sempurna!");
   } catch (e) {
-    console.error("❌ Gagal memuat lembaran dari cloud: ", e);
+    console.error("❌ Gagal memuat lembaran bertingkat: ", e);
   }
 };
 
+// ✅ BARU: Menyimpan susunan metadata Jurnal (Rak)
 const saveToFirebase = async () => {
   if (!currentUser.value) return;
   try {
     const uid = currentUser.value.uid;
-
-    // Simpan susunan metadata struktur buku saja ke dalam field dokumen induk user_diaries/{uid}
-    const userDocRef = doc($fbDb, "user_diaries", uid);
-
-    const booksMetadataOnly = notebooks.value.map((book: any) => {
-      const { pages, ...metadata } = book;
-      return metadata;
-    });
-
-    await setDoc(userDocRef, { notebooks: booksMetadataOnly }, { merge: true });
-    console.log("🔥 Struktur rak buku berhasil dicadangkan ke dokumen utama!");
+    // Mengamankan data ke /user_diaries/{uid}/jurnals/{idjurnal}
+    for (const book of notebooks.value) {
+      const journalDocRef = doc($fbDb, "user_diaries", uid, "jurnals", book.id);
+      await setDoc(
+        journalDocRef,
+        {
+          title: book.title,
+          isLocked: book.isLocked,
+          journalPin: book.journalPin,
+          createdAt: book.createdAt || Date.now(),
+        },
+        { merge: true },
+      );
+    }
+    console.log("🔥 Metadata jurnals berhasil dicadangkan.");
   } catch (e) {
-    console.error("Gagal mencadangkan metadata rak buku: ", e);
+    console.error("Gagal mencadangkan jurnal: ", e);
   }
 };
 
@@ -1235,84 +1247,49 @@ const checkJournalPinInput = () => {
 
 const toggleJournalLock = async () => {
   if (currentBook.value.isLocked) {
-    const confirmPin = prompt(
-      "Masukkan 6-Digit PIN Jurnal saat ini untuk melepas gembok permanen:",
-    );
+    const confirmPin = prompt("Masukkan 6-Digit PIN Jurnal saat ini:");
     if (confirmPin === currentBook.value.journalPin) {
       currentBook.value.isLocked = false;
       currentBook.value.journalPin = "";
       isJournalUnlocked.value = false;
-      alert("🔓 Gembok dilepas! Jurnal ini sekarang berstatus umum.");
+      alert("🔓 Gembok dilepas!");
       await saveToFirebase();
     } else if (confirmPin !== null) {
-      alert("❌ PIN Salah! Gagal membuka gembok.");
+      alert("❌ PIN Salah!");
     }
   } else {
-    const newPin = prompt(
-      "Buat 6-Digit PIN Angka Baru untuk mengamankan jurnal ini:",
-    );
+    const newPin = prompt("Buat 6-Digit PIN Angka Baru:");
     if (newPin === null) return;
-
     if (!newPin || newPin.length !== 6 || isNaN(Number(newPin))) {
-      alert("⚠️ PIN wajib berupa 6 digit angka baku (Contoh: 123456).");
+      alert("⚠️ PIN wajib berupa 6 digit angka.");
       return;
     }
-
     currentBook.value.isLocked = true;
     currentBook.value.journalPin = newPin;
     isJournalUnlocked.value = true;
-    alert(
-      `🔐 Sukses! Jurnal "${currentBook.value.title}" sekarang aman terkunci.`,
-    );
+    alert(`🔐 Sukses terkunci.`);
     await saveToFirebase();
   }
 };
 
 const handleResetJournalPinWithPassword = async () => {
   resetJournalErrorMsg.value = "";
-
-  if (!resetJournalPassword.value) {
-    resetJournalErrorMsg.value = "Password akun login wajib diisi!";
-    return;
-  }
-  if (
-    !resetNewJournalPin.value ||
-    resetNewJournalPin.value.length !== 6 ||
-    isNaN(Number(resetNewJournalPin.value))
-  ) {
-    resetJournalErrorMsg.value = "PIN baru wajib berupa 6 digit angka baku!";
-    return;
-  }
-
+  if (!resetJournalPassword.value || !resetNewJournalPin.value) return;
   isJournalResetLoading.value = true;
-
   try {
     const credential = EmailAuthProvider.credential(
       currentUser.value.email,
       resetJournalPassword.value,
     );
     await reauthenticateWithCredential($fbAuth.currentUser!, credential);
-
     currentBook.value.journalPin = resetNewJournalPin.value;
     currentBook.value.isLocked = true;
     isJournalUnlocked.value = true;
-
     await saveToFirebase();
-    alert(
-      `🎉 Sukses! PIN Gembok untuk jurnal "${currentBook.value.title}" berhasil di-reset.`,
-    );
+    alert(`🎉 PIN Jurnal berhasil di-reset.`);
     closeJournalResetModal();
   } catch (error: any) {
-    console.error("Gagal melakukan reset PIN Jurnal:", error);
-    if (
-      error.code === "auth/wrong-password" ||
-      error.code === "auth/invalid-credential"
-    ) {
-      resetJournalErrorMsg.value = "Password salah! Akses verifikasi ditolak.";
-    } else {
-      resetJournalErrorMsg.value =
-        "Terjadi kesalahan sistem saat memverifikasi akun.";
-    }
+    resetJournalErrorMsg.value = "Akses verifikasi ditolak.";
   } finally {
     isJournalResetLoading.value = false;
   }
@@ -1322,11 +1299,10 @@ const closeJournalResetModal = () => {
   showJournalResetModal.value = false;
   resetJournalPassword.value = "";
   resetNewJournalPin.value = "";
-  resetJournalErrorMsg.value = "";
 };
 
 // =========================================================================
-// LOGIKA PROTEKSI GEMBOK HALAMAN CATATAN (KONTEN UTAMA)
+// LOGIKA PROTEKSI GEMBOK HALAMAN CATATAN (NOTEBOOKS)
 // =========================================================================
 watch(
   [currentPageIndex, activeBookIndex],
@@ -1355,78 +1331,48 @@ const checkPinInput = () => {
 };
 
 const togglePageLock = async () => {
-  if (!currentUser.value || !currentPage.value.id) return;
+  if (!currentUser.value || !currentPage.value.id || !currentBook.value.id)
+    return;
+
+  // ✅ TARGET PATH SUB-COLLECTION BARU
   const pageDocRef = doc(
     $fbDb,
     "user_diaries",
     currentUser.value.uid,
+    "jurnals",
+    currentBook.value.id,
     "notebooks",
     currentPage.value.id,
   );
 
   if (currentPage.value.isLocked) {
     if (isCurrentPageUnlocked.value) {
-      const confirmDisable = confirm(
-        "Apakah kamu ingin MEMBUANG proteksi PIN pada halaman ini secara permanen?",
-      );
-      if (confirmDisable) {
-        const confirmPin = prompt("Masukkan PIN saat ini untuk konfirmasi:");
-        if (confirmPin === currentPage.value.pin) {
-          currentPage.value.isLocked = false;
-          currentPage.value.pin = "";
-          isCurrentPageUnlocked.value = false;
-
-          await updateDoc(pageDocRef, { isLocked: false, pin: "" });
-          alert("🔒 Proteksi PIN telah dilepas.");
-        } else if (confirmPin !== null) {
-          alert("❌ PIN Salah!");
-        }
-      }
-    } else {
-      const inputBuka = prompt(
-        "Masukkan 6-Digit PIN untuk membuka lembaran ini:",
-      );
-      if (inputBuka === currentPage.value.pin) {
-        isCurrentPageUnlocked.value = true;
-        pinError.value = false;
-      } else if (inputBuka !== null) {
+      const confirmPin = prompt("Masukkan PIN saat ini untuk melepas gembok:");
+      if (confirmPin === currentPage.value.pin) {
+        currentPage.value.isLocked = false;
+        currentPage.value.pin = "";
+        isCurrentPageUnlocked.value = false;
+        await updateDoc(pageDocRef, { isLocked: false, pin: "" });
+        alert("🔒 Gembok dilepas.");
+      } else if (confirmPin !== null) {
         alert("❌ PIN Salah!");
       }
     }
   } else {
     const newPin = prompt("Buat 6-Digit PIN angka baru:");
-    if (newPin === null) return;
-
-    if (!newPin || newPin.length !== 6 || isNaN(Number(newPin))) {
-      alert("⚠️ PIN wajib berupa 6 digit nomor angka baku.");
-      return;
-    }
+    if (newPin === null || newPin.length !== 6 || isNaN(Number(newPin))) return;
 
     currentPage.value.isLocked = true;
     currentPage.value.pin = newPin;
     isCurrentPageUnlocked.value = true;
 
     await updateDoc(pageDocRef, { isLocked: true, pin: newPin });
-    alert("🔐 Sukses terkunci aman!");
+    alert("🔐 Lembaran terkunci.");
   }
 };
 
 const handleResetPinWithPassword = async () => {
-  resetErrorMsg.value = "";
-
-  if (!resetPassword.value) {
-    resetErrorMsg.value = "Password akun wajib diisi!";
-    return;
-  }
-  if (
-    !resetNewPin.value ||
-    resetNewPin.value.length !== 6 ||
-    isNaN(Number(resetNewPin.value))
-  ) {
-    resetErrorMsg.value = "PIN baru harus berupa 6 digit angka baku!";
-    return;
-  }
-
+  if (!resetPassword.value || !resetNewPin.value) return;
   isResetLoading.value = true;
   try {
     const credential = EmailAuthProvider.credential(
@@ -1439,25 +1385,21 @@ const handleResetPinWithPassword = async () => {
       $fbDb,
       "user_diaries",
       currentUser.value.uid,
+      "jurnals",
+      currentBook.value.id,
       "notebooks",
       currentPage.value.id,
     );
+
     currentPage.value.pin = resetNewPin.value;
     currentPage.value.isLocked = true;
     isCurrentPageUnlocked.value = true;
 
     await updateDoc(pageDocRef, { isLocked: true, pin: resetNewPin.value });
-    alert("🔄 PIN Berhasil Diperbarui!");
+    alert("🔄 PIN Halaman Berhasil Diperbarui!");
     closeResetModal();
   } catch (error: any) {
-    if (
-      error.code === "auth/wrong-password" ||
-      error.code === "auth/invalid-credential"
-    ) {
-      resetErrorMsg.value = "Password salah! Akses ditolak.";
-    } else {
-      resetErrorMsg.value = "Gagal memverifikasi akun.";
-    }
+    resetErrorMsg.value = "Gagal memverifikasi akun.";
   } finally {
     isResetLoading.value = false;
   }
@@ -1467,11 +1409,10 @@ const closeResetModal = () => {
   showResetModal.value = false;
   resetPassword.value = "";
   resetNewPin.value = "";
-  resetErrorMsg.value = "";
 };
 
 // =========================================================================
-// MANAJEMEN TULIS & HALAMAN CATATAN (DIPERBARUI KE SUB-COLLECTION)
+// MANAJEMEN TULIS & SIMPAN (NOTEBOOKS BARU DI DALAM JURNAL)
 // =========================================================================
 const startWriting = () => {
   newText.value = "";
@@ -1484,16 +1425,44 @@ const cancelWriting = () => {
   isWritingMode.value = false;
 };
 
-// MENAMBAH HALAMAN BARU LANGSUNG KE SUB-COLLECTION
+// ✅ BARU: Menulis lembaran teks catatan langsung ke sub-collection notebooks milik jurnal terpilih
 const savePage = async () => {
-  if (!newText.value.trim() || !currentUser.value) return;
+  if (!newText.value.trim() || !currentUser.value || !currentBook.value.id)
+    return;
 
   if (!currentBook.value.pages) currentBook.value.pages = [];
 
+  // ✅ 1. KUNCI AMAN: Ambil URL hasil upload dari Pinia Store
+  const upStore = uploadStore();
+  const rawPiniaUrl = upStore.getUrlRef;
+
+  // 🛡️ STRATEGI FILTER BERLAPIS ANTI-NULL UNTUK NOTEBOOK BARU
+  let finalImageValue = null;
+
+  if (rawPiniaUrl && rawPiniaUrl.trim() !== "") {
+    // Jalur 1: Jika user sukses upload lewat komponen Tailwind baru
+    finalImageValue = rawPiniaUrl.trim();
+    console.log(
+      "🎯 [SAVE-PAGE] Menggunakan URL Gambar dari Pinia Store:",
+      finalImageValue,
+    );
+  } else if (
+    imagePreview.value &&
+    imagePreview.value.trim() !== "" &&
+    !imagePreview.value.startsWith("data:image")
+  ) {
+    // Jalur 2: Jika ada string URL valid non-base64 di preview
+    finalImageValue = imagePreview.value.trim();
+  } else {
+    // Jalur 3: Jika tidak ada upload gambar, set null agar field di Firestore bersih
+    finalImageValue = null;
+    console.log("🎯 [SAVE-PAGE] Catatan dibuat tanpa gambar (null).");
+  }
+
+  // ✅ 2. Gunakan finalImageValue di dalam objek data
   const newPageData = {
-    bookId: currentBook.value.id,
     text: newText.value,
-    image: imagePreview.value,
+    image: finalImageValue, // 👈 Menggunakan URL Firebase resmi hasil filter
     createdAt: Date.now(),
     mood: selectedMood.value,
     isLocked: false,
@@ -1501,12 +1470,16 @@ const savePage = async () => {
   };
 
   try {
+    // Jalur path sasaran sub-collection: /user_diaries/{uid}/jurnals/{idjurnal}/notebooks
     const notebooksSubRef = collection(
       $fbDb,
       "user_diaries",
       currentUser.value.uid,
+      "jurnals",
+      currentBook.value.id,
       "notebooks",
     );
+
     const docRef = await addDoc(notebooksSubRef, newPageData);
 
     currentBook.value.pages.push({
@@ -1519,9 +1492,14 @@ const savePage = async () => {
     imagePreview.value = null;
     isWritingMode.value = false;
     searchQuery.value = "";
+
+    console.log("📝 Sukses menulis cerita baru ke sub-collection notebooks!");
+
+    // ✅ 3. BERSIHKAN STORE: Reset state upload setelah dokumen berhasil masuk Cloud
+    upStore.setReset();
   } catch (e) {
-    console.error("Gagal menambahkan halaman baru ke sub-collection:", e);
-    alert("Gagal mencadangkan lembar baru ke cloud.");
+    console.error("❌ Gagal menyimpan notebook baru:", e);
+    alert("Gagal mencadangkan lembar baru.");
   }
 };
 
@@ -1544,10 +1522,9 @@ const prevPage = () => {
 };
 
 // =========================================================================
-// INTEGRASI TEMA & MANAJEMEN AKSI SIDEBAR
+// TEMA & MANAJEMEN AKSI RAK JURNAL
 // =========================================================================
 const currentTheme = useState<string>("diary-active-theme", () => "cream");
-
 const themeStyles: Record<string, any> = {
   dark: {
     textLabel: "text-indigo-400",
@@ -1624,7 +1601,7 @@ const themeStyles: Record<string, any> = {
   },
 };
 
-// COMPUTED DATA BUKU & PAGES
+// COMPUTED DATA
 const currentBook = computed(() => {
   const listBuku = Array.isArray(notebooks.value) ? notebooks.value : [];
   return (
@@ -1638,9 +1615,9 @@ const currentBook = computed(() => {
   );
 });
 
-const currentPage = computed(() => {
-  return filteredPages.value[currentPageIndex.value] || {};
-});
+const currentPage = computed(
+  () => filteredPages.value[currentPageIndex.value] || {},
+);
 
 const filteredNotebooks = computed(() => {
   const listBuku = Array.isArray(notebooks.value) ? notebooks.value : [];
@@ -1652,34 +1629,50 @@ const filteredNotebooks = computed(() => {
 
 const filteredPages = computed(() => {
   if (!currentBook.value || !currentBook.value.pages) return [];
-  return currentBook.value.pages.filter((page: any) => {
-    return page?.text?.toLowerCase().includes(searchQuery.value.toLowerCase());
-  });
+  return currentBook.value.pages.filter((page: any) =>
+    page?.text?.toLowerCase().includes(searchQuery.value.toLowerCase()),
+  );
 });
 
-const currentThemeClasses = computed(() => {
-  return themeStyles[currentTheme.value] || themeStyles["cream"];
-});
+const currentThemeClasses = computed(
+  () => themeStyles[currentTheme.value] || themeStyles["cream"],
+);
 
+// ✅ BARU: Menambah dokumen Jurnal ke sub-collection /jurnals
 const createNewBook = async () => {
-  if (!newBookTitle.value.trim()) return;
+  if (!newBookTitle.value.trim() || !currentUser.value) return;
 
+  const newId = generateId();
   const listBuku = Array.isArray(notebooks.value) ? notebooks.value : [];
-  listBuku.push({
-    id: generateId(),
+
+  const newJournalData = {
     title: newBookTitle.value.trim(),
     createdAt: Date.now(),
     isLocked: false,
     journalPin: "",
-    pages: [],
-  });
+  };
 
-  notebooks.value = listBuku;
-  newBookTitle.value = "";
-  activeBookIndex.value = notebooks.value.length - 1;
-  currentPageIndex.value = 0;
-  isWritingMode.value = false;
-  await saveToFirebase();
+  try {
+    const journalDocRef = doc(
+      $fbDb,
+      "user_diaries",
+      currentUser.value.uid,
+      "jurnals",
+      newId,
+    );
+    await setDoc(journalDocRef, newJournalData);
+
+    listBuku.push({ id: newId, ...newJournalData, pages: [] });
+    notebooks.value = listBuku;
+    newBookTitle.value = "";
+    activeBookIndex.value = notebooks.value.length - 1;
+    currentPageIndex.value = 0;
+    isWritingMode.value = false;
+
+    console.log("🎨 Jurnal baru berhasil dibentuk di Cloud sub-collection!");
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const selectBook = (clickedBook: any) => {
@@ -1693,67 +1686,63 @@ const selectBook = (clickedBook: any) => {
   }
 };
 
+// ✅ BARU: Menghapus Jurnal sekaligus menyapu bersih seluruh sub-collection notebooks di dalamnya
 const deleteBook = async (clickedBook: any) => {
   if (!currentUser.value) return;
-
   const originalIndex = notebooks.value.findIndex(
     (b: any) => b.id === clickedBook.id,
   );
-
   if (originalIndex === -1) return;
 
   if (
     !confirm(
-      `Hapus jurnal "${clickedBook.title}" beserta seluruh isinya secara permanen?`,
+      `Hapus jurnal "${clickedBook.title}" beserta seluruh lembaran di dalamnya?`,
     )
-  ) {
+  )
     return;
-  }
 
   const uid = currentUser.value.uid;
   const bookId = clickedBook.id;
 
   try {
-    console.log(`Memulai proses penghapusan jurnal: ${bookId}`);
-
-    // Hapus semua halaman yang terikat dengan bookId dari sub-collection notebooks
+    // 1. Bersihkan semua lembar notebooks di bawah jurnal ini
     const pagesToDelete = notebooks.value[originalIndex].pages || [];
     for (const p of pagesToDelete) {
       if (p.id) {
-        const pageDocRef = doc($fbDb, "user_diaries", uid, "notebooks", p.id);
+        const pageDocRef = doc(
+          $fbDb,
+          "user_diaries",
+          uid,
+          "jurnals",
+          bookId,
+          "notebooks",
+          p.id,
+        );
         await deleteDoc(pageDocRef);
       }
     }
-    console.log("Semua lembar halaman di cloud berhasil dibersihkan.");
 
-    // Sinkronisasi mutasi lokal array
+    // 2. Hapus dokumen induk Jurnal
+    const journalDocRef = doc($fbDb, "user_diaries", uid, "jurnals", bookId);
+    await deleteDoc(journalDocRef);
+
     notebooks.value.splice(originalIndex, 1);
-
-    if (notebooks.value.length === 0) {
-      activeBookIndex.value = 0;
-    } else if (activeBookIndex.value >= notebooks.value.length) {
-      activeBookIndex.value = notebooks.value.length - 1;
-    }
-
+    activeBookIndex.value =
+      notebooks.value.length === 0
+        ? 0
+        : Math.min(activeBookIndex.value, notebooks.value.length - 1);
     currentPageIndex.value = 0;
-    await saveToFirebase();
 
-    alert("✨ Jurnal dan seluruh isinya berhasil dihapus!");
+    alert("✨ Jurnal berhasil dibersihkan dari cloud!");
   } catch (e) {
-    console.error("Gagal menghapus jurnal dari cloud:", e);
-    alert("Terjadi kesalahan saat mencoba menghapus jurnal dari cloud.");
+    console.error(e);
   }
 };
 
 const showAllNotebooks = ref(false);
-
 const displayedNotebooks = computed(() => {
-  if (searchQuery.value) {
+  if (searchQuery.value || showAllNotebooks.value)
     return filteredNotebooks.value;
-  }
-  if (showAllNotebooks.value) {
-    return filteredNotebooks.value;
-  }
   return filteredNotebooks.value.slice(0, 5);
 });
 
@@ -1773,67 +1762,63 @@ const cancelEdit = () => {
   editingBookTitle.value = "";
 };
 
+// ✅ BARU: Menyimpan perubahan judul Jurnal di dalam sub-collection jurnals
 const saveBookTitle = async (book: any) => {
   const cleanTitle = editingBookTitle.value.trim();
-
   if (!cleanTitle || cleanTitle === book.title) {
     cancelEdit();
     return;
   }
 
   const user = $fbAuth.currentUser;
-  if (!user) {
-    alert("Sesi Anda telah habis. Silakan login kembali.");
-    return;
-  }
+  if (!user) return;
 
   try {
-    const updatedNotebooks = notebooks.value.map((item: any) => {
-      if (item.id === book.id) {
-        return { ...item, title: cleanTitle };
-      }
+    const journalDocRef = doc(
+      $fbDb,
+      "user_diaries",
+      user.uid,
+      "jurnals",
+      book.id,
+    );
+    await updateDoc(journalDocRef, { title: cleanTitle });
+
+    notebooks.value = notebooks.value.map((item: any) => {
+      if (item.id === book.id) return { ...item, title: cleanTitle };
       return item;
     });
-
-    notebooks.value = updatedNotebooks;
-    await saveToFirebase();
     book.title = cleanTitle;
-
-    console.log("Judul jurnal di database user_diaries berhasil diperbarui.");
+    console.log("Judul jurnal sukses diperbarui di sub-collection jurnals.");
   } catch (error) {
-    console.error("Gagal memperbarui judul di Firestore:", error);
-    alert("Gagal menyimpan perubahan ke cloud.");
+    console.error(error);
   } finally {
     cancelEdit();
   }
 };
 
 // =========================================================================
-// STATE & MANAJEMEN BUFFER EDIT HALAMAN CATATAN
+// STATE & MANAJEMEN EDIT HALAMAN (NOTEBOOKS VERSI SINKRON SANGAT AMAN)
 // =========================================================================
 const isEditingPage = ref(false);
 const editTextBuffer = ref("");
 const editMoodBuffer = ref("");
 const editImageBuffer = ref<string | null>(null);
 
+const isImageDeleted = ref(false); // 👈 Penanda apakah user sengaja menghapus gambar
+
 const removeEditImage = () => {
   editImageBuffer.value = null;
+  isImageDeleted.value = true; // 👈 Set true saat tombol hapus diklik user
 };
 
 const startEditPage = () => {
   const page = currentPage.value;
-
-  if (!page || !page.id) {
-    alert("Maaf, lembaran halaman tidak valid atau tidak memiliki ID resmi.");
-    return;
-  }
+  if (!page || !page.id) return;
 
   editTextBuffer.value = page.text || "";
   editMoodBuffer.value = page.mood || "😊";
   editImageBuffer.value = page.image || null;
-
   isEditingPage.value = true;
-  console.log("✏️ Membuka mode edit untuk dokumen halaman ID:", page.id);
 };
 
 const cancelEditPage = () => {
@@ -1843,95 +1828,52 @@ const cancelEditPage = () => {
   editImageBuffer.value = null;
 };
 
+// ✅ BARU & BEBAS NULL: Menyimpan edit teks & gambar ke /jurnals/{idjurnal}/notebooks/{idcatatan}
 const saveEditPage = async () => {
-  console.log("=== 🚀 START DEBUGGING SAVE EDIT PAGE ===");
-
   const cleanText = editTextBuffer.value.trim();
-  if (!cleanText) {
-    alert("Isi cerita jurnal tidak boleh kosong.");
-    return;
-  }
+  if (!cleanText) return;
 
   const user = $fbAuth.currentUser;
   const targetPage = currentPage.value;
 
-  if (!user || !targetPage || !targetPage.id) {
-    alert("Sesi masuk tidak valid atau lembaran tidak ditemukan di database.");
-    return;
-  }
+  if (!user || !targetPage || !targetPage.id || !currentBook.value.id) return;
 
-  // ✅ 2. KUNCI UTAMA: Panggil instans secara aman untuk runtime environment Nuxt
   const upStore = uploadStore();
   const rawPiniaUrl = upStore.getUrlRef;
 
-  // 🔍 SPY LOGS - Memeriksa isi setiap penampung data sebelum diolah
-  console.log(
-    "📸 [DATA SPY] Nilai di Pinia (upStore.getUrlRef):",
-    `"${rawPiniaUrl}"`,
-  );
-  console.log(
-    "📸 [DATA SPY] Nilai di Local Buffer (editImageBuffer):",
-    `"${editImageBuffer.value}"`,
-  );
-  console.log(
-    "📸 [DATA SPY] Nilai Asli Gambar Lama (targetPage.image):",
-    `"${targetPage.image}"`,
-  );
-
-  // 🛡️ STRATEGI FILTER BERLAPIS (Membasmi String Kosong "")
+  // 🛡️ STRATEGI FILTER BERLAPIS ANTI-NULL
   let finalImageValue = null;
-
   if (rawPiniaUrl && rawPiniaUrl.trim() !== "") {
-    // Jalur 1: User baru saja upload foto baru lewat komponen upload
     finalImageValue = rawPiniaUrl.trim();
-    console.log("🎯 [JALUR TERPILIH] Menggunakan URL Baru dari Pinia Store.");
   } else if (editImageBuffer.value && editImageBuffer.value.trim() !== "") {
-    // Jalur 2: Menggunakan link gambar yang ada di buffer lokal halaman utama
     finalImageValue = editImageBuffer.value.trim();
-    console.log("🎯 [JALUR TERPILIH] Menggunakan URL dari editImageBuffer.");
   } else {
-    // Jalur 3: Jika dua-duanya "" atau null, selamatkan dengan gambar lama agar tidak terhapus
     finalImageValue = targetPage.image ? targetPage.image : null;
-    console.log(
-      "🎯 [JALUR TERPILIH] Store & Buffer kosong. Menyelamatkan gambar asli lama.",
-    );
   }
 
-  console.log(
-    "📝 [HASIL AKHIR INTERAL] Nilai finalImageValue yang akan dikirim:",
-    finalImageValue,
-  );
-  console.log("=== 📜 SELESAI ANALISIS DATA ===");
-
   try {
+    // Jalur path baru: /user_diaries/{uid}/jurnals/{idjurnal}/notebooks/{idcatatan}
     const pageDocRef = doc(
       $fbDb,
       "user_diaries",
       user.uid,
+      "jurnals",
+      currentBook.value.id,
       "notebooks",
       targetPage.id,
     );
 
-    console.log(
-      "💾 Menulis ke Firestore path: user_diaries/" +
-        user.uid +
-        "/notebooks/" +
-        targetPage.id,
-    );
-
-    // Eksekusi Tembak ke Firestore Cloud
     await updateDoc(pageDocRef, {
       text: cleanText,
       mood: editMoodBuffer.value,
-      image: finalImageValue, // Mengirim data tersaring ketat
+      image: finalImageValue,
     });
 
-    // Sinkronisasi komponen visual secara instan
+    // Sinkronisasi data ke state lokal Vue secara instan
     targetPage.text = cleanText;
     targetPage.mood = editMoodBuffer.value;
     targetPage.image = finalImageValue;
 
-    // Sinkronisasi deep reactive array pembungkus halaman
     if (currentBook.value && currentBook.value.pages) {
       const idx = currentBook.value.pages.findIndex(
         (p: any) => p.id === targetPage.id,
@@ -1940,29 +1882,19 @@ const saveEditPage = async () => {
         currentBook.value.pages[idx].text = cleanText;
         currentBook.value.pages[idx].mood = editMoodBuffer.value;
         currentBook.value.pages[idx].image = finalImageValue;
-
-        // Force refresh state array Vue
         currentBook.value.pages = [...currentBook.value.pages];
       }
     }
 
-    console.log("✅ [SUKSES] Data cloud & lokal sinkron sempurna!");
     alert("✨ Lembaran cerita berhasil diperbarui!");
-
-    // 🧼 Bersihkan Pinia Store di sini secara aman setelah transaksi sukses
-    upStore.setReset();
-
+    upStore.setReset(); // Bersihkan sisa indikasi upload di Pinia
     isEditingPage.value = false;
   } catch (error) {
-    console.error(
-      "❌ [ERROR FIRESTORE] Gagal memperbarui lembaran halaman:",
-      error,
-    );
-    alert("Gagal menyimpan perubahan lembaran ke cloud.");
+    console.error(error);
+    alert("Gagal menyimpan perubahan.");
   }
 };
 
-// Reset otomatis jika ganti halaman lewat paginasi saat sedang mengedit
 watch(
   () => currentPageIndex.value,
   () => {
