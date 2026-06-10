@@ -115,7 +115,7 @@
                   @click.stop
                   @keyup.enter="saveBookTitle(book)"
                   @keyup.esc="cancelEdit"
-                  class="w-full bg-white/20 dark:bg-slate-950/40 border-2 border-indigo-500/50 rounded-xl px-3 py-1.5 text-sm outline-none text-current font-bold transition-all shadow-inner backdrop-blur-xs"
+                  class="w-full bg-white border-2 border-slate-200 focus:border-indigo-500 rounded-xl px-3 py-1.5 text-sm outline-none text-slate-800 font-bold transition-all shadow-sm"
                   ref="editInputRef"
                 />
                 <!-- Mode Teks Biasa -->
@@ -134,37 +134,54 @@
                   {{ book?.pages?.length || 0 }}
                 </span>
 
-                <!-- GRUP TOMBOL UTAMA (Selalu Tampil Tanpa Perlu Hover) -->
                 <div class="flex items-center gap-1">
-                  <!-- Tombol Edit / Simpan -->
-                  <button
-                    v-if="editingBookId === book.id"
-                    @click.stop="saveBookTitle(book)"
-                    class="p-2 rounded-xl border border-transparent transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
-                    title="Simpan Nama"
-                  >
-                    <Icon
-                      icon="solar:check-circle-bold-duotone"
-                      class="w-6 h-6"
-                    />
-                  </button>
-                  <button
-                    v-else
-                    @click.stop="startEditBook(book)"
-                    class="p-2 rounded-xl border border-transparent transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
-                    title="Ubah Nama"
-                  >
-                    <Icon icon="solar:pen-2-bold-duotone" class="w-6 h-6" />
-                  </button>
+                  <template v-if="editingBookId === book.id">
+                    <button
+                      @click.stop="saveBookTitle(book)"
+                      class="group p-1.5 rounded-lg bg-white border border-slate-100 shadow-3xs transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+                      title="Simpan Nama"
+                    >
+                      <Icon
+                        icon="solar:check-circle-bold-duotone"
+                        class="w-4 h-4 text-emerald-600 dark:text-emerald-500"
+                      />
+                    </button>
 
-                  <!-- Tombol Hapus (Dibuat Berwarna Merah Tegas) -->
-                  <button
-                    @click.stop="deleteBook(book)"
-                    class="p-2 rounded-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
-                    title="Hapus Jurnal"
-                  >
-                    <Icon icon="solar:close-square-linear" class="w-6 h-6" />
-                  </button>
+                    <button
+                      @click.stop="cancelEdit"
+                      class="group p-1.5 rounded-lg bg-white border border-slate-100 shadow-3xs transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+                      title="Batal Edit"
+                    >
+                      <Icon
+                        icon="solar:close-circle-bold-duotone"
+                        class="w-4 h-4 text-rose-500 hover:text-rose-600 transition-colors"
+                      />
+                    </button>
+                  </template>
+
+                  <template v-else>
+                    <button
+                      @click.stop="startEditBook(book)"
+                      class="group p-1.5 rounded-lg bg-white border border-slate-100 shadow-3xs transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+                      title="Ubah Nama"
+                    >
+                      <Icon
+                        icon="solar:pen-2-bold-duotone"
+                        class="w-4 h-4 text-indigo-600 dark:text-indigo-500"
+                      />
+                    </button>
+
+                    <button
+                      @click.stop="deleteBook(book)"
+                      class="group p-1.5 rounded-lg bg-white border border-slate-100 shadow-3xs transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+                      title="Hapus Jurnal"
+                    >
+                      <Icon
+                        icon="solar:trash-bin-trash-bold-duotone"
+                        class="w-4 h-4 text-rose-600 dark:text-rose-500"
+                      />
+                    </button>
+                  </template>
                 </div>
               </div>
             </div>
@@ -666,7 +683,7 @@
                           : 'bg-white/70',
                       ]"
                     >
-                          <span class="tracking-wide">Edit Lembar</span>
+                      <span class="tracking-wide">Edit Lembar</span>
                     </button>
                   </div>
 
