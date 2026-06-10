@@ -354,38 +354,60 @@
 
               <!-- Widget Kontrol Paginasi Halaman Kanan Atas -->
               <div
-                class="flex items-center gap-1 p-1 rounded-xl border ml-auto"
-                :class="
-                  darkMode
-                    ? 'bg-slate-900/50 border-slate-800 text-white'
-                    : 'bg-amber-50/80 border-amber-200 text-slate-800'
-                "
+                class="flex items-center gap-1 p-1 rounded-2xl border-2 ml-auto backdrop-blur-md transition-colors duration-300"
+                :class="[
+                  currentThemeClasses.border,
+                  currentTheme === 'dark' ? 'bg-slate-900/50' : 'bg-white/60',
+                ]"
               >
                 <button
                   @click="prevPage"
                   :disabled="currentPageIndex === 0 || !filteredPages.length"
-                  class="p-1.5 rounded-lg border disabled:opacity-20 active:scale-95 transition-all"
-                  :class="darkMode ? 'border-slate-800' : 'border-amber-200'"
+                  class="group p-1.5 rounded-xl border-2 disabled:opacity-20 active:scale-95 transition-all duration-200"
+                  :class="[
+                    currentThemeClasses.border,
+                    currentThemeClasses.itemInactive,
+                    currentThemeClasses.borderEditHover, // Menggunakan warna hover border sesuai tema yang sudah kita buat
+                    currentThemeClasses.bgEditHover, // Tombol menyala penuh sesuai tema saat di-hover!
+                  ]"
                 >
-                  <Icon icon="solar:alt-arrow-left-bold" class="w-3.5 h-3.5" />
+                  <Icon
+                    icon="solar:alt-arrow-left-bold"
+                    class="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5 text-current"
+                  />
                 </button>
+
                 <span
-                  class="text-xs font-black px-1.5 text-center min-w-[45px]"
+                  class="text-xs font-black px-2 text-center min-w-[50px] tracking-wider"
+                  :class="
+                    currentTheme === 'dark'
+                      ? 'text-slate-300'
+                      : 'text-slate-700'
+                  "
                 >
-                  {{ filteredPages.length ? currentPageIndex + 1 : 0 }}/{{
-                    filteredPages.length
-                  }}
+                  {{ filteredPages.length ? currentPageIndex + 1 : 0
+                  }}<span class="opacity-40mx-0.5">/</span
+                  >{{ filteredPages.length }}
                 </span>
+
                 <button
                   @click="nextPage"
                   :disabled="
                     currentPageIndex >= filteredPages.length - 1 ||
                     !filteredPages.length
                   "
-                  class="p-1.5 rounded-lg border disabled:opacity-20 active:scale-95 transition-all"
-                  :class="darkMode ? 'border-slate-800' : 'border-amber-200'"
+                  class="group p-1.5 rounded-xl border-2 disabled:opacity-20 active:scale-95 transition-all duration-200"
+                  :class="[
+                    currentThemeClasses.border,
+                    currentThemeClasses.itemInactive,
+                    currentThemeClasses.borderEditHover,
+                    currentThemeClasses.bgEditHover,
+                  ]"
                 >
-                  <Icon icon="solar:alt-arrow-right-bold" class="w-3.5 h-3.5" />
+                  <Icon
+                    icon="solar:alt-arrow-right-bold"
+                    class="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 text-current"
+                  />
                 </button>
               </div>
             </div>
@@ -644,7 +666,7 @@
                           : 'bg-white/70',
                       ]"
                     >
-                      <span class="tracking-wide">Edit Lembar</span>
+                          <span class="tracking-wide">Edit Lembar</span>
                     </button>
                   </div>
 
