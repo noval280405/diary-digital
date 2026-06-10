@@ -649,14 +649,17 @@
                     <button
                       type="button"
                       @click="cancelEditPage"
-                      class="px-3.5 py-2 rounded-xl text-xs font-bold border transition-all active:scale-95"
-                      :class="
+                      :class="[
+                        currentThemeClasses.itemInactive,
+                        currentThemeClasses.border, // 👈 Mengikuti warna border tema aktif (Green/Pink/Cream)
+                        currentThemeClasses.textLabel, // 👈 Mengikuti warna teks tema aktif agar lebih hidup
                         currentTheme === 'dark'
-                          ? 'border-slate-800 text-slate-400 hover:text-slate-300'
-                          : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-                      "
+                          ? 'border-slate-700/80 text-slate-400 hover:bg-slate-800/60 hover:text-slate-300'
+                          : 'hover:bg-current/5 border-opacity-60',
+                      ]"
+                      class="px-5 py-2.5 rounded-xl text-xs font-black border-2 transition-all active:scale-95 shadow-3xs tracking-wider"
                     >
-                      Batal
+                      BATAL
                     </button>
                     <button
                       type="button"
@@ -872,42 +875,53 @@
             />
 
             <div
-              class="flex flex-row items-center justify-between p-3 rounded-2xl border border-dashed gap-4 shadow-xs transition-all duration-300"
+              class="p-4 rounded-2xl border transition-all duration-300 w-full"
               :class="[
                 currentThemeClasses.itemInactive,
                 currentThemeClasses.border,
               ]"
             >
               <label
-                class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black cursor-pointer border active:scale-95 transition-all hover:brightness-95 shadow-3xs"
+                class="text-[10px] font-black uppercase tracking-[0.15em] block mb-3 opacity-70"
+                :class="currentThemeClasses.textLabel"
               >
-                <Icon
-                  icon="solar:camera-add-bold-duotone"
-                  class="w-4 h-4"
-                  :class="currentThemeClasses.icon"
-                />
-                <span>{{ imagePreview ? "Ganti Foto" : "Unggah Foto" }}</span>
-                <!-- <input
-                  type="file"
-                  accept="image/*"
-                  @change="handleImageUpload"
-                  class="hidden"
-                /> -->
-                <uploadImage typefolder="user_diaries" />
+                Tambah Foto Lembaran Jurnal:
               </label>
 
               <div
-                v-if="imagePreview"
-                class="relative rounded-xl overflow-hidden border shrink-0 shadow-md group transition-all"
-                :class="currentThemeClasses.border"
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
               >
-                <img :src="imagePreview" class="h-11 w-18 object-cover" />
-                <button
-                  @click="imagePreview = null"
-                  class="absolute inset-0 bg-black/60 text-white flex items-center justify-center text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                <div class="w-full sm:w-auto">
+                  <uploadImage
+                    typefolder="user_diaries"
+                    :label="
+                      imagePreview ? 'Ganti Foto Jurnal' : 'Unggah Foto Jurnal'
+                    "
+                  />
+                </div>
+
+                <div
+                  v-if="imagePreview"
+                  class="relative rounded-xl overflow-hidden border shrink-0 shadow-md group transition-all h-14 w-24 sm:h-11 sm:w-18 self-start sm:self-center"
+                  :class="currentThemeClasses.border"
                 >
-                  Hapus
-                </button>
+                  <img
+                    :src="imagePreview"
+                    class="w-full h-full object-cover"
+                    alt="Preview Jurnal"
+                  />
+                  <button
+                    type="button"
+                    @click="imagePreview = null"
+                    class="absolute inset-0 bg-black/75 text-white flex items-center justify-center text-[10px] font-black opacity-0 group-hover:opacity-100 backdrop-blur-3xs transition-all duration-200"
+                  >
+                    <Icon
+                      icon="solar:trash-bin-trash-bold"
+                      class="w-3.5 h-3.5 mr-1"
+                    />
+                    Hapus
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -931,12 +945,15 @@
           <button
             v-if="isWritingMode"
             @click="cancelWriting"
-            :class="
-              darkMode
-                ? 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
-            "
-            class="w-1/2 sm:w-auto text-center justify-center px-4 py-3 sm:py-2.5 rounded-xl font-black text-xs transition-colors"
+            :class="[
+              currentThemeClasses.itemInactive,
+              currentThemeClasses.border, // 👈 Pakai border bawaan tema agar warnanya ikut berubah
+              currentThemeClasses.textLabel, // 👈 Pakai warna teks tema agar green/pink-nya hidup
+              currentTheme === 'dark'
+                ? 'border-slate-700/80 text-slate-400 hover:bg-slate-800/60 hover:text-slate-300'
+                : 'hover:bg-current/5 border-opacity-60',
+            ]"
+            class="w-1/2 sm:w-auto text-center justify-center px-5 py-3 sm:py-2.5 rounded-xl font-black text-xs border-4 transition-all active:scale-95 shadow-3xs tracking-wider"
           >
             BATAL
           </button>
@@ -944,14 +961,13 @@
           <button
             v-if="isWritingMode"
             @click="savePage"
-            :class="
-              darkMode
-                ? 'from-emerald-600 to-teal-600'
-                : 'from-emerald-500 to-teal-500'
-            "
-            class="bg-gradient-to-r w-1/2 sm:w-auto justify-center px-4 py-3 sm:py-2.5 rounded-xl text-white font-black text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-transform"
+            :class="currentThemeClasses.btnGradient"
+            class="w-1/2 sm:w-auto justify-center px-5 py-3 sm:py-2.5 rounded-xl text-white font-black text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all tracking-wider"
           >
-            <Icon icon="solar:check-square-bold-duotone" class="w-4 h-4" />
+            <Icon
+              icon="solar:check-square-bold-duotone"
+              class="w-4 h-4 transform scale-110"
+            />
             SIMPAN
           </button>
         </div>
@@ -1549,20 +1565,30 @@ const cancelWriting = () => {
 
 // ✅ BARU: Menulis lembaran teks catatan langsung ke sub-collection notebooks milik jurnal terpilih
 const savePage = async () => {
+  const upStore = uploadStore();
+  const rawPiniaUrl = upStore.getUrlRef;
+
+  if (!newText.value || !newText.value.trim()) {
+    return notificationStore.showError("Lembaran kosong tidak dapat disimpan.");
+  }
+
+  const confirmed = await confirmationDialog.value?.show(
+    "Konfirmasi Tambah Lembaran",
+    "Anda yakin ingin menambahkan Lembaran baru?",
+  );
+
+  if (!confirmed) {
+    return notificationStore.showError("Penambahan Lembaran dibatalkan");
+  }
+
   if (!newText.value.trim() || !currentUser.value || !currentBook.value.id)
     return;
 
   if (!currentBook.value.pages) currentBook.value.pages = [];
 
-  // ✅ 1. KUNCI AMAN: Ambil URL hasil upload dari Pinia Store
-  const upStore = uploadStore();
-  const rawPiniaUrl = upStore.getUrlRef;
-
-  // 🛡️ STRATEGI FILTER BERLAPIS ANTI-NULL UNTUK NOTEBOOK BARU
   let finalImageValue = null;
 
   if (rawPiniaUrl && rawPiniaUrl.trim() !== "") {
-    // Jalur 1: Jika user sukses upload lewat komponen Tailwind baru
     finalImageValue = rawPiniaUrl.trim();
     console.log(
       "🎯 [SAVE-PAGE] Menggunakan URL Gambar dari Pinia Store:",
@@ -1573,18 +1599,15 @@ const savePage = async () => {
     imagePreview.value.trim() !== "" &&
     !imagePreview.value.startsWith("data:image")
   ) {
-    // Jalur 2: Jika ada string URL valid non-base64 di preview
     finalImageValue = imagePreview.value.trim();
   } else {
-    // Jalur 3: Jika tidak ada upload gambar, set null agar field di Firestore bersih
     finalImageValue = null;
     console.log("🎯 [SAVE-PAGE] Catatan dibuat tanpa gambar (null).");
   }
 
-  // ✅ 2. Gunakan finalImageValue di dalam objek data
   const newPageData = {
     text: newText.value,
-    image: finalImageValue, // 👈 Menggunakan URL Firebase resmi hasil filter
+    image: finalImageValue,
     createdAt: Date.now(),
     mood: selectedMood.value,
     isLocked: false,
@@ -1592,7 +1615,6 @@ const savePage = async () => {
   };
 
   try {
-    // Jalur path sasaran sub-collection: /user_diaries/{uid}/jurnals/{idjurnal}/notebooks
     const notebooksSubRef = collection(
       $fbDb,
       "user_diaries",
@@ -1617,7 +1639,6 @@ const savePage = async () => {
 
     console.log("📝 Sukses menulis cerita baru ke sub-collection notebooks!");
 
-    // ✅ 3. BERSIHKAN STORE: Reset state upload setelah dokumen berhasil masuk Cloud
     upStore.setReset();
   } catch (e) {
     console.error("❌ Gagal menyimpan notebook baru:", e);
@@ -1913,6 +1934,14 @@ const cancelEdit = () => {
 
 // ✅ BARU: Menyimpan perubahan judul Jurnal di dalam sub-collection jurnals
 const saveBookTitle = async (book: any) => {
+  const confirmed = await confirmationDialog.value?.show(
+    "Konfirmasi Ubah Judul",
+    "Anda yakin ingin mengubah judul jurnal ini?",
+  );
+
+  if (!confirmed) {
+    return notificationStore.showError("Pengubahan judul dibatalkan");
+  }
   const cleanTitle = editingBookTitle.value.trim();
   if (!cleanTitle || cleanTitle === book.title) {
     cancelEdit();
@@ -1979,6 +2008,14 @@ const cancelEditPage = () => {
 
 // ✅ BARU & BEBAS NULL: Menyimpan edit teks & gambar ke /jurnals/{idjurnal}/notebooks/{idcatatan}
 const saveEditPage = async () => {
+  const confirmed = await confirmationDialog.value?.show(
+    "Konfirmasi Ubah Cerita",
+    "Anda yakin ingin mengubah cerita ini?",
+  );
+
+  if (!confirmed) {
+    return notificationStore.showError("Pengubahan cerita dibatalkan");
+  }
   console.log("=== 🚀 START DEBUGGING SAVE EDIT PAGE ===");
 
   const cleanText = editTextBuffer.value.trim();
