@@ -634,18 +634,17 @@
 
                     <button
                       @click="startEditPage"
-                      class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all active:scale-95 hover:bg-current/5 shadow-3xs"
-                      :class="
+                      class="group flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-extrabold border-2 backdrop-blur-md shadow-sm transition-colors duration-300 ease-out active:scale-95 hover:shadow-md hover:-translate-y-0.5"
+                      :class="[
+                        currentThemeClasses.border,
+                        currentThemeClasses.borderEditHover,
+                        currentThemeClasses.bgEditHover, // 👈 Mengontrol background dan teks tombol sekaligus
                         currentTheme === 'dark'
-                          ? 'border-slate-800 text-slate-300'
-                          : 'border-amber-200/80 text-slate-700 bg-white/60'
-                      "
+                          ? 'bg-slate-900/80'
+                          : 'bg-white/70',
+                      ]"
                     >
-                      <Icon
-                        icon="solar:pen-to-square-bold-duotone"
-                        class="w-3.5 h-3.5 text-orange-500"
-                      />
-                      <span>Edit Lembar</span>
+                      <span class="tracking-wide">Edit Lembar</span>
                     </button>
                   </div>
 
@@ -1521,9 +1520,6 @@ const prevPage = () => {
   if (currentPageIndex.value > 0) currentPageIndex.value--;
 };
 
-// =========================================================================
-// TEMA & MANAJEMEN AKSI RAK JURNAL
-// =========================================================================
 const currentTheme = useState<string>("diary-active-theme", () => "cream");
 const themeStyles: Record<string, any> = {
   dark: {
@@ -1540,6 +1536,9 @@ const themeStyles: Record<string, any> = {
     itemInactive:
       "bg-slate-900/40 border-slate-900/80 text-slate-300 hover:bg-slate-900/80",
     badge: "bg-slate-800 text-indigo-400",
+    iconEdit: "text-indigo-400",
+    borderEditHover: "hover:border-indigo-500",
+    bgEditHover: "hover:bg-indigo-600 hover:text-white text-indigo-400", // 👈 Kita satukan warna teks default-nya di sini!
   },
   cream: {
     textLabel: "text-amber-700",
@@ -1555,6 +1554,10 @@ const themeStyles: Record<string, any> = {
     itemInactive:
       "bg-amber-50/40 border-amber-100 text-slate-700 hover:bg-white",
     badge: "bg-amber-100 text-amber-900",
+    iconEdit: "text-orange-500",
+    borderEditHover: "hover:border-orange-500",
+    bgEditHover:
+      "hover:bg-gradient-to-tr hover:from-orange-500 hover:to-amber-500 hover:text-white text-orange-500", // 👈
   },
   pink: {
     textLabel: "text-pink-600",
@@ -1569,6 +1572,10 @@ const themeStyles: Record<string, any> = {
       "bg-gradient-to-r from-pink-500 to-rose-500 border-pink-400 text-white shadow-md shadow-pink-900/10",
     itemInactive: "bg-pink-50/30 border-pink-100 text-pink-900 hover:bg-white",
     badge: "bg-pink-100 text-pink-900",
+    iconEdit: "text-pink-500",
+    borderEditHover: "hover:border-pink-500",
+    bgEditHover:
+      "hover:bg-gradient-to-tr hover:from-pink-500 hover:to-rose-500 hover:text-white text-pink-500", // 👈
   },
   blue: {
     textLabel: "text-sky-600",
@@ -1583,6 +1590,10 @@ const themeStyles: Record<string, any> = {
       "bg-gradient-to-r from-sky-500 to-indigo-500 border-sky-400 text-white shadow-md shadow-indigo-900/10",
     itemInactive: "bg-sky-50/30 border-pink-100 text-sky-900 hover:bg-white",
     badge: "bg-sky-100 text-sky-900",
+    iconEdit: "text-sky-500",
+    borderEditHover: "hover:border-sky-500",
+    bgEditHover:
+      "hover:bg-gradient-to-tr hover:from-sky-500 hover:to-indigo-500 hover:text-white text-sky-500", // 👈
   },
   green: {
     textLabel: "text-emerald-600",
@@ -1598,6 +1609,10 @@ const themeStyles: Record<string, any> = {
     itemInactive:
       "bg-emerald-50/30 border-emerald-100 text-emerald-900 hover:bg-white",
     badge: "bg-emerald-100 text-emerald-900",
+    iconEdit: "text-emerald-500",
+    borderEditHover: "hover:border-emerald-500",
+    bgEditHover:
+      "hover:bg-gradient-to-tr hover:from-emerald-500 hover:to-teal-500 hover:text-white text-emerald-500", // 👈
   },
 };
 
