@@ -22,15 +22,17 @@
               v-model="newBookTitle"
               placeholder="Nama rak jurnal..."
               :class="currentThemeClasses.input || currentThemeClasses.navLink"
-              class="flex-1 px-4 py-3 border rounded-2xl text-sm outline-none transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/30"
+              class="flex-1 h-10 px-3 border rounded-xl text-sm outline-none transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/30"
               @keyup.enter="createNewBook"
             />
+
             <button
               @click="createNewBook"
               :class="currentThemeClasses.btnGradient"
-              class="hover:brightness-110 hover:scale-[1.03] active:scale-95 transition-all px-5 rounded-2xl font-black text-current shadow-md text-xl bg-gradient-to-br flex items-center justify-center shrink-0"
+              class="w-10 h-10 rounded-xl flex items-center justify-center text-white transition-all duration-200 hover:scale-105 active:scale-95"
+              title="Tambah Jurnal Baru"
             >
-              +
+              <Icon icon="iconamoon:sign-plus-fill" class="w-5 h-5" />
             </button>
           </div>
         </div>
