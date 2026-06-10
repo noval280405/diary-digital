@@ -103,13 +103,50 @@
                 <span
                   class="text-xl filter drop-shadow-xs shrink-0 select-none"
                 >
-                  {{
-                    book.isLocked
-                      ? "🔒"
-                      : notebooks[activeBookIndex]?.id === book.id
-                        ? "📖"
-                        : "📔"
-                  }}
+                  <div
+                    v-if="book.isLocked"
+                    class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs"
+                    :class="
+                      currentTheme === 'dark'
+                        ? 'bg-rose-950 border-rose-500'
+                        : 'bg-white border-rose-200'
+                    "
+                  >
+                    <Icon
+                      icon="solar:lock-keyhole-minimalistic-bold-duotone"
+                      class="w-4.5 h-4.5 text-rose-600 dark:text-rose-400"
+                    />
+                  </div>
+
+                  <div
+                    v-else-if="notebooks[activeBookIndex]?.id === book.id"
+                    class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border shadow-xs transition-transform duration-300 scale-105"
+                    :class="
+                      currentTheme === 'dark'
+                        ? 'bg-slate-900 border-indigo-500'
+                        : 'bg-white border-indigo-200'
+                    "
+                  >
+                    <Icon
+                      icon="solar:notebook-bookmark-bold-duotone"
+                      class="w-5 h-5 text-indigo-600 dark:text-indigo-400"
+                    />
+                  </div>
+
+                  <div
+                    v-else
+                    class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs"
+                    :class="
+                      currentTheme === 'dark'
+                        ? 'bg-slate-900 border-emerald-600'
+                        : 'bg-white border-emerald-200'
+                    "
+                  >
+                    <Icon
+                      icon="solar:notebook-bold-duotone"
+                      class="w-5 h-5 text-emerald-500 dark:text-emerald-400"
+                    />
+                  </div>
                 </span>
                 <!-- Mode Edit Inline -->
                 <input
@@ -145,7 +182,7 @@
                       title="Simpan Nama"
                     >
                       <Icon
-                        icon="solar:check-circle-bold-duotone"
+                        icon="mdi:check-outline"
                         class="w-4 h-4 text-emerald-600 dark:text-emerald-500"
                       />
                     </button>
@@ -156,7 +193,7 @@
                       title="Batal Edit"
                     >
                       <Icon
-                        icon="solar:close-circle-bold-duotone"
+                        icon="mdi:cancel-bold"
                         class="w-4 h-4 text-rose-500 hover:text-rose-600 transition-colors"
                       />
                     </button>
@@ -1082,8 +1119,8 @@ import { useDiaryTheme } from "~/composables/useDiaryTheme";
 import { uploadStore } from "@/stores/uploadStore";
 const notificationStore = useNotificationStore();
 const confirmationDialog = ref<any>(null);
-  // Di dalam index.vue kamu:
-import { provide } from 'vue';
+// Di dalam index.vue kamu:
+import { provide } from "vue";
 
 // Pastikan dua baris ini ada setelah reactive state tema kamu didefinisikan:
 
@@ -1665,7 +1702,7 @@ const themeStyles: Record<string, any> = {
   },
 };
 
-provide('currentTheme', currentTheme);
+provide("currentTheme", currentTheme);
 
 // COMPUTED DATA
 const currentBook = computed(() => {
@@ -1703,7 +1740,7 @@ const filteredPages = computed(() => {
 const currentThemeClasses = computed(
   () => themeStyles[currentTheme.value] || themeStyles["cream"],
 );
-provide('currentThemeClasses', currentThemeClasses);
+provide("currentThemeClasses", currentThemeClasses);
 
 // ✅ BARU: Menambah dokumen Jurnal ke sub-collection /jurnals
 const createNewBook = async () => {
