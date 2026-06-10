@@ -5,6 +5,7 @@
     ]"
     class="min-h-screen flex flex-col md:flex-row transition-colors duration-700 font-sans relative overflow-hidden"
   >
+    <appNotification />
     <!-- EFEK LATAR BELAKANG: Gradasi Sinematik Luas -->
     <div
       class="fixed inset-0 pointer-events-none z-0 transition-all duration-700"

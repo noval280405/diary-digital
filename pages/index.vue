@@ -1,4 +1,5 @@
 <template>
+  <ConfirmationDialog ref="confirmationDialog" />
   <NuxtLayout name="diary">
     <template #sidebar-content>
       <div class="space-y-6 px-1 py-2 font-sans selection:bg-indigo-500/30">
@@ -1079,6 +1080,13 @@ import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { Icon } from "@iconify/vue";
 import { useDiaryTheme } from "~/composables/useDiaryTheme";
 import { uploadStore } from "@/stores/uploadStore";
+const notificationStore = useNotificationStore();
+const confirmationDialog = ref<any>(null);
+  // Di dalam index.vue kamu:
+import { provide } from 'vue';
+
+// Pastikan dua baris ini ada setelah reactive state tema kamu didefinisikan:
+
 import {
   onAuthStateChanged,
   EmailAuthProvider,
@@ -1657,6 +1665,8 @@ const themeStyles: Record<string, any> = {
   },
 };
 
+provide('currentTheme', currentTheme);
+
 // COMPUTED DATA
 const currentBook = computed(() => {
   const listBuku = Array.isArray(notebooks.value) ? notebooks.value : [];
@@ -1693,6 +1703,7 @@ const filteredPages = computed(() => {
 const currentThemeClasses = computed(
   () => themeStyles[currentTheme.value] || themeStyles["cream"],
 );
+provide('currentThemeClasses', currentThemeClasses);
 
 // ✅ BARU: Menambah dokumen Jurnal ke sub-collection /jurnals
 const createNewBook = async () => {
@@ -1744,6 +1755,14 @@ const selectBook = (clickedBook: any) => {
 
 // ✅ BARU: Menghapus Jurnal sekaligus menyapu bersih seluruh sub-collection notebooks di dalamnya
 const deleteBook = async (clickedBook: any) => {
+  const confirmed = await confirmationDialog.value?.show(
+    "Konfirmasi Hapus",
+    "Anda yakin ingin menghapus data ini?",
+  );
+
+  if (!confirmed) {
+    return notificationStore.showError("Penghapusan dibatalkan");
+  }
   if (!currentUser.value) return;
   const originalIndex = notebooks.value.findIndex(
     (b: any) => b.id === clickedBook.id,
