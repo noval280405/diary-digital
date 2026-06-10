@@ -725,6 +725,17 @@
                     >
                       <span class="tracking-wide">Edit Lembar</span>
                     </button>
+
+                    <button
+                      @click="deleteNotebook(currentPage.id!)"
+                      class="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all"
+                      title="Hapus Halaman"
+                    >
+                      <Icon
+                        icon="solar:trash-bin-trash-bold-duotone"
+                        class="w-5 h-5"
+                      />
+                    </button>
                   </div>
 
                   <p
@@ -2061,6 +2072,59 @@ watch(
     editImageBuffer.value = null;
   },
 );
+
+import { useRouter } from "vue-router";
+
+// Asumsi variabel ID yang didapat dari State/Route/Props aplikasi kamu
+const userId = ref("iduser_kamu");
+const jurnalId = ref("idjurnal_kamu");
+
+/**
+ * FUNCTION: Hapus Notebook dari Database Firestore
+ * @param noteId - ID dari notebook yang ingin dihapus
+ */
+async function deleteNotebook(noteId: string) {
+  // Pengecekan aman agar tidak crash kalau ref belum nempel
+  const user = $fbAuth.currentUser;
+  if (!confirmationDialog.value) {
+    console.error(
+      "Komponen ConfirmDialog belum dipasang di bagian bawah template HTML!",
+    );
+    return;
+  }
+
+  const isConfirmed = await confirmationDialog.value.show(
+    "Hapus Lembaran Ini?",
+    "Halaman akan dihapus permanen dari cloud database dan tidak bisa dikembalikan.",
+  );
+
+  if (!isConfirmed) return;
+
+  console.log(`Memulai proses penghapusan notebook dengan ID: ${noteId}`);
+
+  console.log(
+    `Target path: /user_diaries/${user?.uid || userId.value}/jurnals/${currentBook.value.id}/notebooks/${noteId}`,
+  );
+
+  try {
+    const docRef = doc(
+      $fbDb,
+      "user_diaries",
+      user?.uid || userId.value,
+      "jurnals",
+      currentBook.value.id,
+      "notebooks",
+      noteId,
+    );
+
+    await deleteDoc(docRef);
+
+    await loadUserDiary(user.uid);
+    console.log("Database updated: Notebook berhasil dihapus!");
+  } catch (error) {
+    console.error("Waduh, gagal menghapus data dari Firestore:", error);
+  }
+}
 </script>
 
 <style scoped>
