@@ -545,11 +545,32 @@
                     class="flex items-center justify-between border-b pb-3 border-current/5"
                   >
                     <span
-                      class="text-xs font-bold text-orange-500 flex items-center gap-1.5"
+                      class="text-xs font-black flex items-center gap-2 tracking-wide select-none transition-colors duration-300"
+                      :class="
+                        currentTheme === 'dark'
+                          ? 'text-slate-400'
+                          : currentThemeClasses.textLabel
+                      "
                     >
-                      <span
-                        class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"
-                      />
+                      <span class="relative flex h-2 w-2">
+                        <span
+                          class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                          :class="
+                            currentTheme === 'dark'
+                              ? 'bg-slate-500'
+                              : currentThemeClasses.bgEditHover || 'bg-current'
+                          "
+                        ></span>
+                        <span
+                          class="relative inline-flex rounded-full h-2 w-2"
+                          :class="
+                            currentTheme === 'dark'
+                              ? 'bg-slate-400'
+                              : currentThemeClasses.bgEditHover || 'bg-current'
+                          "
+                        ></span>
+                      </span>
+
                       Sedang Memperbaiki Tulisan...
                     </span>
                   </div>
