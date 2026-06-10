@@ -671,32 +671,42 @@
 
                 <div v-else class="space-y-4 md:space-y-6 animate-fadeIn">
                   <div
-                    class="flex flex-wrap items-center justify-between gap-3 border-b pb-3 border-current/5"
+                    class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5 pb-4 border-b border-dashed border-current/10"
                   >
                     <div
                       v-if="currentPage.mood"
-                      class="flex flex-wrap items-center gap-2"
+                      class="flex items-center flex-wrap gap-2.5 min-w-0"
                     >
                       <span
                         :class="[
                           currentThemeClasses.badge,
                           currentThemeClasses.border,
                         ]"
-                        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black border shadow-sm"
+                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-black border shadow-3xs transition-transform duration-300 hover:scale-105 select-none"
                       >
-                        <span>{{ currentPage.mood }}</span>
-                        <span>Suasana Hati</span>
+                        <span
+                          class="text-xs md:text-sm transform scale-110 active:animate-ping"
+                          >{{ currentPage.mood }}</span
+                        >
+                        <span class="tracking-wide opacity-90"
+                          >Suasana Hatimu</span
+                        >
                       </span>
+
                       <span
                         v-if="currentPage.createdAt"
-                        class="text-[10px] md:text-[11px] opacity-40 font-medium"
+                        class="text-[10px] md:text-xs font-bold tracking-wide flex items-center gap-1.5"
                         :class="
                           currentTheme === 'dark'
-                            ? 'text-slate-400'
-                            : 'text-slate-600'
+                            ? 'text-slate-500'
+                            : 'text-slate-400'
                         "
                       >
-                        •
+                        <span class="opacity-50">•</span>
+                        <Icon
+                          icon="solar:calendar-date-linear"
+                          class="w-3.5 h-3.5 opacity-70"
+                        />
                         {{
                           new Date(currentPage.createdAt).toLocaleDateString(
                             "id-ID",
@@ -711,31 +721,39 @@
                       </span>
                     </div>
 
-                    <button
-                      @click="startEditPage"
-                      class="group flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-extrabold border-2 backdrop-blur-md shadow-sm transition-colors duration-300 ease-out active:scale-95 hover:shadow-md hover:-translate-y-0.5"
-                      :class="[
-                        currentThemeClasses.border,
-                        currentThemeClasses.borderEditHover,
-                        currentThemeClasses.bgEditHover, // 👈 Mengontrol background dan teks tombol sekaligus
-                        currentTheme === 'dark'
-                          ? 'bg-slate-900/80'
-                          : 'bg-white/70',
-                      ]"
+                    <div
+                      class="flex items-center gap-2 sm:self-center self-end w-full sm:w-auto justify-end"
                     >
-                      <span class="tracking-wide">Edit Lembar</span>
-                    </button>
+                      <button
+                        @click="startEditPage"
+                        class="group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black border-2 backdrop-blur-md shadow-3xs transition-all duration-300 active:scale-95 hover:shadow-sm hover:-translate-y-0.5"
+                        :class="[
+                          currentThemeClasses.border,
+                          currentThemeClasses.borderEditHover,
+                          currentThemeClasses.bgEditHover,
+                          currentTheme === 'dark'
+                            ? 'bg-slate-900/60'
+                            : 'bg-white/80',
+                        ]"
+                      >
+                        <Icon
+                          icon="solar:pen-new-square-bold-duotone"
+                          class="w-4 h-4 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"
+                        />
+                        <span class="tracking-wider">Edit Lembar</span>
+                      </button>
 
-                    <button
-                      @click="deleteNotebook(currentPage.id!)"
-                      class="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all"
-                      title="Hapus Halaman"
-                    >
-                      <Icon
-                        icon="solar:trash-bin-trash-bold-duotone"
-                        class="w-5 h-5"
-                      />
-                    </button>
+                      <button
+                        @click="deleteNotebook(currentPage.id!)"
+                        class="p-2 rounded-xl border border-transparent text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 dark:hover:border-rose-900/30 transition-all duration-200 active:scale-90 group/btnTrash relative"
+                        title="Hapus Halaman"
+                      >
+                        <Icon
+                          icon="solar:trash-bin-trash-bold-duotone"
+                          class="w-5 h-5 transition-transform duration-300 group-hover/btnTrash:scale-110 group-hover/btnTrash:rotate-6"
+                        />
+                      </button>
+                    </div>
                   </div>
 
                   <p
