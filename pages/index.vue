@@ -745,13 +745,21 @@
 
                       <button
                         @click="deleteNotebook(currentPage.id!)"
-                        class="p-2 rounded-xl border border-transparent text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 dark:hover:border-rose-900/30 transition-all duration-200 active:scale-90 group/btnTrash relative"
-                        title="Hapus Halaman"
+                        class="group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black border-2 backdrop-blur-md shadow-3xs transition-all duration-300 active:scale-95 hover:shadow-sm hover:-translate-y-0.5"
+                        :class="[
+                          currentThemeClasses.border,
+                          currentThemeClasses.borderEditHover,
+                          currentThemeClasses.bgEditHover,
+                          currentTheme === 'dark'
+                            ? 'bg-slate-900/60'
+                            : 'bg-white/80',
+                        ]"
                       >
                         <Icon
                           icon="solar:trash-bin-trash-bold-duotone"
                           class="w-5 h-5 transition-transform duration-300 group-hover/btnTrash:scale-110 group-hover/btnTrash:rotate-6"
                         />
+                        <span class="tracking-wider">Hapus Lembar</span>
                       </button>
                     </div>
                   </div>
