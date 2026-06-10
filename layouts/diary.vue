@@ -38,20 +38,30 @@
       "
       class="md:hidden fixed top-0 left-0 right-0 w-full z-50 flex items-center justify-between p-4 border-b backdrop-blur-md transition-colors duration-500"
     >
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5 select-none tracking-tight">
         <div
           :class="currentThemeClasses.btnGradient"
-          class="w-11 h-11 rounded-xl bg-gradient-to flex items-center justify-center shadow-lg shrink-0"
+          class="w-9 h-9 rounded-xl bg-gradient-to flex items-center justify-center shadow-lg shrink-0"
         >
           <Icon
             icon="solar:book-bookmark-bold-duotone"
             class="w-5 h-5 text-white"
           />
         </div>
+
         <span
-          class="font-black text-sm tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text"
-          >My Diary</span
+          :class="[
+            currentThemeClasses.fontTitle ||
+              currentThemeClasses.fontHead ||
+              'font-extrabold',
+            currentThemeClasses.textTitle ||
+              currentThemeClasses.text ||
+              (currentTheme === 'dark' ? 'text-white' : 'text-current'),
+          ]"
+          class="text-base font-black transition-colors duration-300"
         >
+          My<span class="opacity-50 font-medium">Diary</span>
+        </span>
       </div>
 
       <button
@@ -102,19 +112,35 @@
           <div class="flex items-center gap-3 min-w-0">
             <div
               :class="currentThemeClasses.btnGradient"
-              class="w-11 h-11 rounded-xl bg-gradient-to flex items-center justify-center shadow-lg shrink-0"
+              class="w-9 h-9 rounded-xl bg-gradient-to flex items-center justify-center shadow-lg shrink-0"
             >
               <Icon
                 icon="solar:book-bookmark-bold-duotone"
                 class="w-5 h-5 text-white"
               />
             </div>
-            <div class="truncate">
-              <h2 class="font-black text-sm tracking-tight">My Diary</h2>
-              <p
-                class="text-[10px] font-semibold opacity-50 uppercase tracking-wider"
+            <div class="truncate select-none tracking-tight">
+              <h2
+                :class="[
+                  currentThemeClasses.fontTitle ||
+                    currentThemeClasses.fontHead ||
+                    'font-extrabold',
+                  currentThemeClasses.textTitle ||
+                    currentThemeClasses.text ||
+                    (currentTheme === 'dark' ? 'text-white' : 'text-current'),
+                ]"
+                class="text-sm font-black transition-colors duration-300 leading-tight"
               >
-                Premium Space
+                My<span class="opacity-50 font-medium">Diary</span>
+              </h2>
+
+              <p
+                :class="
+                  currentTheme === 'dark' ? 'text-slate-500' : 'text-current/40'
+                "
+                class="text-[10px] font-bold tracking-wide mt-0.5"
+              >
+                Ruang Cerita
               </p>
             </div>
           </div>

@@ -272,40 +272,68 @@
     >
       <!-- HEADER JURNAL (Judul Rak & Aksi Gembok Global) -->
       <div
-        class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5 mb-6 md:mb-8"
+        class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-4 border-b pb-6 mb-6 md:mb-8"
         :class="currentThemeClasses.border"
       >
-        <div class="flex items-center gap-3 md:gap-4">
+        <div
+          class="flex items-center gap-3.5 md:gap-4 select-none tracking-tight min-w-0"
+        >
           <div
-            :class="currentThemeClasses.btnGradient"
-            class="w-12 h-12 md:w-14 md:h-14 rounded-2xl md:rounded-3xl bg-gradient-to-br flex items-center justify-center shadow-lg shrink-0"
+            :class="
+              currentTheme === 'dark'
+                ? 'text-slate-400'
+                : currentThemeClasses.textLabel
+            "
+            class="shrink-0 transition-transform duration-500 ease-out hover:scale-110"
           >
             <Icon
               icon="solar:book-bookmark-bold-duotone"
-              class="w-6 h-6 md:w-8 md:h-8 text-white"
+              class="w-8 h-8 md:w-10 md:h-10 opacity-95"
             />
           </div>
-          <div class="min-w-0">
-            <h1 class="text-xl md:text-3xl font-black tracking-tight truncate">
+
+          <div class="min-w-0 flex flex-col justify-center">
+            <h1
+              :class="[
+                currentThemeClasses.fontTitle ||
+                  currentThemeClasses.fontHead ||
+                  'font-black',
+                currentThemeClasses.textTitle ||
+                  currentThemeClasses.text ||
+                  (currentTheme === 'dark' ? 'text-white' : 'text-slate-900'),
+              ]"
+              class="text-xl md:text-2xl font-black truncate leading-tight transition-colors duration-300 mb-1"
+            >
               {{ currentBook.title || "Mulai Menulis" }}
             </h1>
-            <p class="text-xs md:text-sm opacity-60 font-semibold mt-0.5">
-              {{ filteredPages.length }} Lembar
-              {{ searchQuery ? "Ditemukan" : "Tersimpan" }}
+
+            <p
+              :class="
+                currentTheme === 'dark' ? 'text-slate-500' : 'text-current/50'
+              "
+              class="text-[11px] md:text-xs font-bold tracking-wide flex items-center gap-1.5"
+            >
+              <span>{{ filteredPages.length }} Lembar</span>
+              <span class="opacity-30">•</span>
+              <span class="opacity-80">{{
+                searchQuery ? "Ditemukan" : "Tersimpan"
+              }}</span>
             </p>
           </div>
         </div>
 
-        <!-- Tombol Pengunci Utama Berdasarkan Rak Jurnal -->
-        <div v-if="currentBook.id" class="flex items-center gap-3">
+        <div
+          v-if="currentBook.id"
+          class="w-full sm:w-auto shrink-0 pt-1 sm:pt-0"
+        >
           <button
             @click="toggleJournalLock"
-            class="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all duration-300"
             :class="
               currentBook.isLocked
-                ? 'bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-400'
-                : 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400'
+                ? 'bg-rose-50 text-rose-600 border-rose-200/60 shadow-rose-100/50 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-400'
+                : 'bg-emerald-50 text-emerald-600 border-emerald-200/60 shadow-emerald-100/50 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400'
             "
+            class="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl text-xs font-black border tracking-wide transition-all duration-300 active:scale-95 hover:brightness-98 shadow-xs"
           >
             <Icon
               :icon="
@@ -313,12 +341,11 @@
                   ? 'solar:lock-bold'
                   : 'solar:shield-keyhole-bold'
               "
-              class="w-4 h-4"
+              class="w-4 h-4 transform scale-105"
+              :class="{ 'animate-pulse': currentBook.isLocked }"
             />
             <span>
-              {{
-                currentBook.isLocked ? "Jurnal Terkunci" : "Kunci Halaman Ini"
-              }}
+              {{ currentBook.isLocked ? "JURNAL TERKUNCI" : "KUNCI HALAMAN" }}
             </span>
           </button>
         </div>
