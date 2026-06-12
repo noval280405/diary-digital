@@ -2,7 +2,10 @@
   <ConfirmationDialog ref="confirmationDialog" />
   <NuxtLayout name="diary">
     <template #sidebar-content>
-      <div @click.stop class="space-y-6 px-1 py-2 font-sans selection:bg-indigo-500/30">
+      <div
+        @click.stop
+        class="space-y-6 px-1 py-2 font-sans selection:bg-indigo-500/30"
+      >
         <!-- SECTION: JURNAL BARU -->
         <div
           class="space-y-3 pt-4 border-t border-dashed transition-colors duration-500"
@@ -23,7 +26,7 @@
               v-model="newBookTitle"
               placeholder="Nama rak jurnal..."
               :class="currentThemeClasses.input || currentThemeClasses.navLink"
-              class="flex-1 h-10 px-3 border rounded-xl text-sm outline-none transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/30"
+              class="flex-1 h-10 px-3 border rounded-xl text-base md:text-sm outline-none transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/30"
               @keyup.enter="createNewBook"
             />
 
@@ -64,7 +67,7 @@
               type="text"
               placeholder="Cari cerita lama..."
               :class="currentThemeClasses.input || currentThemeClasses.navLink"
-              class="w-full pl-10 pr-3 py-2.5 border rounded-xl text-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/20"
+              class="w-full pl-10 pr-3 py-2 md:py-2.5 border rounded-xl text-base md:text-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/20"
             />
             <Icon
               icon="solar:magnifer-bold"
