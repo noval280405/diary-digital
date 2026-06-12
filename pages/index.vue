@@ -2,7 +2,7 @@
   <ConfirmationDialog ref="confirmationDialog" />
   <NuxtLayout name="diary">
     <template #sidebar-content>
-      <div class="space-y-6 px-1 py-2 font-sans selection:bg-indigo-500/30">
+      <div @click.stop class="space-y-6 px-1 py-2 font-sans selection:bg-indigo-500/30">
         <!-- SECTION: JURNAL BARU -->
         <div
           class="space-y-3 pt-4 border-t border-dashed transition-colors duration-500"
