@@ -87,7 +87,7 @@
     <div
       v-if="isSidebarOpen"
       @click="isSidebarOpen = false"
-      class="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-40 md:hidden transition-opacity duration-300"
+      class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 md:hidden transition-opacity duration-300"
     />
 
     <!-- SIDEBAR: Perbaikan Kelas Kontainer Utama -->
@@ -96,11 +96,11 @@
         themeClasses[currentTheme]?.sidebar || themeClasses['cream'].sidebar,
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
       ]"
-      class="fixed inset-y-0 left-0 w-76 h-[100dvh] md:sticky md:top-0 md:h-screen border-r backdrop-blur-xl flex flex-col justify-between z-50 md:z-10 transition-transform duration-300 ease-in-out"
+      :style="{ height: sidebarHeight }"
+      class="fixed inset-y-0 left-0 w-[85vw] max-w-[320px] md:w-76 md:sticky md:top-0 md:h-screen border-r backdrop-blur-xl flex flex-col justify-between z-50 md:z-10 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none"
     >
-      <!-- AREA KONTEN ATAS: Dipaksa overflow secara independen -->
       <div
-        class="flex-1 overflow-y-auto min-h-0 p-5 space-y-6 custom-sidebar-scroll"
+        class="flex-1 overflow-y-auto min-h-0 p-4 sm:p-5 space-y-5 custom-sidebar-scroll"
       >
         <!-- Brand Header Area -->
         <div
@@ -706,7 +706,7 @@ const quotes = [
   "Write what you cannot say.",
 ];
 const quote = ref("");
-
+const sidebarHeight = ref("100vh");
 onMounted(() => {
   quote.value = quotes[Math.floor(Math.random() * quotes.length)];
   onAuthStateChanged($fbAuth, (user) => {
@@ -714,6 +714,19 @@ onMounted(() => {
       currentUser.value = user;
     }
   });
+
+  if (import.meta.client) {
+    // Kunci tinggi awal saat aplikasi pertama kali dimuat
+    sidebarHeight.value = `${window.innerHeight}px`;
+
+    // Jaga-jaga jika user memutar layar (landscape/portrait)
+    window.addEventListener("resize", () => {
+      // Hanya update jika perubahannya drastis (bukan karena keyboard muncul)
+      if (Math.abs(window.innerHeight - parseInt(sidebarHeight.value)) > 150) {
+        sidebarHeight.value = `${window.innerHeight}px`;
+      }
+    });
+  }
 });
 
 const notebooks = useState<any[]>("global-notebooks", () => []);
