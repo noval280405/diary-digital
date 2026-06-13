@@ -450,11 +450,11 @@
               <button
                 v-if="!isWritingMode && currentPage.text"
                 @click="togglePageLock"
-                class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider border transition-all duration-300 active:scale-95 shadow-sm backdrop-blur-md"
+                class="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 active:scale-95 select-none"
                 :class="
                   currentPage.isLocked
-                    ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400'
-                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
+                    ? 'bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-500 dark:text-white dark:border-transparent'
+                    : 'bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-500 dark:text-white dark:border-transparent'
                 "
               >
                 <Icon
@@ -463,10 +463,11 @@
                       ? 'solar:shield-keyhole-bold'
                       : 'solar:key-bold'
                   "
-                  class="w-4 h-4 shrink-0 transition-transform duration-300"
+                  class="w-3.5 h-3.5 shrink-0"
                 />
+
                 <span>
-                  {{ currentPage.isLocked ? "Hapus PIN" : "Kunci Lembar" }}
+                  {{ currentPage.isLocked ? "Hapus PIN" : "Kunci" }}
                 </span>
               </button>
 
