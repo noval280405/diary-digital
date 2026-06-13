@@ -97,29 +97,24 @@
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
       ]"
       :style="{ height: sidebarHeight }"
-      class="fixed inset-y-0 left-0 w-[85vw] max-w-[320px] md:w-76 md:sticky md:top-0 md:h-screen border-r backdrop-blur-xl flex flex-col justify-between z-50 md:z-10 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none"
+      class="fixed inset-y-0 left-0 w-[85vw] max-w-[320px] md:w-76 md:sticky md:top-0 md:h-screen border-r backdrop-blur-xl flex flex-col justify-between z-50 md:z-10 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none select-none"
     >
       <div
-        class="flex-1 overflow-y-auto min-h-0 p-4 sm:p-5 space-y-5 custom-sidebar-scroll"
+        class="px-5 pt-5 pb-4 flex flex-col gap-4 border-b border-dashed transition-all duration-300 bg-inherit rounded-t-[2rem]"
+        :class="themeClasses[currentTheme]?.borderDashed || 'border-slate-800'"
       >
-        <!-- Brand Header Area -->
-        <div
-          class="flex items-center justify-between pb-2 border-b border-dashed"
-          :class="
-            themeClasses[currentTheme]?.borderDashed || 'border-slate-800'
-          "
-        >
+        <div class="flex items-center justify-between">
           <div class="flex items-center gap-3 min-w-0">
             <div
               :class="currentThemeClasses.btnGradient"
-              class="w-9 h-9 rounded-xl bg-gradient-to flex items-center justify-center shadow-lg shrink-0"
+              class="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg shrink-0"
             >
               <Icon
                 icon="solar:book-bookmark-bold-duotone"
                 class="w-5 h-5 text-white"
               />
             </div>
-            <div class="truncate select-none tracking-tight">
+            <div class="truncate tracking-tight">
               <h2
                 :class="[
                   currentThemeClasses.fontTitle ||
@@ -133,7 +128,6 @@
               >
                 My<span class="opacity-50 font-medium">Diary</span>
               </h2>
-
               <p
                 :class="
                   currentTheme === 'dark' ? 'text-slate-500' : 'text-current/40'
@@ -145,14 +139,13 @@
             </div>
           </div>
 
-          <!-- TOMBOL CLOSE SIDEBAR CUSTOM THEME (Khusus Mobile) -->
           <button
             @click="isSidebarOpen = false"
             :class="
               themeClasses[currentTheme]?.mobileClose ||
               themeClasses['dark'].mobileClose
             "
-            class="md:hidden group w-9 h-9 rounded-2xl border backdrop-blur-xl flex items-center justify-center transition-all duration-300 active:scale-90 hover:scale-105"
+            class="md:hidden group w-9 h-9 rounded-xl border backdrop-blur-xl flex items-center justify-center transition-all duration-300 active:scale-90 hover:scale-105"
           >
             <Icon
               icon="solar:alt-arrow-left-outline"
@@ -161,130 +154,125 @@
           </button>
         </div>
 
-        <!-- PILIHAN WARNA TEMA (Tema Palettes) -->
-        <!-- BUTTON TAMPILKAN WARNA -->
-        <button
-          @click="showThemePicker = !showThemePicker"
-          class="mt-4 w-full flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-bold transition-all"
-          :class="
-            themeClasses[currentTheme]?.navLink || themeClasses['dark'].navLink
-          "
-        >
-          <span class="flex items-center gap-2">
+        <div class="w-full">
+          <button
+            @click="showThemePicker = !showThemePicker"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-bold transition-all duration-300"
+            :class="
+              themeClasses[currentTheme]?.navLink ||
+              themeClasses['dark'].navLink
+            "
+          >
+            <span class="flex items-center gap-2">
+              <Icon
+                icon="solar:palette-bold-duotone"
+                :class="themeClasses[currentTheme]?.iconPrimary"
+                class="w-4 h-4"
+              />
+              Ganti Warna
+            </span>
             <Icon
-              icon="solar:palette-bold-duotone"
-              :class="themeClasses[currentTheme]?.iconPrimary"
+              :icon="
+                showThemePicker
+                  ? 'solar:alt-arrow-up-linear'
+                  : 'solar:alt-arrow-down-linear'
+              "
               class="w-4 h-4"
             />
-            Ganti Warna
-          </span>
+          </button>
 
-          <Icon
-            :icon="
-              showThemePicker
-                ? 'solar:alt-arrow-up-linear'
-                : 'solar:alt-arrow-down-linear'
-            "
-            class="w-4 h-4"
-          />
-        </button>
-
-        <!-- PILIHAN WARNA -->
-        <Transition name="fade">
-          <div v-if="showThemePicker" class="mt-3">
-            <div
-              class="grid grid-cols-5 gap-2 bg-slate-500/5 p-1.5 rounded-xl border"
-              :class="
-                themeClasses[currentTheme]?.borderSimple || 'border-slate-800'
-              "
-            >
-              <!-- cream -->
-              <button
-                @click="setTheme('cream')"
+          <Transition name="fade">
+            <div v-if="showThemePicker" class="mt-2">
+              <div
+                class="grid grid-cols-5 gap-2 bg-slate-500/5 p-1.5 rounded-xl border transition-colors duration-300"
                 :class="
-                  currentTheme === 'cream'
-                    ? 'ring-2 ring-amber-600 scale-105'
-                    : ''
+                  themeClasses[currentTheme]?.borderSimple || 'border-slate-800'
                 "
-                class="w-full h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center transition-all"
               >
-                <Icon
-                  v-if="currentTheme === 'cream'"
-                  icon="solar:check-circle-bold"
-                  class="w-3.5 h-3.5 text-amber-700"
-                />
-              </button>
-
-              <!-- pink -->
-              <button
-                @click="setTheme('pink')"
-                :class="
-                  currentTheme === 'pink'
-                    ? 'ring-2 ring-pink-500 scale-105'
-                    : ''
-                "
-                class="w-full h-8 rounded-lg bg-pink-50 border border-pink-200 flex items-center justify-center transition-all"
-              >
-                <Icon
-                  v-if="currentTheme === 'pink'"
-                  icon="solar:check-circle-bold"
-                  class="w-3.5 h-3.5 text-pink-600"
-                />
-              </button>
-
-              <!-- blue -->
-              <button
-                @click="setTheme('blue')"
-                :class="
-                  currentTheme === 'blue' ? 'ring-2 ring-sky-500 scale-105' : ''
-                "
-                class="w-full h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center transition-all"
-              >
-                <Icon
-                  v-if="currentTheme === 'blue'"
-                  icon="solar:check-circle-bold"
-                  class="w-3.5 h-3.5 text-sky-600"
-                />
-              </button>
-
-              <!-- green -->
-              <button
-                @click="setTheme('green')"
-                :class="
-                  currentTheme === 'green'
-                    ? 'ring-2 ring-emerald-500 scale-105'
-                    : ''
-                "
-                class="w-full h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center transition-all"
-              >
-                <Icon
-                  v-if="currentTheme === 'green'"
-                  icon="solar:check-circle-bold"
-                  class="w-3.5 h-3.5 text-emerald-600"
-                />
-              </button>
-
-              <!-- dark -->
-              <button
-                @click="setTheme('dark')"
-                :class="
-                  currentTheme === 'dark'
-                    ? 'ring-2 ring-indigo-500 scale-105'
-                    : ''
-                "
-                class="w-full h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center transition-all"
-              >
-                <Icon
-                  v-if="currentTheme === 'dark'"
-                  icon="solar:check-circle-bold"
-                  class="w-3.5 h-3.5 text-indigo-400"
-                />
-              </button>
+                <button
+                  @click="setTheme('cream')"
+                  :class="
+                    currentTheme === 'cream'
+                      ? 'ring-2 ring-amber-600 scale-105'
+                      : ''
+                  "
+                  class="w-full h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center transition-all"
+                >
+                  <Icon
+                    v-if="currentTheme === 'cream'"
+                    icon="solar:check-circle-bold"
+                    class="w-3.5 h-3.5 text-amber-700"
+                  />
+                </button>
+                <button
+                  @click="setTheme('pink')"
+                  :class="
+                    currentTheme === 'pink'
+                      ? 'ring-2 ring-pink-500 scale-105'
+                      : ''
+                  "
+                  class="w-full h-8 rounded-lg bg-pink-50 border border-pink-200 flex items-center justify-center transition-all"
+                >
+                  <Icon
+                    v-if="currentTheme === 'pink'"
+                    icon="solar:check-circle-bold"
+                    class="w-3.5 h-3.5 text-pink-600"
+                  />
+                </button>
+                <button
+                  @click="setTheme('blue')"
+                  :class="
+                    currentTheme === 'blue'
+                      ? 'ring-2 ring-sky-500 scale-105'
+                      : ''
+                  "
+                  class="w-full h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center transition-all"
+                >
+                  <Icon
+                    v-if="currentTheme === 'blue'"
+                    icon="solar:check-circle-bold"
+                    class="w-3.5 h-3.5 text-sky-600"
+                  />
+                </button>
+                <button
+                  @click="setTheme('green')"
+                  :class="
+                    currentTheme === 'green'
+                      ? 'ring-2 ring-emerald-500 scale-105'
+                      : ''
+                  "
+                  class="w-full h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center transition-all"
+                >
+                  <Icon
+                    v-if="currentTheme === 'green'"
+                    icon="solar:check-circle-bold"
+                    class="w-3.5 h-3.5 text-emerald-600"
+                  />
+                </button>
+                <button
+                  @click="setTheme('dark')"
+                  :class="
+                    currentTheme === 'dark'
+                      ? 'ring-2 ring-indigo-500 scale-105'
+                      : ''
+                  "
+                  class="w-full h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center transition-all"
+                >
+                  <Icon
+                    v-if="currentTheme === 'dark'"
+                    icon="solar:check-circle-bold"
+                    class="w-3.5 h-3.5 text-indigo-400"
+                  />
+                </button>
+              </div>
             </div>
-          </div>
-        </Transition>
+          </Transition>
+        </div>
+      </div>
 
-        <!-- Quotes Area -->
+      <div
+        class="flex-1 overflow-y-auto min-h-0 px-5 pt-4 pb-5 space-y-4 custom-sidebar-scroll"
+      >
         <div
           class="p-4 rounded-xl border relative overflow-hidden group transition-all duration-300"
           :class="
@@ -309,7 +297,6 @@
           </div>
         </div>
 
-        <!-- Navigasi Menu Utama -->
         <div class="space-y-1">
           <NuxtLink
             to="/stats"
@@ -335,18 +322,15 @@
           </NuxtLink>
         </div>
 
-        <!-- Slot Dinamis Konten Rak Buku -->
         <div @click="isSidebarOpen = false" class="space-y-1 pt-1">
           <slot name="sidebar-content" />
         </div>
       </div>
 
-      <!-- AREA KONTEN BAWAH: Tetap terkunci static di bawah -->
       <div
         class="space-y-4 p-5 border-t shrink-0 bg-inherit"
         :class="themeClasses[currentTheme]?.borderDashed || 'border-slate-800'"
       >
-        <!-- Progress Menulis -->
         <div class="px-1">
           <div
             class="flex items-center justify-between text-[11px] font-bold opacity-60 mb-1.5"
@@ -389,7 +373,6 @@
           </div>
         </div>
 
-        <!-- Profil Akun Premium Card -->
         <div
           class="flex items-center justify-between p-3 rounded-xl border transition-all duration-300"
           :class="
