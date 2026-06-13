@@ -204,24 +204,48 @@
 
                   <template v-else>
                     <button
+                      @click.stop="toggleJournalLock(book)"
+                      class="group p-1.5 rounded-lg bg-white border shadow-3xs active:scale-95 flex items-center justify-center select-none"
+                      :class="
+                        book.isLocked ? 'border-rose-200' : 'border-emerald-200'
+                      "
+                      :title="
+                        book.isLocked
+                          ? 'Hapus/Lepas PIN Jurnal'
+                          : 'Buat/Pasang PIN Baru'
+                      "
+                    >
+                      <Icon
+                        :icon="
+                          book.isLocked
+                            ? 'solar:lock-keyhole-bold'
+                            : 'solar:key-bold'
+                        "
+                        class="w-4 h-4"
+                        :class="
+                          book.isLocked ? 'text-rose-500' : 'text-emerald-500'
+                        "
+                      />
+                    </button>
+                    <button
                       @click.stop="startEditBook(book)"
-                      class="group p-1.5 rounded-lg bg-white border border-slate-100 shadow-3xs transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+                      class="p-1.5 rounded-lg bg-white border border-slate-100 shadow-3xs active:scale-95 flex items-center justify-center select-none"
                       title="Ubah Nama"
                     >
                       <Icon
                         icon="solar:pen-2-bold-duotone"
-                        class="w-4 h-4 text-indigo-600 dark:text-indigo-500"
+                        class="w-4 h-4 text-indigo-500"
                       />
                     </button>
 
                     <button
                       @click.stop="deleteBook(book)"
-                      class="group p-1.5 rounded-lg bg-white border border-slate-100 shadow-3xs transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+                      class="p-1.5 rounded-lg bg-white border border-slate-100 shadow-3xs active:scale-95 flex items-center justify-center select-none"
                       title="Hapus Jurnal"
                     >
                       <Icon
                         icon="solar:trash-bin-trash-bold-duotone"
-                        class="w-4 h-4 text-rose-600 dark:text-rose-500"
+                        class="w-4 h-4 text-rose-500"
                       />
                     </button>
                   </template>
@@ -325,7 +349,7 @@
           </div>
         </div>
 
-        <div
+        <!-- <div
           v-if="currentBook.id"
           class="w-full sm:w-auto shrink-0 pt-1 sm:pt-0"
         >
@@ -351,7 +375,7 @@
               {{ currentBook.isLocked ? "JURNAL TERKUNCI" : "KUNCI HALAMAN" }}
             </span>
           </button>
-        </div>
+        </div> -->
       </div>
 
       <!-- KONDISI PERTAMA: JURNAL DIKUNCI TOTAL -->
