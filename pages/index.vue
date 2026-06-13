@@ -1,5 +1,12 @@
 <template>
   <ConfirmationDialog ref="confirmationDialog" />
+  <PinModal
+    v-model="isPinModalOpen"
+    :mode="pinModalMode"
+    :book-title="selectedBook?.title"
+    @submit="handlePinSubmit"
+  />
+
   <NuxtLayout name="diary">
     <template #sidebar-content>
       <div
@@ -1249,7 +1256,9 @@ const notificationStore = useNotificationStore();
 const confirmationDialog = ref<any>(null);
 // Di dalam index.vue kamu:
 import { provide } from "vue";
-
+const isPinModalOpen = ref(false);
+const pinModalMode = ref<"create" | "delete">("create");
+const selectedBook = ref<any>(null); // Penampung buku yang sedang dipilih untuk di-PIN
 // Pastikan dua baris ini ada setelah reactive state tema kamu didefinisikan:
 
 import {
@@ -1458,30 +1467,53 @@ const checkJournalPinInput = () => {
   }
 };
 
-const toggleJournalLock = async () => {
-  if (currentBook.value.isLocked) {
-    const confirmPin = prompt("Masukkan 6-Digit PIN Jurnal saat ini:");
-    if (confirmPin === currentBook.value.journalPin) {
-      currentBook.value.isLocked = false;
-      currentBook.value.journalPin = "";
-      isJournalUnlocked.value = false;
+const toggleJournalLock = (book: any) => {
+  // 1. Simpan data buku yang diklik ke penampung reaktif
+  selectedBook.value = book;
+
+  // 2. Tentukan mode modal berdasarkan status lock buku saat ini
+  if (book.isLocked) {
+    pinModalMode.value = "delete"; // Modenya menghapus/melepas PIN
+  } else {
+    pinModalMode.value = "create"; // Modenya membuat PIN baru
+  }
+
+  // 3. Picu modal custom agar muncul di layar
+  isPinModalOpen.value = true;
+};
+
+const handlePinSubmit = async (pinYangDiketik: string) => {
+  // Ambil data buku yang tadi disimpan saat tombol sidebar diklik
+  const book = selectedBook.value;
+  if (!book) return;
+
+  if (pinModalMode.value === "create") {
+    // 🟢 LOGIKA: BUAT PIN BARU
+    book.isLocked = true;
+    book.journalPin = pinYangDiketik; // Sesuaikan dengan nama field kamu (journalPin)
+
+    // Jika buku yang dikunci kebetulan adalah buku yang sedang aktif dibuka di layar tengah
+    if (currentBook.value?.id === book.id) {
+      isJournalUnlocked.value = true;
+    }
+
+    alert(`🔐 Sukses terkunci.`);
+    await saveToFirebase(); // Panggil fungsi save Firebase bawaan kamu
+  } else {
+    // 🔴 LOGIKA: HAPUS / LEPAS PIN
+    if (pinYangDiketik === book.journalPin) {
+      book.isLocked = false;
+      book.journalPin = "";
+
+      if (currentBook.value?.id === book.id) {
+        isJournalUnlocked.value = false;
+      }
+
       alert("🔓 Gembok dilepas!");
-      await saveToFirebase();
-    } else if (confirmPin !== null) {
+      await saveToFirebase(); // Panggil fungsi save Firebase bawaan kamu
+    } else {
       alert("❌ PIN Salah!");
     }
-  } else {
-    const newPin = prompt("Buat 6-Digit PIN Angka Baru:");
-    if (newPin === null) return;
-    if (!newPin || newPin.length !== 6 || isNaN(Number(newPin))) {
-      alert("⚠️ PIN wajib berupa 6 digit angka.");
-      return;
-    }
-    currentBook.value.isLocked = true;
-    currentBook.value.journalPin = newPin;
-    isJournalUnlocked.value = true;
-    alert(`🔐 Sukses terkunci.`);
-    await saveToFirebase();
   }
 };
 
