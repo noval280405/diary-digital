@@ -1498,7 +1498,7 @@ const handlePinSubmit = async (pinYangDiketik: string) => {
       isJournalUnlocked.value = true;
     }
 
-    alert(`🔐 Sukses terkunci.`);
+    notificationStore.showSuccess(`Sukses terkunci.`);
     await saveToFirebase(); // Panggil fungsi save Firebase bawaan kamu
   } else {
     // 🔴 LOGIKA: HAPUS / LEPAS PIN
@@ -1510,10 +1510,10 @@ const handlePinSubmit = async (pinYangDiketik: string) => {
         isJournalUnlocked.value = false;
       }
 
-      alert("🔓 Gembok dilepas!");
+      notificationStore.showSuccess("Gembok dilepas!");
       await saveToFirebase(); // Panggil fungsi save Firebase bawaan kamu
     } else {
-      alert("❌ PIN Salah!");
+      notificationStore.showError("PIN Salah!");
     }
   }
 };
@@ -1532,7 +1532,7 @@ const handleResetJournalPinWithPassword = async () => {
     currentBook.value.isLocked = true;
     isJournalUnlocked.value = true;
     await saveToFirebase();
-    alert(`🎉 PIN Jurnal berhasil di-reset.`);
+    notificationStore.showSuccess(`PIN Jurnal berhasil di-reset.`);
     closeJournalResetModal();
   } catch (error: any) {
     resetJournalErrorMsg.value = "Akses verifikasi ditolak.";
@@ -1599,9 +1599,9 @@ const togglePageLock = async () => {
         currentPage.value.pin = "";
         isCurrentPageUnlocked.value = false;
         await updateDoc(pageDocRef, { isLocked: false, pin: "" });
-        alert("🔒 Gembok dilepas.");
+        notificationStore.showSuccess("Gembok dilepas.");
       } else if (confirmPin !== null) {
-        alert("❌ PIN Salah!");
+        notificationStore.showError("PIN Salah!");
       }
     }
   } else {
@@ -1613,7 +1613,7 @@ const togglePageLock = async () => {
     isCurrentPageUnlocked.value = true;
 
     await updateDoc(pageDocRef, { isLocked: true, pin: newPin });
-    alert("🔐 Lembaran terkunci.");
+    notificationStore.showSuccess("Lembaran terkunci.");
   }
 };
 
@@ -1642,7 +1642,7 @@ const handleResetPinWithPassword = async () => {
     isCurrentPageUnlocked.value = true;
 
     await updateDoc(pageDocRef, { isLocked: true, pin: resetNewPin.value });
-    alert("🔄 PIN Halaman Berhasil Diperbarui!");
+    notificationStore.showSuccess("PIN Halaman Berhasil Diperbarui!");
     closeResetModal();
   } catch (error: any) {
     resetErrorMsg.value = "Gagal memverifikasi akun.";
@@ -1750,7 +1750,7 @@ const savePage = async () => {
     upStore.setReset();
   } catch (e) {
     console.error("❌ Gagal menyimpan notebook baru:", e);
-    alert("Gagal mencadangkan lembar baru.");
+    notificationStore.showError("Gagal mencadangkan lembar baru.");
   }
 };
 
@@ -1972,13 +1972,6 @@ const deleteBook = async (clickedBook: any) => {
   );
   if (originalIndex === -1) return;
 
-  if (
-    !confirm(
-      `Hapus jurnal "${clickedBook.title}" beserta seluruh lembaran di dalamnya?`,
-    )
-  )
-    return;
-
   const uid = currentUser.value.uid;
   const bookId = clickedBook.id;
 
@@ -2011,7 +2004,7 @@ const deleteBook = async (clickedBook: any) => {
         : Math.min(activeBookIndex.value, notebooks.value.length - 1);
     currentPageIndex.value = 0;
 
-    alert("✨ Jurnal berhasil dibersihkan dari cloud!");
+    notificationStore.showSuccess("Jurnal berhasil dibersihkan dari cloud!");
   } catch (e) {
     console.error(e);
   }
@@ -2128,7 +2121,7 @@ const saveEditPage = async () => {
 
   const cleanText = editTextBuffer.value.trim();
   if (!cleanText) {
-    alert("Isi cerita jurnal tidak boleh kosong.");
+    notificationStore.showError("Isi cerita jurnal tidak boleh kosong.");
     return;
   }
 
@@ -2136,7 +2129,9 @@ const saveEditPage = async () => {
   const targetPage = currentPage.value;
 
   if (!user || !targetPage || !targetPage.id || !currentBook.value.id) {
-    alert("Sesi masuk tidak valid atau lembaran tidak ditemukan di database.");
+    notificationStore.showError(
+      "Sesi masuk tidak valid atau lembaran tidak ditemukan di database.",
+    );
     return;
   }
 
@@ -2223,14 +2218,14 @@ const saveEditPage = async () => {
       }
     }
 
-    alert("✨ Lembaran cerita berhasil diperbarui!");
+    notificationStore.showSuccess("Lembaran cerita berhasil diperbarui!");
 
     isImageDeleted.value = false; // 🧼 Reset penanda hapus setelah sukses
     upStore.setReset(); // Bersihkan sisa indikasi upload di Pinia
     isEditingPage.value = false;
   } catch (error) {
     console.error(error);
-    alert("Gagal menyimpan perubahan.");
+    notificationStore.showError("Gagal menyimpan perubahan.");
   }
 };
 
