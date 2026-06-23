@@ -102,7 +102,7 @@ export const uploadStore = defineStore('uploadStore', {
             this.urlRef = file
         },
         simpanFileAction(typefolder: string) {
-            // const loadingStore = useloadingStore()
+            const loadingStore = useloadingStore()
             const picturestore = usePictureStore()
             const storage = useFirebaseStorage();
             const tahun = moment().format('YYYY');
@@ -113,7 +113,7 @@ export const uploadStore = defineStore('uploadStore', {
                     var metadata = {
                         contentType: this.typefile,
                     };
-                    // loadingStore.setLoading(true)
+                    loadingStore.setLoading(true)
                     const filenamaref = storageRef(storage, `upload/${tahun}/${bulan}/${tanggal}/${typefolder}/` + this.namefile);
                     const uploadTask = uploadBytesResumable(filenamaref, this.fileupload);
 
@@ -144,10 +144,10 @@ export const uploadStore = defineStore('uploadStore', {
                                 // console.log('File available at', downloadURL);
                             });
                             picturestore.setPic(this.downloadUrl)
-                            // loadingStore.setLoading(false)
+                            loadingStore.setLoading(false)
                         })
                 } catch (error) {
-                    // loadingStore.setLoading(false)
+                    loadingStore.setLoading(false)
                     return reject(error)
                 }
             })
@@ -164,7 +164,7 @@ export const uploadStore = defineStore('uploadStore', {
                     var metadata = {
                         contentType: this.typefile,
                     };
-                    // loadingStore.setLoading(true)
+                    loadingStore.setLoading(true)
                     const filenamaref = storageRef(storage, `upload/${tahun}/${bulan}/${tanggal}/${typefolder}/` + this.namefile2);
                     const uploadTask = uploadBytesResumable(filenamaref, this.fileupload2);
 
@@ -195,10 +195,10 @@ export const uploadStore = defineStore('uploadStore', {
                                 // console.log('File available at', downloadURL);
                             });
                             picturestore.setPic(this.downloadUrl2)
-                            // loadingStore.setLoading(false)
+                            loadingStore.setLoading(false)
                         })
                 } catch (error) {
-                    // loadingStore.setLoading(false)
+                    loadingStore.setLoading(false)
                     return reject(error)
                 }
             })
