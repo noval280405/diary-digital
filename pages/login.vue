@@ -8,7 +8,6 @@
       "
       class="min-h-screen flex items-center justify-center p-6 font-sans relative overflow-hidden transition-colors duration-500"
     >
-      <!-- TOMBOL SWITCHER TEMA (Pojok Kanan Atas) -->
       <div
         class="absolute top-6 right-6 z-50 flex items-center gap-2 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1.5 rounded-full border border-amber-200/40 dark:border-slate-800"
       >
@@ -25,7 +24,6 @@
           class="w-7 h-7 rounded-full transition-all duration-300 relative group"
           :title="theme.name"
         >
-          <!-- Tooltip Nama Tema -->
           <span
             class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap"
           >
@@ -34,7 +32,6 @@
         </button>
       </div>
 
-      <!-- Background Bulat Estetik (Dinamis TOTAL Sesuai Tema Aktif) -->
       <div
         class="fixed inset-0 pointer-events-none transition-all duration-500"
         :class="
@@ -48,7 +45,6 @@
         :class="activeThemeMap?.glow"
       />
 
-      <!-- Kartu Form (Glassmorphism Effect) -->
       <div
         :class="
           currentTheme === 'dark'
@@ -57,13 +53,11 @@
         "
         class="w-full max-w-md p-8 md:p-10 rounded-[32px] border backdrop-blur-xl relative z-10 transition-all duration-500"
       >
-        <!-- Header Ikon -->
         <div class="flex flex-col items-center text-center mb-8">
           <div
             :class="activeThemeMap?.btnGradient"
             class="w-16 h-16 rounded-3xl bg-gradient-to-br flex items-center justify-center shadow-lg mb-4 transition-all duration-500 text-white"
           >
-            <!-- SVG Native Register / Login -->
             <svg
               v-if="isRegister"
               class="w-8 h-8 text-white"
@@ -119,9 +113,7 @@
           </p>
         </div>
 
-        <!-- Form Utama -->
         <form @submit.prevent="handleSubmit" class="space-y-5">
-          <!-- Input Email -->
           <div>
             <label
               :class="activeThemeMap?.textLabel"
@@ -143,7 +135,6 @@
             />
           </div>
 
-          <!-- Input Password -->
           <div class="space-y-2">
             <label
               :class="activeThemeMap?.textLabel"
@@ -164,7 +155,6 @@
               class="w-full px-4 py-3 border rounded-2xl text-sm outline-none transition-all duration-300 placeholder:text-slate-400"
             />
 
-            <!-- Link Lupa Password -->
             <div v-if="!isRegister" class="text-right pt-1">
               <NuxtLink
                 to="/forgot-password"
@@ -180,7 +170,6 @@
             </div>
           </div>
 
-          <!-- Tombol Submit -->
           <button
             type="submit"
             :disabled="loading"
@@ -216,7 +205,6 @@
           </button>
         </form>
 
-        <!-- Toggle Pindah Halaman Login / Register -->
         <div
           class="mt-8 pt-4 border-t text-center"
           :class="
@@ -247,7 +235,9 @@ import { ref, onMounted, computed } from "vue";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  updateProfile,
 } from "firebase/auth";
+import { doc, setDoc, serverTimestamp, getFirestore } from "firebase/firestore"; // Tambahkan getFirestore di sini
 
 // Shared state tema global
 const currentTheme = useState("diary-active-theme", () => "cream");
@@ -262,6 +252,14 @@ const availableThemes = {
 
 const authThemeMap = {
   dark: {
+    pageBg: "bg-slate-950 text-white",
+    radialBg:
+      "bg-[radial-gradient(circle_at_top,_rgba(79,70,229,0.25),_transparent_45%),radial-gradient(circle_at_bottom,_rgba(236,72,153,0.18),_transparent_40%)]",
+    cardBgBorder:
+      "bg-slate-900/80 border-slate-800 shadow-[0_30px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl",
+    inputStyle:
+      "bg-slate-950/90 border-slate-800 text-slate-100 focus:ring-2 focus:ring-indigo-500 shadow-sm",
+    borderToggle: "border-slate-800",
     btnGradient: "from-indigo-600 to-violet-600",
     textLabel: "text-indigo-400",
     textToggle: "text-indigo-400 hover:text-indigo-300",
@@ -324,7 +322,9 @@ const activeThemeMap = computed(
 
 const changeTheme = (themeKey) => {
   currentTheme.value = themeKey;
-  localStorage.setItem("diary-active-theme", themeKey);
+  if (import.meta.client) {
+    localStorage.setItem("diary-active-theme", themeKey);
+  }
 };
 
 const email = ref("");
@@ -332,48 +332,90 @@ const password = ref("");
 const isRegister = ref(false);
 const loading = ref(false);
 
-// Mengunci kondisi halaman register & tema lewat localStorage sewaktu direfresh
 onMounted(() => {
-  const savedTheme = localStorage.getItem("diary-active-theme");
-  if (savedTheme && authThemeMap[savedTheme]) {
-    currentTheme.value = savedTheme;
-  }
+  if (import.meta.client) {
+    const savedTheme = localStorage.getItem("diary-active-theme");
+    if (savedTheme && authThemeMap[savedTheme]) {
+      currentTheme.value = savedTheme;
+    }
 
-  const savedMode = localStorage.getItem("diary-auth-mode");
-  if (savedMode) {
-    isRegister.value = savedMode === "register";
+    const savedMode = localStorage.getItem("diary-auth-mode");
+    if (savedMode) {
+      isRegister.value = savedMode === "register";
+    }
   }
 });
 
 const toggleAuthMode = () => {
   isRegister.value = !isRegister.value;
-  localStorage.setItem(
-    "diary-auth-mode",
-    isRegister.value ? "register" : "login",
-  );
+  if (import.meta.client) {
+    localStorage.setItem(
+      "diary-auth-mode",
+      isRegister.value ? "register" : "login",
+    );
+  }
 };
 
 const { $fbAuth } = useNuxtApp();
 const router = useRouter();
 
+// MEMASTIKAN INSTANCE DB FIRESTORE DIAMBIL DENGAN BENAR
+const db = getFirestore();
+
+const getDisplayNameFromEmail = (emailValue) => {
+  const rawName = String(emailValue || "")
+    .split("@")[0]
+    .trim();
+  if (!rawName) return "User";
+  return rawName.charAt(0).toUpperCase() + rawName.slice(1);
+};
+
 const handleSubmit = async () => {
   loading.value = true;
+
   try {
     if (isRegister.value) {
-      await createUserWithEmailAndPassword(
+      // 1. Buat akun auth
+      const userCredential = await createUserWithEmailAndPassword(
         $fbAuth,
         email.value,
         password.value,
       );
+
+      const user = userCredential.user;
+      const derivedDisplayName = getDisplayNameFromEmail(email.value);
+
+      // 2. Simpan ke profile auth
+      await updateProfile(user, {
+        displayName: derivedDisplayName,
+      });
+
+      // 3. Simpan ke Firestore -> Menggunakan 'db' lokal yang valid
+      await setDoc(doc(db, "user_diaries", user.uid), {
+        uid: user.uid,
+        email: user.email || email.value,
+        displayName: derivedDisplayName,
+        createdAt: serverTimestamp(),
+      });
+
       alert("Selamat! Akun diary kamu berhasil dibuat.");
-      // Hapus cadangan mode setelah sukses daftar
-      localStorage.removeItem("diary-auth-mode");
+
+      if (import.meta.client) {
+        localStorage.removeItem("diary-auth-mode");
+      }
     } else {
+      // Logika Login
       await signInWithEmailAndPassword($fbAuth, email.value, password.value);
-      localStorage.removeItem("diary-auth-mode");
+
+      if (import.meta.client) {
+        localStorage.removeItem("diary-auth-mode");
+      }
     }
+
     router.push("/");
   } catch (error) {
+    console.error("FIREBASE ERROR DETECTED:", error);
+
     if (error.code === "auth/email-already-in-use") {
       alert("Email sudah terdaftar. Silakan login langsung.");
     } else if (
@@ -383,7 +425,7 @@ const handleSubmit = async () => {
     ) {
       alert("Email atau password salah. Periksa kembali data kamu.");
     } else {
-      alert(error.message);
+      alert(`Terjadi kesalahan: [${error.code}] - ${error.message}`);
     }
   } finally {
     loading.value = false;
