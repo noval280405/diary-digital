@@ -1,5 +1,6 @@
 <template>
   <div
+    v-if="themeReady"
     :class="[
       themeClasses[currentTheme]?.wrapper || themeClasses['dark'].wrapper,
     ]"
@@ -489,19 +490,24 @@
 </template>
 
 <script setup lang="ts">
-// (Semua kode script setup kamu tetap sama seperti sebelumnya, tidak ada perubahan di sini)
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, provide } from "vue";
 import { Icon } from "@iconify/vue";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged, signOut, type Unsubscribe } from "firebase/auth";
+
 const showThemePicker = ref(false);
 
 const { $fbAuth } = useNuxtApp();
 const router = useRouter();
 
-const currentTheme = useState<string>("diary-active-theme", () => "cream");
-const currentUser = ref<any>(null);
-const isSidebarOpen = ref(false);
+/**
+ * Flag agar layout tidak tampil sebelum tema selesai dipastikan.
+ * Ini untuk menghilangkan flash theme cream saat refresh.
+ */
+const themeReady = ref(false);
 
+/**
+ * Daftar semua class tema.
+ */
 const themeClasses: Record<string, any> = {
   cream: {
     wrapper: "bg-amber-50/40 text-slate-900",
@@ -656,18 +662,57 @@ const themeClasses: Record<string, any> = {
   },
 };
 
-const currentThemeClasses = computed(
-  () => themeClasses[currentTheme.value] || themeClasses["cream"],
+/**
+ * Ambil theme tersimpan dari localStorage.
+ * Kalau tidak ada / invalid, fallback ke cream.
+ */
+const getSavedTheme = (): string => {
+  if (!import.meta.client) return "cream";
+
+  const savedTheme = localStorage.getItem("diary-active-theme");
+  if (savedTheme && themeClasses[savedTheme]) {
+    return savedTheme;
+  }
+
+  return "cream";
+};
+
+/**
+ * Theme state global.
+ * Penting: default value langsung ambil dari localStorage agar refresh tetap theme terakhir.
+ */
+const currentTheme = useState<string>("diary-active-theme", () =>
+  getSavedTheme(),
 );
 
+/**
+ * Class theme aktif.
+ */
+const currentThemeClasses = computed(
+  () => themeClasses[currentTheme.value] || themeClasses.cream,
+);
+
+const currentUser = ref<any>(null);
+const isSidebarOpen = ref(false);
+
+/**
+ * Ganti theme + simpan ke localStorage.
+ */
 const changeTheme = (themeName: string) => {
-  if (themeClasses[themeName]) {
-    currentTheme.value = themeName;
+  if (!themeClasses[themeName]) return;
+
+  currentTheme.value = themeName;
+
+  if (import.meta.client) {
     localStorage.setItem("diary-active-theme", themeName);
   }
 };
+
 provide("changeTheme", changeTheme);
 
+/**
+ * Global lock modal state
+ */
 const lockModalState = useState("global-lock-modal", () => ({
   isOpen: false,
   correctPin: "",
@@ -687,6 +732,9 @@ const handlePinSuccess = () => {
   closeLockModal();
 };
 
+/**
+ * Quotes
+ */
 const quotes = [
   "Writing is the painting of the voice.",
   "Every page is a new beginning.",
@@ -694,75 +742,126 @@ const quotes = [
   "Small memories become great stories.",
   "Write what you cannot say.",
 ];
+
 const quote = ref("");
 const sidebarHeight = ref("100vh");
 
-onMounted(() => {
-  // 1. Nyalakan loading store di awal masuk browser
-  useloadingStore().setLoading(true);
-
-  // 2. Ambil tema asli dari localStorage secepat mungkin
-  const savedTheme = localStorage.getItem("diary-active-theme");
-  if (savedTheme && themeClasses[savedTheme]) {
-    currentTheme.value = savedTheme;
-  }
-
-  quote.value = quotes[Math.floor(Math.random() * quotes.length)];
-
-  // 3. Jalankan Firebase Auth
-  onAuthStateChanged($fbAuth, (user) => {
-    if (user) {
-      currentUser.value = user;
-    }
-    // FIX: Matikan loading HANYA SETELAH Firebase Auth selesai mendeteksi user!
-    useloadingStore().setLoading(false);
-  });
-
-  if (import.meta.client) {
-    // Kunci tinggi awal saat aplikasi pertama kali dimuat
-    sidebarHeight.value = `${window.innerHeight}px`;
-
-    // Jaga-jaga jika user memutar layar (landscape/portrait)
-    window.addEventListener("resize", () => {
-      // Hanya update jika perubahannya drastis (bukan karena keyboard muncul)
-      if (Math.abs(window.innerHeight - parseInt(sidebarHeight.value)) > 150) {
-        sidebarHeight.value = `${window.innerHeight}px`;
-      }
-    });
-  }
-});
-
+/**
+ * Data notebook global
+ */
 const notebooks = useState<any[]>("global-notebooks", () => []);
 const wordGoal = ref(500);
 
+/**
+ * Hitung total kata hari ini.
+ */
 const todayWordCount = computed(() => {
   let totalWords = 0;
   const todayStr = new Date().toDateString();
+
   notebooks.value.forEach((book: any) => {
     if (book.pages && Array.isArray(book.pages)) {
       book.pages.forEach((page: any) => {
         const pageDate = page.createdAt
           ? new Date(page.createdAt).toDateString()
           : todayStr;
+
         if (pageDate === todayStr && page.text) {
-          const words = page.text.trim().split(/\s+/);
+          const trimmed = String(page.text).trim();
+          if (!trimmed) return;
+
+          const words = trimmed.split(/\s+/);
           totalWords += words.filter((w: string) => w.length > 0).length;
         }
       });
     }
   });
+
   return totalWords;
 });
 
+/**
+ * Progress menulis harian.
+ */
 const writingProgress = computed(() => {
-  if (wordGoal.value === 0) return 0;
+  if (wordGoal.value <= 0) return 0;
   return (todayWordCount.value / wordGoal.value) * 100;
 });
 
+/**
+ * Logout user
+ */
 const handleLogout = async () => {
   await signOut($fbAuth);
   router.push("/login");
 };
+
+/**
+ * Simpan cleanup listener agar tidak bocor.
+ */
+let authUnsubscribe: Unsubscribe | null = null;
+let resizeHandler: (() => void) | null = null;
+
+onMounted(() => {
+  // loading ON di awal
+  useloadingStore().setLoading(true);
+
+  /**
+   * Sinkronkan lagi theme saat mounted.
+   * Kalau user terakhir pilih pink, saat refresh tetap pink.
+   */
+  currentTheme.value = getSavedTheme();
+
+  /**
+   * Setelah theme dipastikan benar, baru layout boleh tampil.
+   * Ini menghilangkan flash cream saat refresh.
+   */
+  themeReady.value = true;
+
+  /**
+   * Ambil quote random
+   */
+  quote.value = quotes[Math.floor(Math.random() * quotes.length)];
+
+  /**
+   * Firebase auth listener
+   */
+  authUnsubscribe = onAuthStateChanged($fbAuth, (user) => {
+    currentUser.value = user || null;
+
+    // loading OFF setelah auth selesai dicek
+    useloadingStore().setLoading(false);
+  });
+
+  /**
+   * Tinggi sidebar berdasarkan tinggi viewport
+   */
+  if (import.meta.client) {
+    sidebarHeight.value = `${window.innerHeight}px`;
+
+    resizeHandler = () => {
+      // Update hanya kalau perubahan tinggi signifikan
+      // agar keyboard mobile tidak bikin layout lompat-lompat
+      if (Math.abs(window.innerHeight - parseInt(sidebarHeight.value)) > 150) {
+        sidebarHeight.value = `${window.innerHeight}px`;
+      }
+    };
+
+    window.addEventListener("resize", resizeHandler);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (authUnsubscribe) {
+    authUnsubscribe();
+    authUnsubscribe = null;
+  }
+
+  if (import.meta.client && resizeHandler) {
+    window.removeEventListener("resize", resizeHandler);
+    resizeHandler = null;
+  }
+});
 </script>
 
 <!-- TAMBAHKAN STYLE BERIKUT UNTUK FORCING SCROLLBAR PADA MOBILE BROWSER -->
