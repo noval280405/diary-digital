@@ -5,7 +5,7 @@
     ]"
     class="min-h-screen flex flex-col md:flex-row transition-colors duration-700 font-sans relative overflow-hidden"
   >
-   <LoadingApp />
+    <LoadingApp />
     <appNotification />
     <!-- EFEK LATAR BELAKANG: Gradasi Sinematik Luas -->
     <div
@@ -191,7 +191,7 @@
                 "
               >
                 <button
-                  @click="setTheme('cream')"
+                  @click="changeTheme('cream')"
                   :class="
                     currentTheme === 'cream'
                       ? 'ring-2 ring-amber-600 scale-105'
@@ -206,7 +206,7 @@
                   />
                 </button>
                 <button
-                  @click="setTheme('pink')"
+                  @click="changeTheme('pink')"
                   :class="
                     currentTheme === 'pink'
                       ? 'ring-2 ring-pink-500 scale-105'
@@ -221,7 +221,7 @@
                   />
                 </button>
                 <button
-                  @click="setTheme('blue')"
+                  @click="changeTheme('blue')"
                   :class="
                     currentTheme === 'blue'
                       ? 'ring-2 ring-sky-500 scale-105'
@@ -236,7 +236,7 @@
                   />
                 </button>
                 <button
-                  @click="setTheme('green')"
+                  @click="changeTheme('green')"
                   :class="
                     currentTheme === 'green'
                       ? 'ring-2 ring-emerald-500 scale-105'
@@ -251,7 +251,7 @@
                   />
                 </button>
                 <button
-                  @click="setTheme('dark')"
+                  @click="changeTheme('dark')"
                   :class="
                     currentTheme === 'dark'
                       ? 'ring-2 ring-indigo-500 scale-105'
@@ -659,9 +659,14 @@ const themeClasses: Record<string, any> = {
 const currentThemeClasses = computed(
   () => themeClasses[currentTheme.value] || themeClasses["cream"],
 );
-const setTheme = (themeName: string) => {
-  currentTheme.value = themeName;
+
+const changeTheme = (themeName: string) => {
+  if (themeClasses[themeName]) {
+    currentTheme.value = themeName;
+    localStorage.setItem("diary-active-theme", themeName);
+  }
 };
+provide("changeTheme", changeTheme);
 
 const lockModalState = useState("global-lock-modal", () => ({
   isOpen: false,
@@ -691,12 +696,26 @@ const quotes = [
 ];
 const quote = ref("");
 const sidebarHeight = ref("100vh");
+
 onMounted(() => {
+  // 1. Nyalakan loading store di awal masuk browser
+  useloadingStore().setLoading(true);
+
+  // 2. Ambil tema asli dari localStorage secepat mungkin
+  const savedTheme = localStorage.getItem("diary-active-theme");
+  if (savedTheme && themeClasses[savedTheme]) {
+    currentTheme.value = savedTheme;
+  }
+
   quote.value = quotes[Math.floor(Math.random() * quotes.length)];
+
+  // 3. Jalankan Firebase Auth
   onAuthStateChanged($fbAuth, (user) => {
     if (user) {
       currentUser.value = user;
     }
+    // FIX: Matikan loading HANYA SETELAH Firebase Auth selesai mendeteksi user!
+    useloadingStore().setLoading(false);
   });
 
   if (import.meta.client) {
