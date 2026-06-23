@@ -1926,6 +1926,7 @@ const createNewBook = async () => {
   };
 
   try {
+    useloadingStore().setLoading(true);
     const journalDocRef = doc(
       $fbDb,
       "user_diaries",
@@ -1941,9 +1942,10 @@ const createNewBook = async () => {
     activeBookIndex.value = notebooks.value.length - 1;
     currentPageIndex.value = 0;
     isWritingMode.value = false;
-
+    useloadingStore().setLoading(false);
     console.log("🎨 Jurnal baru berhasil dibentuk di Cloud sub-collection!");
   } catch (e) {
+    useloadingStore().setLoading(false);
     console.error(e);
   }
 };
