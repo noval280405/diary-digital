@@ -277,8 +277,11 @@
           <div v-if="filteredNotebooks.length > 5 && !searchQuery" class="pt-1">
             <button
               @click="showAllNotebooks = !showAllNotebooks"
-              :class="currentThemeClasses.textLabel"
-              class="w-full py-2.5 text-xs font-bold tracking-wider uppercase border border-dashed rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900/60 transition-all flex items-center justify-center gap-1.5"
+              :class="[
+                currentThemeClasses.textLabel,
+                hoverThemeClasses[currentTheme] || hoverThemeClasses['cream'],
+              ]"
+              class="w-full py-2.5 text-xs font-bold tracking-wider uppercase border rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5"
             >
               <span>
                 {{
@@ -1871,6 +1874,14 @@ const themeStyles: Record<string, any> = {
   },
 };
 
+const hoverThemeClasses: Record<string, string> = {
+  dark: "hover:bg-indigo-500/10 text-indigo-400",
+  cream: "hover:bg-orange-500/10 dark:hover:bg-orange-500/5",
+  pink: "hover:bg-pink-500/10 dark:hover:bg-pink-500/5",
+  blue: "hover:bg-sky-500/10 dark:hover:bg-sky-500/5",
+  green: "hover:bg-emerald-500/10 dark:hover:bg-emerald-500/5",
+};
+
 provide("currentTheme", currentTheme);
 
 // COMPUTED DATA
@@ -2343,5 +2354,21 @@ async function deleteNotebook(noteId: string) {
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(156, 163, 175, 0.3);
   border-radius: 4px;
+}
+
+/* 1. Efek Hover dinamis mengikuti tema untuk Light Mode */
+.custom-hover-theme:hover {
+  background-color: var(
+    --hover-bg,
+    rgba(241, 245, 249, 0.6)
+  ); /* Fallback slate-100 */
+}
+
+/* 2. Efek Hover dinamis mengikuti tema untuk Dark Mode */
+.dark .custom-hover-theme:hover {
+  background-color: var(
+    --hover-bg-dark,
+    rgba(15, 23, 42, 0.6)
+  ); /* Fallback slate-900/60 */
 }
 </style>
