@@ -1723,6 +1723,7 @@ const savePage = async () => {
   };
 
   try {
+    useloadingStore().setLoading(true);
     const notebooksSubRef = collection(
       $fbDb,
       "user_diaries",
@@ -1748,7 +1749,9 @@ const savePage = async () => {
     console.log("📝 Sukses menulis cerita baru ke sub-collection notebooks!");
 
     upStore.setReset();
+    useloadingStore().setLoading(false);
   } catch (e) {
+    useloadingStore().setLoading(false);
     console.error("❌ Gagal menyimpan notebook baru:", e);
     notificationStore.showError("Gagal mencadangkan lembar baru.");
   }
@@ -1976,6 +1979,7 @@ const deleteBook = async (clickedBook: any) => {
   const bookId = clickedBook.id;
 
   try {
+    useloadingStore().setLoading(true);
     // 1. Bersihkan semua lembar notebooks di bawah jurnal ini
     const pagesToDelete = notebooks.value[originalIndex].pages || [];
     for (const p of pagesToDelete) {
@@ -2005,7 +2009,9 @@ const deleteBook = async (clickedBook: any) => {
     currentPageIndex.value = 0;
 
     notificationStore.showSuccess("Jurnal berhasil dibersihkan dari cloud!");
+    useloadingStore().setLoading(false);
   } catch (e) {
+    useloadingStore().setLoading(false);
     console.error(e);
   }
 };
@@ -2053,6 +2059,7 @@ const saveBookTitle = async (book: any) => {
   if (!user) return;
 
   try {
+    useloadingStore().setLoading(true);
     const journalDocRef = doc(
       $fbDb,
       "user_diaries",
@@ -2067,10 +2074,13 @@ const saveBookTitle = async (book: any) => {
       return item;
     });
     book.title = cleanTitle;
+    useloadingStore().setLoading(false);
     console.log("Judul jurnal sukses diperbarui di sub-collection jurnals.");
   } catch (error) {
+    useloadingStore().setLoading(false);
     console.error(error);
   } finally {
+    useloadingStore().setLoading(false);
     cancelEdit();
   }
 };
@@ -2184,6 +2194,7 @@ const saveEditPage = async () => {
   console.log("=== 📜 SELESAI ANALISIS DATA ===");
 
   try {
+    useloadingStore().setLoading(true);
     // Jalur path baru: /user_diaries/{uid}/jurnals/{idjurnal}/notebooks/{idcatatan}
     const pageDocRef = doc(
       $fbDb,
@@ -2217,13 +2228,14 @@ const saveEditPage = async () => {
         currentBook.value.pages = [...currentBook.value.pages];
       }
     }
-
+    useloadingStore().setLoading(false);
     notificationStore.showSuccess("Lembaran cerita berhasil diperbarui!");
 
     isImageDeleted.value = false; // 🧼 Reset penanda hapus setelah sukses
     upStore.setReset(); // Bersihkan sisa indikasi upload di Pinia
     isEditingPage.value = false;
   } catch (error) {
+    useloadingStore().setLoading(false);
     console.error(error);
     notificationStore.showError("Gagal menyimpan perubahan.");
   }
