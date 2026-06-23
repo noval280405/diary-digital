@@ -1348,9 +1348,12 @@ const generateId = () =>
 onMounted(() => {
   onAuthStateChanged($fbAuth, async (user) => {
     if (user) {
+      useloadingStore().setLoading(true);
       currentUser.value = user;
       await loadUserDiary(user.uid);
+      useloadingStore().setLoading(false);
     } else {
+      useloadingStore().setLoading(false);
       router.push("/login");
     }
   });
