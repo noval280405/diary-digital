@@ -2285,6 +2285,7 @@ async function deleteNotebook(noteId: string) {
   );
 
   try {
+    useloadingStore().setLoading(true);
     const docRef = doc(
       $fbDb,
       "user_diaries",
@@ -2298,8 +2299,10 @@ async function deleteNotebook(noteId: string) {
     await deleteDoc(docRef);
 
     await loadUserDiary(user.uid);
+    useloadingStore().setLoading(false);
     console.log("Database updated: Notebook berhasil dihapus!");
   } catch (error) {
+    useloadingStore().setLoading(false);
     console.error("Waduh, gagal menghapus data dari Firestore:", error);
   }
 }
