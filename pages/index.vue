@@ -70,9 +70,9 @@
           <!-- Fitur Pencarian -->
           <div class="relative mb-3">
             <input
-              v-model="searchQuery"
+              v-model="searchBook"
               type="text"
-              placeholder="Cari cerita lama..."
+              placeholder="Cari judul jurnal..."
               :class="currentThemeClasses.input || currentThemeClasses.navLink"
               class="w-full pl-10 pr-3 py-2 md:py-2.5 border rounded-xl text-base md:text-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/20"
             />
@@ -1905,19 +1905,33 @@ const currentPage = computed(
   () => filteredPages.value[currentPageIndex.value] || {},
 );
 
+const searchBook = ref("");
+const searchPage = ref("");
 const filteredNotebooks = computed(() => {
   const listBuku = Array.isArray(notebooks.value) ? notebooks.value : [];
-  if (!searchQuery.value.trim()) return listBuku;
+
+  if (!searchBook.value.trim()) {
+    return listBuku;
+  }
+
   return listBuku.filter((book: any) =>
-    book?.title?.toLowerCase().includes(searchQuery.value.toLowerCase()),
+    book.title.toLowerCase().includes(searchBook.value.toLowerCase()),
   );
 });
 
 const filteredPages = computed(() => {
-  if (!currentBook.value || !currentBook.value.pages) return [];
-  return currentBook.value.pages.filter((page: any) =>
-    page?.text?.toLowerCase().includes(searchQuery.value.toLowerCase()),
-  );
+  if (!currentBook.value || !currentBook.value.pages) {
+    return [];
+  }
+
+  return currentBook.value.pages;
+});
+
+watch(searchQuery, () => {
+  currentPageIndex.value = 0;
+});
+watch(searchBook, () => {
+  currentPageIndex.value = 0;
 });
 
 const currentThemeClasses = computed(
