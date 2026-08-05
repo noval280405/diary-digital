@@ -92,19 +92,20 @@
       class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 md:hidden transition-opacity duration-300"
     />
 
-    <!-- SIDEBAR: Perbaikan Kelas Kontainer Utama -->
     <aside
       :class="[
         themeClasses[currentTheme]?.sidebar || themeClasses['cream'].sidebar,
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
       ]"
       :style="{ height: sidebarHeight }"
-      class="fixed inset-y-0 left-0 w-[85vw] max-w-[320px] md:w-76 md:sticky md:top-0 md:h-screen border-r backdrop-blur-xl flex flex-col justify-between z-50 md:z-10 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none select-none"
+      class="fixed inset-y-0 left-0 w-[85vw] max-w-[320px] md:w-76 md:sticky md:top-0 md:h-screen border-r backdrop-blur-xl flex flex-col justify-between z-50 md:z-10 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none select-none overflow-hidden"
     >
+      <!-- BAGIAN ATAS (FIXED / DIAM): LOGO, TEMA, KUTIPAN, STATS, JURNAL BARU & PENCARIAN -->
       <div
-        class="px-5 pt-5 pb-4 flex flex-col gap-4 border-b border-dashed transition-all duration-300 bg-inherit rounded-t-[2rem]"
+        class="px-4 md:px-5 pt-4 md:pt-5 pb-3 flex flex-col gap-3 border-b border-dashed transition-all duration-300 bg-inherit rounded-t-[2rem] shrink-0"
         :class="themeClasses[currentTheme]?.borderDashed || 'border-slate-800'"
       >
+        <!-- LOGO & TOMBOL CLOSE MOBILE -->
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3 min-w-0">
             <div
@@ -156,10 +157,11 @@
           </button>
         </div>
 
+        <!-- PEMILIH TEMA / GANTI WARNA -->
         <div class="w-full">
           <button
             @click="showThemePicker = !showThemePicker"
-            class="w-full flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-bold transition-all duration-300"
+            class="w-full flex items-center justify-between px-3 py-1.5 md:py-2 rounded-xl border text-xs font-bold transition-all duration-300"
             :class="
               themeClasses[currentTheme]?.navLink ||
               themeClasses['dark'].navLink
@@ -270,13 +272,10 @@
             </div>
           </Transition>
         </div>
-      </div>
 
-      <div
-        class="flex-1 overflow-y-auto min-h-0 px-5 pt-4 pb-5 space-y-4 custom-sidebar-scroll"
-      >
+        <!-- KUTIPAN MOTIVASI -->
         <div
-          class="p-4 rounded-xl border relative overflow-hidden group transition-all duration-300"
+          class="p-3 rounded-xl border relative overflow-hidden group transition-all duration-300"
           :class="
             themeClasses[currentTheme]?.quoteBox ||
             themeClasses['dark'].quoteBox
@@ -299,6 +298,7 @@
           </div>
         </div>
 
+        <!-- TOMBOL NAVIGASI STATS -->
         <div class="space-y-1">
           <NuxtLink
             to="/stats"
@@ -307,7 +307,7 @@
               themeClasses[currentTheme]?.navLink ||
               themeClasses['dark'].navLink
             "
-            class="w-full p-3 rounded-xl border flex items-center justify-between text-xs font-bold tracking-wide transition-all shadow-xs group"
+            class="w-full p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold tracking-wide transition-all shadow-xs group"
           >
             <div class="flex items-center gap-3">
               <Icon
@@ -324,13 +324,88 @@
           </NuxtLink>
         </div>
 
-        <div @click="isSidebarOpen = false" class="space-y-1 pt-1">
+        <!-- SECTION: JURNAL BARU -->
+        <div class="space-y-2 pt-1">
+          <label
+            :class="currentThemeClasses.textLabel"
+            class="text-[11px] uppercase tracking-[0.2em] font-black flex items-center gap-1.5 opacity-80"
+          >
+            <Icon
+              icon="solar:folder-add-bold-duotone"
+              class="w-3.5 h-3.5 text-indigo-500"
+            />
+            Jurnal Baru
+          </label>
+          <div class="flex gap-2">
+            <input
+              v-model="newBookTitle"
+              placeholder="Nama rak jurnal..."
+              :class="currentThemeClasses.input || currentThemeClasses.navLink"
+              class="flex-1 h-9 px-3 border rounded-xl text-sm outline-none transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/30"
+              @keyup.enter="createNewBook"
+            />
+
+            <button
+              @click="createNewBook"
+              :class="currentThemeClasses.btnGradient"
+              class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-xs"
+              title="Tambah Jurnal Baru"
+            >
+              <Icon icon="iconamoon:sign-plus-fill" class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <!-- HEADER & PENCARIAN RAK JURNAL -->
+        <div class="space-y-2 pt-1">
+          <label
+            :class="currentThemeClasses.textLabel"
+            class="text-[11px] uppercase tracking-[0.2em] font-black flex items-center gap-1.5 opacity-80"
+          >
+            <Icon
+              icon="solar:bookmark-opened-bold-duotone"
+              class="w-3.5 h-3.5 text-rose-500"
+            />
+            Rak Jurnal
+          </label>
+
+          <!-- Fitur Pencarian -->
+          <div class="relative">
+            <input
+              v-model="searchBook"
+              type="text"
+              placeholder="Cari judul jurnal..."
+              :class="currentThemeClasses.input || currentThemeClasses.navLink"
+              class="w-full pl-9 pr-8 py-1.5 border rounded-xl text-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/20"
+            />
+            <Icon
+              icon="solar:magnifer-bold"
+              :class="currentThemeClasses.iconPrimary"
+              class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-60 pointer-events-none"
+            />
+            <button
+              v-if="searchBook"
+              @click="searchBook = ''"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+            >
+              <Icon icon="solar:close-circle-bold" class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BAGIAN TENGAH (SCROLLABLE): HANYA UNTUK SLOT DAFTAR JURNAL -->
+      <div
+        class="flex-1 overflow-y-auto px-4 md:px-5 py-3 space-y-2 custom-sidebar-scroll overscroll-contain touch-pan-y"
+      >
+        <div @click="isSidebarOpen = false">
           <slot name="sidebar-content" />
         </div>
       </div>
 
+      <!-- BAGIAN BAWAH (FIXED / DIAM): TARGET HARI INI & PROFIL USER -->
       <div
-        class="space-y-4 p-5 border-t shrink-0 bg-inherit"
+        class="space-y-3 p-4 md:p-5 border-t shrink-0 bg-inherit"
         :class="themeClasses[currentTheme]?.borderDashed || 'border-slate-800'"
       >
         <div class="px-1">
@@ -388,7 +463,7 @@
                 themeClasses[currentTheme]?.avatarBg ||
                 'bg-gradient-to-tr from-orange-500 to-rose-500'
               "
-              class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-xs shadow-md"
+              class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-xs shadow-md shrink-0"
             >
               {{
                 currentUser?.email
@@ -862,6 +937,31 @@ onBeforeUnmount(() => {
     resizeHandler = null;
   }
 });
+
+// Buat emit untuk mengirim event ke parent/page
+const emit = defineEmits(["create-book", "update-search"]);
+
+// Gunakan useState agar variabel ini otomatis sinkron dengan file Page
+const newBookTitle = useState("newBookTitle", () => "");
+const searchBook = useState("searchBook", () => "");
+
+// Mengambil referensi daftar jurnal yang ada di Page
+const journals = useState("journalsList", () => []);
+
+// Fungsi Tambah Jurnal Baru
+const createNewBook = () => {
+  if (!newBookTitle.value.trim()) return;
+
+  // Tambahkan jurnal baru ke dalam array
+  journals.value.push({
+    id: Date.now(),
+    title: newBookTitle.value.trim(),
+    createdAt: new Date().toISOString(),
+  });
+
+  // Reset input setelah berhasil dibuat
+  newBookTitle.value = "";
+};
 </script>
 
 <!-- TAMBAHKAN STYLE BERIKUT UNTUK FORCING SCROLLBAR PADA MOBILE BROWSER -->

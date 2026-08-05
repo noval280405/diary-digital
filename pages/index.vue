@@ -1,263 +1,204 @@
 <template>
   <ConfirmationDialog ref="confirmationDialog" />
-  <PinModal
-    v-model="isPinModalOpen"
-    :mode="pinModalMode"
-    :book-title="selectedBook?.title"
-    @submit="handlePinSubmit"
-  />
 
-  <NuxtLayout name="diary">
+  <NuxtLayout
+    name="diary"
+    @create-book="handleCreateBook"
+    @update-search="(val) => (searchKeyword = val)"
+  >
     <template #sidebar-content>
-      <div
-        @click.stop
-        class="space-y-6 px-1 py-2 font-sans selection:bg-indigo-500/30"
-      >
-        <!-- BUNGKUSAN UTAMA (Membatasi tinggi total & mengunci layout flex vertikal) -->
-        <div class="flex flex-col h-[550px] max-h-[550px]">
-          <!-- AREA ATAS (FIXED / DIAM DI ATAS: JURNAL BARU & PENCARIAN) -->
-          <div class="shrink-0 space-y-4 mb-3">
-            <!-- SECTION: JURNAL BARU -->
-            <div
-              class="space-y-3 pt-2 border-t border-dashed transition-colors duration-500"
-              :class="currentThemeClasses.borderDashed"
-            >
-              <label
-                :class="currentThemeClasses.textLabel"
-                class="text-xs uppercase tracking-[0.25em] font-black flex items-center gap-1.5 opacity-80"
-              >
-                <Icon
-                  icon="solar:folder-add-bold-duotone"
-                  class="w-4 h-4 text-indigo-500"
-                />
-                Jurnal Baru
-              </label>
-              <div class="flex gap-2">
+      <div @click.stop class="space-y-3 font-sans selection:bg-indigo-500/30">
+        <!-- DAFTAR KARTU JURNAL -->
+        <div
+          v-for="book in displayedNotebooks"
+          :key="book.id"
+          @click="selectBook(book)"
+          :class="[
+            notebooks[activeBookIndex]?.id === book.id
+              ? currentThemeClasses.btnGradient +
+                ' border-transparent shadow-lg ring-2 ring-white/10 scale-[1.01]'
+              : currentThemeClasses.navLink +
+                ' hover:shadow-md hover:-translate-y-0.5',
+          ]"
+          class="group rounded-2xl border transition-all duration-300 overflow-hidden cursor-pointer"
+        >
+          <div class="p-3.5">
+            <!-- HEADER KARTU -->
+            <div class="flex items-start gap-3">
+              <!-- ICON KUNCI / BUKU -->
+              <div class="shrink-0">
+                <div
+                  v-if="book.isLocked"
+                  class="w-9 h-9 rounded-xl flex items-center justify-center bg-rose-500/10 dark:bg-rose-900/30"
+                >
+                  <Icon
+                    icon="solar:lock-keyhole-bold-duotone"
+                    class="w-4 h-4 text-rose-500"
+                  />
+                </div>
+
+                <div
+                  v-else
+                  class="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-500/10 dark:bg-emerald-900/30"
+                >
+                  <Icon
+                    icon="solar:notebook-bold-duotone"
+                    class="w-4 h-4 text-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <!-- JUDUL & HALAMAN -->
+              <div class="flex-1 min-w-0">
+                <!-- INPUT EDIT JUDUL -->
                 <input
-                  v-model="newBookTitle"
-                  placeholder="Nama rak jurnal..."
-                  :class="
-                    currentThemeClasses.input || currentThemeClasses.navLink
-                  "
-                  class="flex-1 h-10 px-3 border rounded-xl text-base md:text-sm outline-none transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/30"
-                  @keyup.enter="createNewBook"
+                  v-if="editingBookId === book.id"
+                  v-model="editingBookTitle"
+                  @click.stop
+                  @keyup.enter="saveBookTitle(book)"
+                  @keyup.esc="cancelEdit"
+                  class="w-full border rounded-lg px-2.5 py-1 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/30"
+                  ref="editInputRef"
                 />
+
+                <!-- DISPLAY JUDUL -->
+                <div v-else>
+                  <h3 class="font-bold text-xs leading-snug break-words">
+                    {{ book.title }}
+                  </h3>
+
+                  <div
+                    class="text-[11px] opacity-60 mt-0.5 flex items-center gap-1.5 font-medium"
+                  >
+                    <Icon
+                      icon="solar:document-text-bold-duotone"
+                      class="w-3.5 h-3.5"
+                    />
+                    <span>{{ book.pages?.length || 0 }} Halaman</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div
+              class="flex items-center justify-end gap-1.5 mt-3 pt-2 border-t border-dashed border-slate-500/10"
+            >
+              <template v-if="editingBookId === book.id">
+                <button
+                  @click.stop="saveBookTitle(book)"
+                  class="p-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                  title="Simpan"
+                >
+                  <Icon icon="mdi:check" class="w-3.5 h-3.5" />
+                </button>
 
                 <button
-                  @click="createNewBook"
-                  :class="currentThemeClasses.btnGradient"
-                  class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-white transition-all duration-200 hover:scale-105 active:scale-95"
-                  title="Tambah Jurnal Baru"
+                  @click.stop="cancelEdit"
+                  class="p-1.5 rounded-lg bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+                  title="Batal"
                 >
-                  <Icon icon="iconamoon:sign-plus-fill" class="w-5 h-5" />
+                  <Icon icon="mdi:close" class="w-3.5 h-3.5" />
                 </button>
-              </div>
-            </div>
+              </template>
 
-            <!-- Pembatas Line Premium -->
-            <div
-              class="my-3 border-t border-dashed opacity-30"
-              :class="currentThemeClasses.borderDashed"
-            ></div>
-
-            <!-- HEADER & PENCARIAN RAK JURNAL -->
-            <div class="space-y-3">
-              <label
-                :class="currentThemeClasses.textLabel"
-                class="text-xs uppercase tracking-[0.25em] font-black flex items-center gap-1.5 opacity-80"
-              >
-                <Icon
-                  icon="solar:bookmark-opened-bold-duotone"
-                  class="w-4 h-4 text-rose-500"
-                />
-                Rak Jurnal
-              </label>
-
-              <!-- Fitur Pencarian -->
-              <div class="relative">
-                <input
-                  v-model="searchBook"
-                  type="text"
-                  placeholder="Cari judul jurnal..."
-                  :class="
-                    currentThemeClasses.input || currentThemeClasses.navLink
-                  "
-                  class="w-full pl-10 pr-3 py-2 md:py-2.5 border rounded-xl text-base md:text-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/20"
-                />
-                <Icon
-                  icon="solar:magnifer-bold"
-                  :class="currentThemeClasses.iconPrimary"
-                  class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 opacity-60 pointer-events-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- AREA SCROLLABLE (HANYA DAFTAR JURNAL & TOMBOL LIHAT SEMUA YANG DI-SCROLL) -->
-          <div class="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-            <!-- ITEM KARTU JURNAL -->
-            <div
-              v-for="book in displayedNotebooks"
-              :key="book.id"
-              @click="selectBook(book)"
-              :class="
-                notebooks[activeBookIndex]?.id === book.id
-                  ? currentThemeClasses.btnGradient +
-                    ' border-transparent shadow-lg ring-2 ring-white/10 scale-[1.01]'
-                  : currentThemeClasses.navLink +
-                    ' hover:shadow-md hover:-translate-y-0.5'
-              "
-              class="group rounded-2xl border transition-all duration-300 overflow-hidden cursor-pointer"
-            >
-              <div class="p-4">
-                <!-- HEADER -->
-                <div class="flex items-start gap-3">
-                  <!-- ICON -->
-                  <div class="shrink-0">
-                    <div
-                      v-if="book.isLocked"
-                      class="w-10 h-10 rounded-xl flex items-center justify-center bg-rose-100 dark:bg-rose-900/30"
-                    >
-                      <Icon
-                        icon="solar:lock-keyhole-bold-duotone"
-                        class="w-5 h-5 text-rose-500"
-                      />
-                    </div>
-
-                    <div
-                      v-else
-                      class="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30"
-                    >
-                      <Icon
-                        icon="solar:notebook-bold-duotone"
-                        class="w-5 h-5 text-emerald-500"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- TITLE -->
-                  <div class="flex-1 min-w-0">
-                    <input
-                      v-if="editingBookId === book.id"
-                      v-model="editingBookTitle"
-                      @click.stop
-                      @keyup.enter="saveBookTitle(book)"
-                      @keyup.esc="cancelEdit"
-                      class="w-full border rounded-lg px-3 py-2 text-sm font-bold"
-                      ref="editInputRef"
-                    />
-
-                    <div v-else>
-                      <div
-                        class="font-bold leading-5 break-words whitespace-normal"
-                      >
-                        {{ book.title }}
-                      </div>
-
-                      <div
-                        class="text-xs opacity-60 mt-1 flex items-center gap-2"
-                      >
-                        <Icon
-                          icon="solar:document-text-bold-duotone"
-                          class="w-3.5 h-3.5"
-                        />
-
-                        {{ book.pages?.length || 0 }}
-                        Halaman
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- ACTION BUTTONS -->
-                <div class="flex items-center justify-end gap-2 mt-4">
-                  <template v-if="editingBookId === book.id">
-                    <button
-                      @click.stop="saveBookTitle(book)"
-                      class="p-2 rounded-xl bg-emerald-500 text-white"
-                    >
-                      <Icon icon="mdi:check" class="w-4 h-4" />
-                    </button>
-
-                    <button
-                      @click.stop="cancelEdit"
-                      class="p-2 rounded-xl bg-rose-500 text-white"
-                    >
-                      <Icon icon="mdi:close" class="w-4 h-4" />
-                    </button>
-                  </template>
-
-                  <template v-else>
-                    <button
-                      @click.stop="toggleJournalLock(book)"
-                      class="p-2 rounded-xl bg-white border"
-                    >
-                      <Icon
-                        :icon="
-                          book.isLocked
-                            ? 'solar:lock-keyhole-bold'
-                            : 'solar:key-bold'
-                        "
-                        :class="
-                          book.isLocked ? 'text-rose-500' : 'text-emerald-500'
-                        "
-                        class="w-4 h-4"
-                      />
-                    </button>
-
-                    <button
-                      @click.stop="startEditBook(book)"
-                      class="p-2 rounded-xl bg-white border"
-                    >
-                      <Icon
-                        icon="solar:pen-2-bold-duotone"
-                        class="w-4 h-4 text-indigo-500"
-                      />
-                    </button>
-
-                    <button
-                      @click.stop="deleteBook(book)"
-                      class="p-2 rounded-xl bg-white border"
-                    >
-                      <Icon
-                        icon="solar:trash-bin-trash-bold-duotone"
-                        class="w-4 h-4 text-rose-500"
-                      />
-                    </button>
-                  </template>
-                </div>
-              </div>
-            </div>
-
-            <!-- MENU INTERAKTIF: BUKA / SEMBUNYIKAN JURNAL -->
-            <div
-              v-if="filteredNotebooks.length > 5 && !searchQuery"
-              class="pt-1"
-            >
-              <button
-                @click="showAllNotebooks = !showAllNotebooks"
-                :class="[
-                  currentThemeClasses.textLabel,
-                  hoverThemeClasses[currentTheme] || hoverThemeClasses['cream'],
-                ]"
-                class="w-full py-2.5 text-xs font-bold tracking-wider uppercase border rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5"
-              >
-                <span>
-                  {{
-                    showAllNotebooks
-                      ? "Sembunyikan Jurnal"
-                      : `Lihat Semua Jurnal (${filteredNotebooks.length})`
-                  }}
-                </span>
-                <span
-                  class="text-[10px] inline-block transition-transform duration-300"
-                  :class="{ 'rotate-180': showAllNotebooks }"
+              <template v-else>
+                <button
+                  @click.stop="toggleJournalLock(book)"
+                  class="p-1.5 rounded-lg border hover:bg-slate-500/10 transition-colors"
+                  :title="book.isLocked ? 'Buka Kunci' : 'Kunci Jurnal'"
                 >
-                  ▼
-                </span>
-              </button>
+                  <Icon
+                    :icon="
+                      book.isLocked
+                        ? 'solar:lock-keyhole-bold'
+                        : 'solar:key-bold'
+                    "
+                    :class="
+                      book.isLocked ? 'text-rose-500' : 'text-emerald-500'
+                    "
+                    class="w-3.5 h-3.5"
+                  />
+                </button>
+
+                <button
+                  @click.stop="startEditBook(book)"
+                  class="p-1.5 rounded-lg border hover:bg-slate-500/10 transition-colors"
+                  title="Edit Judul"
+                >
+                  <Icon
+                    icon="solar:pen-2-bold-duotone"
+                    class="w-3.5 h-3.5 text-indigo-500"
+                  />
+                </button>
+
+                <button
+                  @click.stop="deleteBook(book)"
+                  class="p-1.5 rounded-lg border hover:bg-slate-500/10 transition-colors"
+                  title="Hapus Jurnal"
+                >
+                  <Icon
+                    icon="solar:trash-bin-trash-bold-duotone"
+                    class="w-3.5 h-3.5 text-rose-500"
+                  />
+                </button>
+              </template>
             </div>
           </div>
+        </div>
+
+        <!-- TAMPILAN JIKA TIDAK ADA JURNAL / TIDAK DITEMUKAN -->
+        <div
+          v-if="displayedNotebooks.length === 0"
+          class="text-center py-6 px-3 border border-dashed rounded-2xl opacity-60 space-y-1"
+        >
+          <Icon
+            icon="solar:notes-minimalistic-bold-duotone"
+            class="w-8 h-8 mx-auto opacity-40"
+          />
+          <p class="text-xs font-bold">
+            {{
+              searchBook || searchQuery
+                ? "Jurnal tidak ditemukan"
+                : "Belum Ada Jurnal"
+            }}
+          </p>
+          <p class="text-[10px]">
+            {{
+              searchBook || searchQuery
+                ? "Coba kata kunci lain"
+                : "Buat rak jurnal baru di atas"
+            }}
+          </p>
+        </div>
+
+        <!-- TOMBOL BUKA / SEMBUNYIKAN JURNAL -->
+        <div
+          v-if="filteredNotebooks.length > 5 && !(searchBook || searchQuery)"
+          class="pt-1"
+        >
+          <button
+            @click="showAllNotebooks = !showAllNotebooks"
+            :class="[
+              currentThemeClasses.textLabel,
+              hoverThemeClasses[currentTheme] || hoverThemeClasses['cream'],
+            ]"
+            class="w-full py-2 text-[11px] font-bold tracking-wider uppercase border rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5"
+          >
+            <span>
+              {{
+                showAllNotebooks
+                  ? "Sembunyikan"
+                  : `Lihat Semua (${filteredNotebooks.length})`
+              }}
+            </span>
+            <span
+              class="text-[9px] inline-block transition-transform duration-300"
+              :class="{ 'rotate-180': showAllNotebooks }"
+            >
+              ▼
+            </span>
+          </button>
         </div>
       </div>
     </template>
@@ -1865,7 +1806,7 @@ const currentPage = computed(
   () => filteredPages.value[currentPageIndex.value] || {},
 );
 
-const searchBook = ref("");
+// const searchBook = ref("");
 const searchPage = ref("");
 const filteredNotebooks = computed(() => {
   const listBuku = Array.isArray(notebooks.value) ? notebooks.value : [];
@@ -1888,9 +1829,6 @@ const filteredPages = computed(() => {
 });
 
 watch(searchQuery, () => {
-  currentPageIndex.value = 0;
-});
-watch(searchBook, () => {
   currentPageIndex.value = 0;
 });
 
@@ -2299,6 +2237,37 @@ async function deleteNotebook(noteId: string) {
     console.error("Waduh, gagal menghapus data dari Firestore:", error);
   }
 }
+
+const searchKeyword = ref("");
+
+// 2. Fungsi Tambah Jurnal Baru
+const handleCreateBook = (title) => {
+  if (!title.trim()) return;
+  journals.value.push({
+    id: Date.now(),
+    title: title,
+  });
+};
+
+// 1. Hubungkan ke data jurnal yang sama dengan Layout
+const journals = useState("journalsList", () => [
+  // Data awal / dummy (jika ada)
+  { id: 1, title: "Catatan Harian" },
+  { id: 2, title: "Rencana Masa Depan" },
+]);
+
+// 2. Hubungkan ke kata kunci pencarian dari Layout
+const searchBook = useState("searchBook", () => "");
+
+// 3. Logika Filter Pencarian
+const filteredJournals = computed(() => {
+  if (!searchBook.value.trim()) {
+    return journals.value;
+  }
+  return journals.value.filter((journal) =>
+    journal.title.toLowerCase().includes(searchBook.value.toLowerCase().trim()),
+  );
+});
 </script>
 
 <style scoped>
