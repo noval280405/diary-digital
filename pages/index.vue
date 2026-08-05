@@ -84,143 +84,105 @@
           </div>
 
           <!-- LIST CONTAINER -->
+          <!-- BUNGKUSAN / CONTAINER DENGAN SCROLLBAR -->
           <div
-            class="space-y-3 max-h-60 md:max-h-72 overflow-y-auto pr-1 custom-scrollbar"
+            class="max-h-[500px] overflow-y-auto pr-2 space-y-3 custom-scrollbar"
           >
             <div
-              v-for="(book, i) in displayedNotebooks"
+              v-for="book in displayedNotebooks"
               :key="book.id"
               @click="selectBook(book)"
               :class="
                 notebooks[activeBookIndex]?.id === book.id
                   ? currentThemeClasses.btnGradient +
-                    ' border-transparent shadow-md ring-1 ring-white/10'
+                    ' border-transparent shadow-lg ring-2 ring-white/10 scale-[1.01]'
                   : currentThemeClasses.navLink +
-                    ' hover:border-slate-400/40 dark:hover:border-slate-700/50'
+                    ' hover:shadow-md hover:-translate-y-0.5'
               "
-              class="group flex items-center justify-between p-3.5 rounded-2xl cursor-pointer transition-all duration-300 border relative overflow-hidden bg-gradient-to-br"
+              class="group rounded-2xl border transition-all duration-300 overflow-hidden cursor-pointer"
             >
-              <!-- Indikator Glow Samping (Hanya Muncul saat Aktif) -->
-              <div
-                v-if="notebooks[activeBookIndex]?.id === book.id"
-                class="absolute left-0 top-0 bottom-0 w-1.5 bg-white shadow-[2px_0_8px_rgba(255,255,255,0.7)]"
-              />
+              <div class="p-4">
+                <!-- HEADER -->
+                <div class="flex items-start gap-3">
+                  <!-- ICON -->
+                  <div class="shrink-0">
+                    <div
+                      v-if="book.isLocked"
+                      class="w-10 h-10 rounded-xl flex items-center justify-center bg-rose-100 dark:bg-rose-900/30"
+                    >
+                      <Icon
+                        icon="solar:lock-keyhole-bold-duotone"
+                        class="w-5 h-5 text-rose-500"
+                      />
+                    </div>
 
-              <!-- Kiri: Judul / Input Inline Edit -->
-              <div
-                class="truncate font-bold flex items-center gap-3 flex-1 min-w-0 z-10"
-              >
-                <span
-                  class="text-xl filter drop-shadow-xs shrink-0 select-none"
-                >
-                  <div
-                    v-if="book.isLocked"
-                    class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs"
-                    :class="
-                      currentTheme === 'dark'
-                        ? 'bg-rose-950 border-rose-500'
-                        : 'bg-white border-rose-200'
-                    "
-                  >
-                    <Icon
-                      icon="solar:lock-keyhole-minimalistic-bold-duotone"
-                      class="w-4.5 h-4.5 text-rose-600 dark:text-rose-400"
-                    />
+                    <div
+                      v-else
+                      class="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30"
+                    >
+                      <Icon
+                        icon="solar:notebook-bold-duotone"
+                        class="w-5 h-5 text-emerald-500"
+                      />
+                    </div>
                   </div>
 
-                  <div
-                    v-else-if="notebooks[activeBookIndex]?.id === book.id"
-                    class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border shadow-xs transition-transform duration-300 scale-105"
-                    :class="
-                      currentTheme === 'dark'
-                        ? 'bg-slate-900 border-indigo-500'
-                        : 'bg-white border-indigo-200'
-                    "
-                  >
-                    <Icon
-                      icon="solar:notebook-bookmark-bold-duotone"
-                      class="w-5 h-5 text-indigo-600 dark:text-indigo-400"
+                  <!-- TITLE -->
+                  <div class="flex-1 min-w-0">
+                    <input
+                      v-if="editingBookId === book.id"
+                      v-model="editingBookTitle"
+                      @click.stop
+                      @keyup.enter="saveBookTitle(book)"
+                      @keyup.esc="cancelEdit"
+                      class="w-full border rounded-lg px-3 py-2 text-sm font-bold"
+                      ref="editInputRef"
                     />
+
+                    <div v-else>
+                      <div
+                        class="font-bold leading-5 break-words whitespace-normal"
+                      >
+                        {{ book.title }}
+                      </div>
+
+                      <div
+                        class="text-xs opacity-60 mt-1 flex items-center gap-2"
+                      >
+                        <Icon
+                          icon="solar:document-text-bold-duotone"
+                          class="w-3.5 h-3.5"
+                        />
+
+                        {{ book.pages?.length || 0 }}
+                        Halaman
+                      </div>
+                    </div>
                   </div>
+                </div>
 
-                  <div
-                    v-else
-                    class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs"
-                    :class="
-                      currentTheme === 'dark'
-                        ? 'bg-slate-900 border-emerald-600'
-                        : 'bg-white border-emerald-200'
-                    "
-                  >
-                    <Icon
-                      icon="solar:notebook-bold-duotone"
-                      class="w-5 h-5 text-emerald-500 dark:text-emerald-400"
-                    />
-                  </div>
-                </span>
-                <!-- Mode Edit Inline -->
-                <input
-                  v-if="editingBookId === book.id"
-                  v-model="editingBookTitle"
-                  @click.stop
-                  @keyup.enter="saveBookTitle(book)"
-                  @keyup.esc="cancelEdit"
-                  class="w-full bg-white border-2 border-slate-200 focus:border-indigo-500 rounded-xl px-3 py-1.5 text-sm outline-none text-slate-800 font-bold transition-all shadow-sm"
-                  ref="editInputRef"
-                />
-                <!-- Mode Teks Biasa -->
-                <span v-else class="truncate text-sm tracking-wide">
-                  {{ book.title }}
-                </span>
-              </div>
-
-              <!-- Kanan: Badge Halaman & Aksi (Dibuat Selalu Kelihatan & Berwarna Kontras) -->
-              <div class="flex items-center gap-2 shrink-0 z-10 pl-2">
-                <!-- Jumlah Halaman -->
-                <span
-                  v-if="editingBookId !== book.id"
-                  class="px-2.5 py-1 rounded-xl text-[15px] font-black font-mono shadow-3xs"
-                >
-                  {{ book?.pages?.length || 0 }}
-                </span>
-
-                <div class="flex items-center gap-1">
+                <!-- ACTION -->
+                <div class="flex items-center justify-end gap-2 mt-4">
                   <template v-if="editingBookId === book.id">
                     <button
                       @click.stop="saveBookTitle(book)"
-                      class="group p-1.5 rounded-lg bg-white border border-slate-100 shadow-3xs transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
-                      title="Simpan Nama"
+                      class="p-2 rounded-xl bg-emerald-500 text-white"
                     >
-                      <Icon
-                        icon="mdi:check-outline"
-                        class="w-4 h-4 text-emerald-600 dark:text-emerald-500"
-                      />
+                      <Icon icon="mdi:check" class="w-4 h-4" />
                     </button>
 
                     <button
                       @click.stop="cancelEdit"
-                      class="group p-1.5 rounded-lg bg-white border border-slate-100 shadow-3xs transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
-                      title="Batal Edit"
+                      class="p-2 rounded-xl bg-rose-500 text-white"
                     >
-                      <Icon
-                        icon="mdi:cancel-bold"
-                        class="w-4 h-4 text-rose-500 hover:text-rose-600 transition-colors"
-                      />
+                      <Icon icon="mdi:close" class="w-4 h-4" />
                     </button>
                   </template>
 
                   <template v-else>
                     <button
                       @click.stop="toggleJournalLock(book)"
-                      class="group p-1.5 rounded-lg bg-white border shadow-3xs active:scale-95 flex items-center justify-center select-none"
-                      :class="
-                        book.isLocked ? 'border-rose-200' : 'border-emerald-200'
-                      "
-                      :title="
-                        book.isLocked
-                          ? 'Hapus/Lepas PIN Jurnal'
-                          : 'Buat/Pasang PIN Baru'
-                      "
+                      class="p-2 rounded-xl bg-white border"
                     >
                       <Icon
                         :icon="
@@ -228,16 +190,16 @@
                             ? 'solar:lock-keyhole-bold'
                             : 'solar:key-bold'
                         "
-                        class="w-4 h-4"
                         :class="
                           book.isLocked ? 'text-rose-500' : 'text-emerald-500'
                         "
+                        class="w-4 h-4"
                       />
                     </button>
+
                     <button
                       @click.stop="startEditBook(book)"
-                      class="p-1.5 rounded-lg bg-white border border-slate-100 shadow-3xs active:scale-95 flex items-center justify-center select-none"
-                      title="Ubah Nama"
+                      class="p-2 rounded-xl bg-white border"
                     >
                       <Icon
                         icon="solar:pen-2-bold-duotone"
@@ -247,8 +209,7 @@
 
                     <button
                       @click.stop="deleteBook(book)"
-                      class="p-1.5 rounded-lg bg-white border border-slate-100 shadow-3xs active:scale-95 flex items-center justify-center select-none"
-                      title="Hapus Jurnal"
+                      class="p-2 rounded-xl bg-white border"
                     >
                       <Icon
                         icon="solar:trash-bin-trash-bold-duotone"
@@ -258,18 +219,6 @@
                   </template>
                 </div>
               </div>
-            </div>
-
-            <!-- State Kosong -->
-            <div
-              v-if="filteredNotebooks.length === 0"
-              class="text-center py-6 text-xs opacity-40 italic flex flex-col items-center gap-1"
-            >
-              <Icon
-                icon="solar:ghost-bold-duotone"
-                class="w-6 h-6 opacity-60 text-slate-400"
-              />
-              <span>Jurnal tidak ditemukan</span>
             </div>
           </div>
 
@@ -2390,5 +2339,20 @@ async function deleteNotebook(noteId: string) {
     --hover-bg-dark,
     rgba(15, 23, 42, 0.6)
   ); /* Fallback slate-900/60 */
+}
+
+/* Styling Scrollbar kustom */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.4);
+  border-radius: 20px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
 }
 </style>
