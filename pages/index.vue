@@ -1941,6 +1941,9 @@ provide("currentThemeClasses", currentThemeClasses);
 
 // ✅ BARU: Menambah dokumen Jurnal ke sub-collection /jurnals
 const createNewBook = async () => {
+  if (!newBookTitle.value.trim()) {
+    return notificationStore.showError("Judul Jurnal tidak boleh kosong.");
+  }
   if (!newBookTitle.value.trim() || !currentUser.value) return;
 
   const newId = generateId();
