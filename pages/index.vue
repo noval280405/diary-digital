@@ -13,81 +13,89 @@
         @click.stop
         class="space-y-6 px-1 py-2 font-sans selection:bg-indigo-500/30"
       >
-        <!-- SECTION: JURNAL BARU -->
-        <div
-          class="space-y-3 pt-4 border-t border-dashed transition-colors duration-500"
-          :class="currentThemeClasses.borderDashed"
-        >
-          <label
-            :class="currentThemeClasses.textLabel"
-            class="text-xs uppercase tracking-[0.25em] font-black block flex items-center gap-1.5 opacity-80"
-          >
-            <Icon
-              icon="solar:folder-add-bold-duotone"
-              class="w-4 h-4 text-indigo-500"
-            />
-            Jurnal Baru
-          </label>
-          <div class="flex gap-2">
-            <input
-              v-model="newBookTitle"
-              placeholder="Nama rak jurnal..."
-              :class="currentThemeClasses.input || currentThemeClasses.navLink"
-              class="flex-1 h-10 px-3 border rounded-xl text-base md:text-sm outline-none transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/30"
-              @keyup.enter="createNewBook"
-            />
-
-            <button
-              @click="createNewBook"
-              :class="currentThemeClasses.btnGradient"
-              class="w-10 h-10 rounded-xl flex items-center justify-center text-white transition-all duration-200 hover:scale-105 active:scale-95"
-              title="Tambah Jurnal Baru"
+        <!-- BUNGKUSAN UTAMA (Membatasi tinggi total & mengunci layout flex vertikal) -->
+        <div class="flex flex-col h-[550px] max-h-[550px]">
+          <!-- AREA ATAS (FIXED / DIAM DI ATAS: JURNAL BARU & PENCARIAN) -->
+          <div class="shrink-0 space-y-4 mb-3">
+            <!-- SECTION: JURNAL BARU -->
+            <div
+              class="space-y-3 pt-2 border-t border-dashed transition-colors duration-500"
+              :class="currentThemeClasses.borderDashed"
             >
-              <Icon icon="iconamoon:sign-plus-fill" class="w-5 h-5" />
-            </button>
+              <label
+                :class="currentThemeClasses.textLabel"
+                class="text-xs uppercase tracking-[0.25em] font-black flex items-center gap-1.5 opacity-80"
+              >
+                <Icon
+                  icon="solar:folder-add-bold-duotone"
+                  class="w-4 h-4 text-indigo-500"
+                />
+                Jurnal Baru
+              </label>
+              <div class="flex gap-2">
+                <input
+                  v-model="newBookTitle"
+                  placeholder="Nama rak jurnal..."
+                  :class="
+                    currentThemeClasses.input || currentThemeClasses.navLink
+                  "
+                  class="flex-1 h-10 px-3 border rounded-xl text-base md:text-sm outline-none transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/30"
+                  @keyup.enter="createNewBook"
+                />
+
+                <button
+                  @click="createNewBook"
+                  :class="currentThemeClasses.btnGradient"
+                  class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-white transition-all duration-200 hover:scale-105 active:scale-95"
+                  title="Tambah Jurnal Baru"
+                >
+                  <Icon icon="iconamoon:sign-plus-fill" class="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Pembatas Line Premium -->
+            <div
+              class="my-3 border-t border-dashed opacity-30"
+              :class="currentThemeClasses.borderDashed"
+            ></div>
+
+            <!-- HEADER & PENCARIAN RAK JURNAL -->
+            <div class="space-y-3">
+              <label
+                :class="currentThemeClasses.textLabel"
+                class="text-xs uppercase tracking-[0.25em] font-black flex items-center gap-1.5 opacity-80"
+              >
+                <Icon
+                  icon="solar:bookmark-opened-bold-duotone"
+                  class="w-4 h-4 text-rose-500"
+                />
+                Rak Jurnal
+              </label>
+
+              <!-- Fitur Pencarian -->
+              <div class="relative">
+                <input
+                  v-model="searchBook"
+                  type="text"
+                  placeholder="Cari judul jurnal..."
+                  :class="
+                    currentThemeClasses.input || currentThemeClasses.navLink
+                  "
+                  class="w-full pl-10 pr-3 py-2 md:py-2.5 border rounded-xl text-base md:text-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/20"
+                />
+                <Icon
+                  icon="solar:magnifer-bold"
+                  :class="currentThemeClasses.iconPrimary"
+                  class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 opacity-60 pointer-events-none"
+                />
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- Pembatas Line Premium -->
-        <div
-          class="my-6 border-t border-dashed opacity-30"
-          :class="currentThemeClasses.borderDashed"
-        ></div>
-
-        <!-- SECTION: RAK JURNAL -->
-        <div class="space-y-4">
-          <label
-            :class="currentThemeClasses.textLabel"
-            class="text-xs uppercase tracking-[0.25em] font-black block flex items-center gap-1.5 opacity-80"
-          >
-            <Icon
-              icon="solar:bookmark-opened-bold-duotone"
-              class="w-4 h-4 text-rose-500"
-            />
-            Rak Jurnal
-          </label>
-
-          <!-- Fitur Pencarian -->
-          <div class="relative mb-3">
-            <input
-              v-model="searchBook"
-              type="text"
-              placeholder="Cari judul jurnal..."
-              :class="currentThemeClasses.input || currentThemeClasses.navLink"
-              class="w-full pl-10 pr-3 py-2 md:py-2.5 border rounded-xl text-base md:text-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/20"
-            />
-            <Icon
-              icon="solar:magnifer-bold"
-              :class="currentThemeClasses.iconPrimary"
-              class="w-4 h-4 absolute left-3.5 top-3.5 opacity-60"
-            />
-          </div>
-
-          <!-- LIST CONTAINER -->
-          <!-- BUNGKUSAN / CONTAINER DENGAN SCROLLBAR -->
-          <div
-            class="max-h-[500px] overflow-y-auto pr-2 space-y-3 custom-scrollbar"
-          >
+          <!-- AREA SCROLLABLE (HANYA DAFTAR JURNAL & TOMBOL LIHAT SEMUA YANG DI-SCROLL) -->
+          <div class="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+            <!-- ITEM KARTU JURNAL -->
             <div
               v-for="book in displayedNotebooks"
               :key="book.id"
@@ -161,7 +169,7 @@
                   </div>
                 </div>
 
-                <!-- ACTION -->
+                <!-- ACTION BUTTONS -->
                 <div class="flex items-center justify-end gap-2 mt-4">
                   <template v-if="editingBookId === book.id">
                     <button
@@ -220,32 +228,35 @@
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- MENU INTERAKTIF: BUKA / SEMBUNYIKAN JURNAL -->
-          <div v-if="filteredNotebooks.length > 5 && !searchQuery" class="pt-1">
-            <button
-              @click="showAllNotebooks = !showAllNotebooks"
-              :class="[
-                currentThemeClasses.textLabel,
-                hoverThemeClasses[currentTheme] || hoverThemeClasses['cream'],
-              ]"
-              class="w-full py-2.5 text-xs font-bold tracking-wider uppercase border rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5"
+            <!-- MENU INTERAKTIF: BUKA / SEMBUNYIKAN JURNAL -->
+            <div
+              v-if="filteredNotebooks.length > 5 && !searchQuery"
+              class="pt-1"
             >
-              <span>
-                {{
-                  showAllNotebooks
-                    ? "Sembunyikan Jurnal"
-                    : `Lihat Semua Jurnal (${filteredNotebooks.length})`
-                }}
-              </span>
-              <span
-                class="text-[10px] inline-block transition-transform duration-300"
-                :class="{ 'rotate-180': showAllNotebooks }"
+              <button
+                @click="showAllNotebooks = !showAllNotebooks"
+                :class="[
+                  currentThemeClasses.textLabel,
+                  hoverThemeClasses[currentTheme] || hoverThemeClasses['cream'],
+                ]"
+                class="w-full py-2.5 text-xs font-bold tracking-wider uppercase border rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5"
               >
-                ▼
-              </span>
-            </button>
+                <span>
+                  {{
+                    showAllNotebooks
+                      ? "Sembunyikan Jurnal"
+                      : `Lihat Semua Jurnal (${filteredNotebooks.length})`
+                  }}
+                </span>
+                <span
+                  class="text-[10px] inline-block transition-transform duration-300"
+                  :class="{ 'rotate-180': showAllNotebooks }"
+                >
+                  ▼
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
