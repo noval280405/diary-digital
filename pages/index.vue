@@ -943,7 +943,7 @@
           :class="currentThemeClasses.border"
         >
           <button
-            v-if="!isWritingMode"
+            v-if="!isWritingMode && !isEditingPage"
             @click="startWriting"
             :disabled="!notebooks.length"
             :class="currentThemeClasses.btnGradient"
