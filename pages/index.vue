@@ -16,20 +16,20 @@
           :class="[
             notebooks[activeBookIndex]?.id === book.id
               ? currentThemeClasses.btnGradient +
-                ' border-transparent shadow-lg ring-2 ring-white/10 scale-[1.01]'
+                ' border-transparent shadow-md ring-2 ring-white/20'
               : currentThemeClasses.navLink +
-                ' hover:shadow-md hover:-translate-y-0.5',
+                ' hover:shadow-xs hover:-translate-y-0.5',
           ]"
-          class="group rounded-2xl border transition-all duration-300 overflow-hidden cursor-pointer"
+          class="group rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden select-none"
         >
-          <div class="p-3.5">
-            <!-- HEADER KARTU -->
-            <div class="flex items-start gap-3">
+          <div class="p-2.5">
+            <!-- BARIS UTAMA: ICON, JUDUL, HALAMAN & ACTION -->
+            <div class="flex items-start gap-2.5">
               <!-- ICON KUNCI / BUKU -->
-              <div class="shrink-0">
+              <div class="shrink-0 pointer-events-none">
                 <div
                   v-if="book.isLocked"
-                  class="w-9 h-9 rounded-xl flex items-center justify-center bg-rose-500/10 dark:bg-rose-900/30"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center bg-rose-100 dark:bg-rose-900/30"
                 >
                   <Icon
                     icon="solar:lock-keyhole-bold-duotone"
@@ -39,7 +39,7 @@
 
                 <div
                   v-else
-                  class="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-500/10 dark:bg-emerald-900/30"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30"
                 >
                   <Icon
                     icon="solar:notebook-bold-duotone"
@@ -57,92 +57,110 @@
                   @click.stop
                   @keyup.enter="saveBookTitle(book)"
                   @keyup.esc="cancelEdit"
-                  class="w-full border rounded-lg px-2.5 py-1 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/30"
+                  class="w-full border rounded-lg px-2 py-1 text-xs font-bold bg-white text-slate-800 dark:bg-slate-800 dark:text-white outline-none"
                   ref="editInputRef"
                 />
 
                 <!-- DISPLAY JUDUL -->
-                <div v-else>
-                  <h3 class="font-bold text-xs leading-snug break-words">
-                    {{ book.title }}
-                  </h3>
+                <div v-else class="space-y-0.5">
+                  <!-- JUDUL JURNAL -->
+                  <div class="text-xs font-bold leading-tight break-words">
+                    <span
+                      v-if="
+                        book.isExpanded ||
+                        (book.title && book.title.length <= 35)
+                      "
+                    >
+                      {{ book.title }}
+                    </span>
+                    <span v-else> {{ book.title?.slice(0, 35) }}... </span>
+                  </div>
 
+                  <!-- TOMBOL SELENGKAPNYA (HANYA MUNCUL JIKA TEKS PANJANG & DIKLIK KHUSUS) -->
+                  <button
+                    v-if="book.title && book.title.length > 35"
+                    @click.stop="book.isExpanded = !book.isExpanded"
+                    class="text-[10px] opacity-75 hover:opacity-100 underline font-medium block"
+                  >
+                    {{ book.isExpanded ? "Sembunyikan" : "Lihat Selengkapnya" }}
+                  </button>
+
+                  <!-- SUB-INFO: HALAMAN -->
                   <div
-                    class="text-[11px] opacity-60 mt-0.5 flex items-center gap-1.5 font-medium"
+                    class="text-[10px] opacity-60 mt-1 flex items-center gap-1 font-medium pointer-events-none"
                   >
                     <Icon
                       icon="solar:document-text-bold-duotone"
-                      class="w-3.5 h-3.5"
+                      class="w-3 h-3"
                     />
                     <span>{{ book.pages?.length || 0 }} Halaman</span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- ACTION BUTTONS -->
-            <div
-              class="flex items-center justify-end gap-1.5 mt-3 pt-2 border-t border-dashed border-slate-500/10"
-            >
-              <template v-if="editingBookId === book.id">
-                <button
-                  @click.stop="saveBookTitle(book)"
-                  class="p-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
-                  title="Simpan"
-                >
-                  <Icon icon="mdi:check" class="w-3.5 h-3.5" />
-                </button>
+              <!-- ACTION BUTTONS (Gaya Ringkas & Minimalis) -->
+              <div class="flex items-center gap-1 shrink-0 pt-0.5">
+                <template v-if="editingBookId === book.id">
+                  <button
+                    @click.stop="saveBookTitle(book)"
+                    class="p-1 rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                    title="Simpan"
+                  >
+                    <Icon icon="mdi:check" class="w-3.5 h-3.5" />
+                  </button>
 
-                <button
-                  @click.stop="cancelEdit"
-                  class="p-1.5 rounded-lg bg-rose-500 text-white hover:bg-rose-600 transition-colors"
-                  title="Batal"
-                >
-                  <Icon icon="mdi:close" class="w-3.5 h-3.5" />
-                </button>
-              </template>
+                  <button
+                    @click.stop="cancelEdit"
+                    class="p-1 rounded-md bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+                    title="Batal"
+                  >
+                    <Icon icon="mdi:close" class="w-3.5 h-3.5" />
+                  </button>
+                </template>
 
-              <template v-else>
-                <button
-                  @click.stop="toggleJournalLock(book)"
-                  class="p-1.5 rounded-lg border hover:bg-slate-500/10 transition-colors"
-                  :title="book.isLocked ? 'Buka Kunci' : 'Kunci Jurnal'"
-                >
-                  <Icon
-                    :icon="
-                      book.isLocked
-                        ? 'solar:lock-keyhole-bold'
-                        : 'solar:key-bold'
-                    "
-                    :class="
-                      book.isLocked ? 'text-rose-500' : 'text-emerald-500'
-                    "
-                    class="w-3.5 h-3.5"
-                  />
-                </button>
+                <template v-else>
+                  <button
+                    type="button"
+                    @click.stop.prevent="toggleJournalLock(book)"
+                    class="flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-gray-200 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+                    :title="book.isLocked ? 'Buka Kunci' : 'Kunci Jurnal'"
+                  >
+                    <Icon
+                      :icon="
+                        book.isLocked
+                          ? 'solar:lock-keyhole-bold'
+                          : 'solar:key-bold'
+                      "
+                      :class="
+                        book.isLocked ? 'text-rose-500' : 'text-emerald-500'
+                      "
+                      class="w-3.5 h-3.5"
+                    />
+                  </button>
 
-                <button
-                  @click.stop="startEditBook(book)"
-                  class="p-1.5 rounded-lg border hover:bg-slate-500/10 transition-colors"
-                  title="Edit Judul"
-                >
-                  <Icon
-                    icon="solar:pen-2-bold-duotone"
-                    class="w-3.5 h-3.5 text-indigo-500"
-                  />
-                </button>
+                  <button
+                    @click.stop="startEditBook(book)"
+                    class="flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-gray-200 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+                    title="Edit Judul"
+                  >
+                    <Icon
+                      icon="solar:pen-2-bold-duotone"
+                      class="w-3.5 h-3.5 text-indigo-500"
+                    />
+                  </button>
 
-                <button
-                  @click.stop="deleteBook(book)"
-                  class="p-1.5 rounded-lg border hover:bg-slate-500/10 transition-colors"
-                  title="Hapus Jurnal"
-                >
-                  <Icon
-                    icon="solar:trash-bin-trash-bold-duotone"
-                    class="w-3.5 h-3.5 text-rose-500"
-                  />
-                </button>
-              </template>
+                  <button
+                    @click.stop="deleteBook(book)"
+                    class="flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-gray-200 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+                    title="Hapus Jurnal"
+                  >
+                    <Icon
+                      icon="solar:trash-bin-trash-bold-duotone"
+                      class="w-3.5 h-3.5 text-rose-500"
+                    />
+                  </button>
+                </template>
+              </div>
             </div>
           </div>
         </div>
