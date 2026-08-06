@@ -1,6 +1,11 @@
 <template>
   <ConfirmationDialog ref="confirmationDialog" />
-
+  <PinModal
+    v-model="isPinModalOpen"
+    :mode="pinModalMode"
+    :book-title="selectedBook?.title"
+    @submit="handlePinSubmit"
+  />
   <NuxtLayout
     name="diary"
     @create-book="handleCreateBook"
