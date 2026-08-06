@@ -568,10 +568,10 @@
 import { ref, computed, onMounted, onBeforeUnmount, provide } from "vue";
 import { Icon } from "@iconify/vue";
 import { onAuthStateChanged, signOut, type Unsubscribe } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 
 const showThemePicker = ref(false);
 
-const { $fbAuth } = useNuxtApp();
 const router = useRouter();
 
 /**
@@ -946,21 +946,61 @@ const newBookTitle = useState("newBookTitle", () => "");
 const searchBook = useState("searchBook", () => "");
 
 // Mengambil referensi daftar jurnal yang ada di Page
-const journals = useState("journalsList", () => []);
+interface Journal {
+  id: number;
+  title: string;
+  createdAt: string;
+}
+const journals = ref<Journal[]>([]);
+
+const activeBookIndex = ref(0);
+const currentPageIndex = ref(0);
+const isWritingMode = ref(false);
+const generateId = () =>
+  "book_" + Date.now() + Math.random().toString(36).slice(2, 8);
+const { $fbAuth, $fbDb } = useNuxtApp();
+const notificationStore = useNotificationStore();
 
 // Fungsi Tambah Jurnal Baru
-const createNewBook = () => {
-  if (!newBookTitle.value.trim()) return;
+const createNewBook = async () => {
+  if (!newBookTitle.value.trim()) {
+    return notificationStore.showError("Judul Jurnal tidak boleh kosong.");
+  }
+  if (!newBookTitle.value.trim() || !currentUser.value) return;
 
-  // Tambahkan jurnal baru ke dalam array
-  journals.value.push({
-    id: Date.now(),
+  const newId = generateId();
+  const listBuku = Array.isArray(notebooks.value) ? notebooks.value : [];
+
+  const newJournalData = {
     title: newBookTitle.value.trim(),
-    createdAt: new Date().toISOString(),
-  });
+    createdAt: Date.now(),
+    isLocked: false,
+    journalPin: "",
+  };
 
-  // Reset input setelah berhasil dibuat
-  newBookTitle.value = "";
+  try {
+    useloadingStore().setLoading(true);
+    const journalDocRef = doc(
+      $fbDb,
+      "user_diaries",
+      currentUser.value.uid,
+      "jurnals",
+      newId,
+    );
+    await setDoc(journalDocRef, newJournalData);
+
+    listBuku.push({ id: newId, ...newJournalData, pages: [] });
+    notebooks.value = listBuku;
+    newBookTitle.value = "";
+    activeBookIndex.value = notebooks.value.length - 1;
+    currentPageIndex.value = 0;
+    isWritingMode.value = false;
+    useloadingStore().setLoading(false);
+    console.log("🎨 Jurnal baru berhasil dibentuk di Cloud sub-collection!");
+  } catch (e) {
+    useloadingStore().setLoading(false);
+    console.error(e);
+  }
 };
 </script>
 
