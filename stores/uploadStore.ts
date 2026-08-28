@@ -12,7 +12,7 @@ export const uploadStore = defineStore('uploadStore', {
             uploadEnd: false,
             namefile: '',
             urlRef: '',
-            fileuploa: File,
+            fileupload: null as File | null,
             typefile: '',
             typefolder: '',
             dialogupload2: false,
@@ -22,7 +22,7 @@ export const uploadStore = defineStore('uploadStore', {
             uploadEnd2: false,
             namefile2: '',
             urlRef2: '',
-            fileuploa2: File,
+            fileupload2: null as File | null,
             typefile2: '',
         }
     },
@@ -62,7 +62,7 @@ export const uploadStore = defineStore('uploadStore', {
                 this.uploadEnd = false,
                 this.namefile = '',
                 this.urlRef = '',
-                this.fileupload = '',
+                this.fileupload = null,
                 this.typefile = ''
         },
 
@@ -74,7 +74,7 @@ export const uploadStore = defineStore('uploadStore', {
                 this.uploadEnd2 = false,
                 this.namefile2 = '',
                 this.urlRef2 = '',
-                this.fileupload2 = '',
+                this.fileupload2 = null,
                 this.typefile2 = ''
         },
 
@@ -110,10 +110,14 @@ export const uploadStore = defineStore('uploadStore', {
             const tanggal = moment().format('DD');
             return new Promise(async (resolve, reject) => {
                 try {
+                    if (!this.fileupload) {
+                        throw new Error("Pilih gambar terlebih dahulu.");
+                    }
                     var metadata = {
                         contentType: this.typefile,
                     };
                     loadingStore.setLoading(true)
+                    this.uploading = true
                     const filenamaref = storageRef(storage, `upload/${tahun}/${bulan}/${tanggal}/${typefolder}/` + this.namefile);
                     const uploadTask = uploadBytesResumable(filenamaref, this.fileupload);
 
@@ -134,19 +138,31 @@ export const uploadStore = defineStore('uploadStore', {
                             }
                         },
                         (error) => {
-
+                            this.uploading = false
+                            loadingStore.setLoading(false)
+                            reject(error)
                         },
-                        () => {
+                        async () => {
                             // Handle successful uploads on complete
                             // For instance, get the download URL: https://firebasestorage.googleapis.com/...
-                            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                            try {
+                                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
                                 this.urlRef = downloadURL
-                                // console.log('File available at', downloadURL);
-                            });
-                            picturestore.setPic(this.downloadUrl)
-                            loadingStore.setLoading(false)
+                                this.downloadUrl = downloadURL
+                                this.progressUpload = 100
+                                this.uploadEnd = true
+                                this.uploading = false
+                                picturestore.setPic(downloadURL)
+                                loadingStore.setLoading(false)
+                                resolve(downloadURL)
+                            } catch (error) {
+                                this.uploading = false
+                                loadingStore.setLoading(false)
+                                reject(error)
+                            }
                         })
                 } catch (error) {
+                    this.uploading = false
                     loadingStore.setLoading(false)
                     return reject(error)
                 }
@@ -206,6 +222,5 @@ export const uploadStore = defineStore('uploadStore', {
     }
 
 })
-
 
 

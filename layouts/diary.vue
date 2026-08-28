@@ -4,7 +4,7 @@
     :class="[
       themeClasses[currentTheme]?.wrapper || themeClasses['dark'].wrapper,
     ]"
-    class="min-h-screen flex flex-col md:flex-row transition-colors duration-700 font-sans relative overflow-hidden"
+    class="h-[100dvh] min-h-0 flex flex-col md:flex-row transition-colors duration-700 font-sans relative overflow-hidden"
   >
     <LoadingApp />
     <appNotification />
@@ -97,12 +97,11 @@
         themeClasses[currentTheme]?.sidebar || themeClasses['cream'].sidebar,
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
       ]"
-      :style="{ height: sidebarHeight }"
-      class="fixed inset-y-0 left-0 w-[85vw] max-w-[320px] md:w-76 md:sticky md:top-0 md:h-screen border-r backdrop-blur-xl flex flex-col justify-between z-50 md:z-10 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none select-none overflow-hidden"
+      class="fixed inset-y-0 left-0 h-[100dvh] w-[88vw] max-w-[340px] sm:w-[320px] md:relative md:inset-auto md:h-[100dvh] md:w-[300px] lg:w-[320px] md:max-w-none border-r backdrop-blur-xl flex flex-col z-50 md:z-10 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none select-none overflow-hidden"
     >
       <!-- BAGIAN ATAS (FIXED / DIAM): LOGO, TEMA, KUTIPAN, STATS, JURNAL BARU & PENCARIAN -->
       <div
-        class="px-4 md:px-5 pt-4 md:pt-5 pb-3 flex flex-col gap-3 border-b border-dashed transition-all duration-300 bg-inherit rounded-t-[2rem] shrink-0"
+        class="sidebar-controls px-4 md:px-5 pt-4 md:pt-5 pb-3 flex flex-col gap-3 border-b border-dashed transition-all duration-300 bg-inherit shrink-0"
         :class="themeClasses[currentTheme]?.borderDashed || 'border-slate-800'"
       >
         <!-- LOGO & TOMBOL CLOSE MOBILE -->
@@ -275,7 +274,7 @@
 
         <!-- KUTIPAN MOTIVASI -->
         <div
-          class="p-3 rounded-xl border relative overflow-hidden group transition-all duration-300"
+          class="sidebar-quote p-3 rounded-xl border relative overflow-hidden group transition-all duration-300"
           :class="
             themeClasses[currentTheme]?.quoteBox ||
             themeClasses['dark'].quoteBox
@@ -396,7 +395,7 @@
 
       <!-- BAGIAN TENGAH (SCROLLABLE): HANYA UNTUK SLOT DAFTAR JURNAL -->
       <div
-        class="flex-1 overflow-y-auto px-4 md:px-5 py-3 space-y-2 custom-sidebar-scroll overscroll-contain touch-pan-y"
+        class="min-h-[72px] flex-1 overflow-y-auto px-4 md:px-5 py-3 space-y-2 custom-sidebar-scroll overscroll-contain touch-pan-y"
       >
         <div @click="isSidebarOpen = false">
           <slot name="sidebar-content" />
@@ -405,7 +404,7 @@
 
       <!-- BAGIAN BAWAH (FIXED / DIAM): TARGET HARI INI & PROFIL USER -->
       <div
-        class="space-y-3 p-4 md:p-5 border-t shrink-0 bg-inherit"
+        class="sidebar-footer space-y-3 p-4 md:p-5 border-t shrink-0 bg-inherit"
         :class="themeClasses[currentTheme]?.borderDashed || 'border-slate-800'"
       >
         <div class="px-1">
@@ -516,7 +515,7 @@
 
     <!-- AREA KANAN: LEMBARAN UTAMA KERTAS DIARY -->
     <main
-      class="relative flex-1 p-3 sm:p-6 md:p-8 overflow-y-auto z-10 flex flex-col justify-center"
+      class="relative h-[100dvh] min-h-0 flex-1 p-3 pt-20 sm:p-6 sm:pt-20 md:p-6 lg:p-8 overflow-x-hidden overflow-y-auto z-10 flex flex-col scroll-smooth"
     >
       <div class="w-full max-w-4xl mx-auto flex-1 flex flex-col">
         <div
@@ -524,7 +523,7 @@
             themeClasses[currentTheme]?.mainPaper ||
             themeClasses['dark'].mainPaper
           "
-          class="rounded-2xl md:rounded-[28px] border p-4 sm:p-8 md:p-12 flex-1 flex flex-col relative transition-all duration-500 min-h-[calc(100vh-120px)] md:min-h-[600px]"
+          class="rounded-2xl md:rounded-[28px] border p-4 sm:p-8 md:p-10 lg:p-12 flex-1 flex flex-col relative transition-all duration-500 min-h-[calc(100dvh-96px)] md:min-h-[600px]"
         >
           <!-- Garis Margin Merah Buku Diary Tradisional -->
           <div
@@ -819,7 +818,6 @@ const quotes = [
 ];
 
 const quote = ref("");
-const sidebarHeight = ref("100vh");
 
 /**
  * Data notebook global
@@ -875,7 +873,6 @@ const handleLogout = async () => {
  * Simpan cleanup listener agar tidak bocor.
  */
 let authUnsubscribe: Unsubscribe | null = null;
-let resizeHandler: (() => void) | null = null;
 
 onMounted(() => {
   // loading ON di awal
@@ -908,22 +905,6 @@ onMounted(() => {
     useloadingStore().setLoading(false);
   });
 
-  /**
-   * Tinggi sidebar berdasarkan tinggi viewport
-   */
-  if (import.meta.client) {
-    sidebarHeight.value = `${window.innerHeight}px`;
-
-    resizeHandler = () => {
-      // Update hanya kalau perubahan tinggi signifikan
-      // agar keyboard mobile tidak bikin layout lompat-lompat
-      if (Math.abs(window.innerHeight - parseInt(sidebarHeight.value)) > 150) {
-        sidebarHeight.value = `${window.innerHeight}px`;
-      }
-    };
-
-    window.addEventListener("resize", resizeHandler);
-  }
 });
 
 onBeforeUnmount(() => {
@@ -932,10 +913,6 @@ onBeforeUnmount(() => {
     authUnsubscribe = null;
   }
 
-  if (import.meta.client && resizeHandler) {
-    window.removeEventListener("resize", resizeHandler);
-    resizeHandler = null;
-  }
 });
 
 // Buat emit untuk mengirim event ke parent/page
@@ -1015,5 +992,34 @@ const createNewBook = async () => {
 /* Menyembunyikan track scrollbar di Chrome, Safari, dan Edge */
 .custom-sidebar-scroll::-webkit-scrollbar {
   display: none;
+}
+
+/* Pada layar laptop pendek, prioritaskan kontrol dan daftar jurnal. */
+@media (max-height: 780px) {
+  .sidebar-quote {
+    display: none;
+  }
+
+  .sidebar-controls {
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.6rem;
+  }
+
+  .sidebar-footer {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    gap: 0.6rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .sidebar-controls {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  .sidebar-footer {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
 }
 </style>

@@ -233,7 +233,8 @@
     >
       <!-- HEADER JURNAL (Judul Rak & Aksi Gembok Global) -->
       <div
-        class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-4 border-b pb-6 mb-6 md:mb-8"
+        v-if="!isWritingMode"
+        class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-4 border-b pb-4 mb-4 md:mb-6"
         :class="currentThemeClasses.border"
       >
         <div
@@ -311,6 +312,35 @@
           </button>
         </div> -->
       </div>
+
+      <!-- Panel pencarian lanjutan dan mode fokus -->
+      <div
+        v-if="!isFocusMode && !isWritingMode"
+        class="sticky top-0 z-30 mb-4 rounded-2xl border p-2.5 sm:p-3 shadow-sm backdrop-blur-xl"
+        :class="[currentThemeClasses.border, currentTheme === 'dark' ? 'bg-slate-900/50' : 'bg-white/70']"
+      >
+        <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
+          <div class="relative flex-1">
+            <Icon icon="solar:magnifer-linear" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" />
+            <input v-model="searchQuery" type="search" placeholder="Cari isi cerita atau tag..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs outline-none" :class="currentThemeClasses.inputSearch" />
+          </div>
+          <div class="grid grid-cols-2 sm:flex gap-2">
+            <select v-model="moodFilter" class="px-3 py-2.5 rounded-xl border text-xs outline-none" :class="currentThemeClasses.inputSearch">
+              <option value="">Semua mood</option>
+              <option v-for="m in moodList" :key="m.emoji" :value="m.emoji">{{ m.emoji }} {{ m.label }}</option>
+            </select>
+            <input v-model="dateFilter" type="date" class="px-3 py-2.5 rounded-xl border text-xs outline-none" :class="currentThemeClasses.inputSearch" />
+            <button v-if="searchQuery || moodFilter || dateFilter" @click="clearAdvancedFilters" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">Reset</button>
+            <button @click="isFocusMode = true" class="px-3 py-2 rounded-xl text-xs font-bold text-white shadow-sm" :class="currentThemeClasses.btnGradient">
+              <Icon icon="solar:full-screen-bold-duotone" class="inline w-4 h-4 mr-1" /> Fokus
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button v-else @click="isFocusMode = false" class="fixed top-4 right-4 z-40 px-4 py-2.5 rounded-xl bg-slate-900/80 text-white text-xs font-bold shadow-xl backdrop-blur">
+        <Icon icon="solar:quit-full-screen-bold-duotone" class="inline w-4 h-4 mr-1" /> Keluar Fokus
+      </button>
 
       <!-- KONDISI PERTAMA: JURNAL DIKUNCI TOTAL -->
       <div
@@ -782,6 +812,9 @@
                   >
                     "{{ currentPage.text }}"
                   </p>
+                  <div v-if="currentPage.tags?.length" class="flex flex-wrap gap-2">
+                    <span v-for="tag in currentPage.tags" :key="tag" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-300">#{{ tag }}</span>
+                  </div>
 
                   <div
                     v-if="currentPage.image"
@@ -834,22 +867,34 @@
           </div>
 
           <!-- MODE EDITOR MENULIS JURNAL BARU -->
-          <div v-else class="space-y-5 animate-fadeIn px-0.5">
+          <div ref="writingEditorRef" v-else class="space-y-3 animate-fadeIn px-0.5">
+            <div class="flex items-center justify-between gap-3 rounded-2xl border px-3 py-2.5" :class="[currentThemeClasses.border, currentThemeClasses.itemInactive]">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white shadow-sm" :class="currentThemeClasses.btnGradient">
+                  <Icon icon="solar:pen-new-square-bold-duotone" class="w-4 h-4" />
+                </span>
+                <div class="min-w-0">
+                  <p class="text-xs font-black truncate">Tulis di {{ currentBook.title }}</p>
+                  <p class="text-[10px] opacity-50">Draft tersimpan otomatis</p>
+                </div>
+              </div>
+              <span class="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black" :class="currentThemeClasses.badge">{{ newTextWordCount }} kata</span>
+            </div>
             <div
-              class="p-4 rounded-2xl border shadow-xs transition-all duration-300"
+              class="p-2.5 rounded-2xl border shadow-xs transition-all duration-300"
               :class="[
                 currentThemeClasses.itemInactive,
                 currentThemeClasses.border,
               ]"
             >
               <label
-                class="text-[10px] font-black uppercase tracking-[0.15em] block mb-3 opacity-80"
+                class="text-[10px] font-black uppercase tracking-[0.15em] block mb-2 opacity-80"
                 :class="currentThemeClasses.textLabel"
               >
                 Bagaimana suasana hatimu hari ini?
               </label>
 
-              <div class="flex flex-wrap gap-2">
+              <div class="grid grid-cols-6 gap-1.5">
                 <button
                   v-for="m in moodList"
                   :key="m.emoji"
@@ -863,12 +908,12 @@
                         ? 'bg-slate-950/40 text-slate-300 border-slate-800/80'
                         : 'bg-white/80 text-slate-700 border-current/10'
                   "
-                  class="flex items-center gap-1.5 px-3 py-1.5 border rounded-xl text-xs transition-all duration-200 active:scale-95 hover:scale-[1.02]"
+                  class="flex items-center justify-center gap-1 px-1.5 py-1.5 border rounded-xl text-xs transition-all duration-200 active:scale-95 hover:scale-[1.02]"
                 >
                   <span class="text-sm filter drop-shadow-xs">{{
                     m.emoji
                   }}</span>
-                  <span class="text-[11px]">{{ m.label }}</span>
+                  <span class="hidden lg:inline text-[10px]">{{ m.label }}</span>
                 </button>
               </div>
             </div>
@@ -876,71 +921,49 @@
             <textarea
               v-model="newText"
               placeholder="Tuangkan isi pikiran, rencana, atau petualangan serumu hari ini di sini..."
-              class="w-full h-56 md:h-64 p-2 outline-none text-base md:text-lg font-serif resize-none bg-transparent leading-[32px] md:leading-[38px] placeholder:text-slate-400/70"
-              :class="
+              class="w-full h-36 md:h-40 p-3 outline-none text-base md:text-lg font-serif resize-y bg-transparent rounded-2xl border leading-[28px] md:leading-[32px] placeholder:text-slate-400/70"
+              :class="[
+                currentThemeClasses.border,
                 currentTheme === 'dark'
-                  ? 'text-slate-100'
-                  : 'text-slate-800 font-medium'
-              "
+                  ? 'text-slate-100 bg-slate-950/20'
+                  : 'text-slate-800 bg-white/40 font-medium'
+              ]"
             />
 
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border p-3" :class="currentThemeClasses.border">
+              <div class="flex-1">
+                <label class="text-[10px] font-black uppercase tracking-widest opacity-60">Tag <span class="normal-case font-medium">(opsional)</span></label>
+                <input v-model="newTagsInput" placeholder="Contoh: kerja, keluarga, ide" class="mt-1.5 w-full rounded-xl border px-3 py-2 text-xs outline-none" :class="currentThemeClasses.inputSearch" />
+              </div>
+              <div class="text-right text-[11px] opacity-60">
+                <p class="font-bold">{{ newTextWordCount }} kata</p>
+                <p>{{ draftStatus }}</p>
+              </div>
+            </div>
+
             <div
-              class="p-4 rounded-2xl border transition-all duration-300 w-full"
+              class="p-3 rounded-2xl border transition-all duration-300 w-full"
               :class="[
                 currentThemeClasses.itemInactive,
                 currentThemeClasses.border,
               ]"
             >
-              <label
-                class="text-[10px] font-black uppercase tracking-[0.15em] block mb-3 opacity-70"
-                :class="currentThemeClasses.textLabel"
-              >
-                Tambah Foto Lembaran Jurnal:
-              </label>
-
-              <div
-                class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
-              >
-                <div class="w-full sm:w-auto">
-                  <uploadImage
-                    typefolder="user_diaries"
-                    :label="
-                      imagePreview ? 'Ganti Foto Jurnal' : 'Unggah Foto Jurnal'
-                    "
-                  />
-                </div>
-
-                <div
-                  v-if="imagePreview"
-                  class="relative rounded-xl overflow-hidden border shrink-0 shadow-md group transition-all h-14 w-24 sm:h-11 sm:w-18 self-start sm:self-center"
-                  :class="currentThemeClasses.border"
-                >
-                  <img
-                    :src="imagePreview"
-                    class="w-full h-full object-cover"
-                    alt="Preview Jurnal"
-                  />
-                  <button
-                    type="button"
-                    @click="imagePreview = null"
-                    class="absolute inset-0 bg-black/75 text-white flex items-center justify-center text-[10px] font-black opacity-0 group-hover:opacity-100 backdrop-blur-3xs transition-all duration-200"
-                  >
-                    <Icon
-                      icon="solar:trash-bin-trash-bold"
-                      class="w-3.5 h-3.5 mr-1"
-                    />
-                    Hapus
-                  </button>
-                </div>
-              </div>
+              <uploadImage
+                typefolder="user_diaries"
+                :label="imagePreview ? 'Ganti Foto Jurnal' : 'Unggah Foto Jurnal'"
+                @preview="imagePreview = $event"
+                @success-upload="imagePreview = $event"
+                @remove="removeNewImage"
+                @upload-error="notificationStore.showError($event)"
+              />
             </div>
           </div>
         </div>
 
         <!-- TOMBOL NAVIGASI BAWAH (Aksi Simpan / Batal / Tulis) -->
         <div
-          class="flex justify-end gap-2.5 pt-4 mt-8 border-t w-full"
-          :class="currentThemeClasses.border"
+          class="sticky bottom-2 z-30 flex justify-end gap-2.5 p-3 mt-5 border rounded-2xl w-full shadow-lg backdrop-blur-xl"
+          :class="[currentThemeClasses.border, currentTheme === 'dark' ? 'bg-slate-950/90' : 'bg-white/90']"
         >
           <button
             v-if="!isWritingMode && !isEditingPage"
@@ -971,14 +994,15 @@
           <button
             v-if="isWritingMode"
             @click="savePage"
+            :disabled="isSavingPage || uploadStore().uploading"
             :class="currentThemeClasses.btnGradient"
-            class="w-1/2 sm:w-auto justify-center px-5 py-3 sm:py-2.5 rounded-xl text-white font-black text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all tracking-wider"
+            class="w-1/2 sm:w-auto justify-center px-5 py-3 sm:py-2.5 rounded-xl text-white font-black text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Icon
               icon="solar:check-square-bold-duotone"
               class="w-4 h-4 transform scale-110"
             />
-            SIMPAN
+            {{ uploadStore().uploading ? "MENGUNGGAH..." : isSavingPage ? "MENYIMPAN..." : "SIMPAN" }}
           </button>
         </div>
       </div>
@@ -1221,6 +1245,7 @@ const notebooks = useState<any[]>("global-notebooks", () => []);
 const activeBookIndex = ref(0);
 const currentPageIndex = ref(0);
 const isWritingMode = ref(false);
+const writingEditorRef = ref<HTMLElement | null>(null);
 
 const newBookTitle = ref("");
 const newText = ref("");
@@ -1229,6 +1254,13 @@ const imagePreview = ref<string | null>(null);
 // State Pencarian dan Pilihan Mood
 const searchQuery = ref("");
 const selectedMood = ref("😊");
+const moodFilter = ref("");
+const dateFilter = ref("");
+const isFocusMode = ref(false);
+const newTagsInput = ref("");
+const draftStatus = ref("Draft siap");
+const isSavingPage = ref(false);
+let draftTimer: ReturnType<typeof setTimeout> | null = null;
 
 // State Proteksi Kunci PIN Halaman Catatan
 const isCurrentPageUnlocked = ref(false);
@@ -1590,20 +1622,62 @@ const closeResetModal = () => {
 // =========================================================================
 // MANAJEMEN TULIS & SIMPAN (NOTEBOOKS BARU DI DALAM JURNAL)
 // =========================================================================
-const startWriting = () => {
-  newText.value = "";
+const startWriting = async () => {
+  const draft = import.meta.client
+    ? localStorage.getItem(`diary-draft-${currentBook.value.id}`)
+    : null;
+  newText.value = draft || "";
+  newTagsInput.value = import.meta.client
+    ? localStorage.getItem(`diary-draft-tags-${currentBook.value.id}`) || ""
+    : "";
   imagePreview.value = null;
   selectedMood.value = "😊";
   isWritingMode.value = true;
+  await nextTick();
+  writingEditorRef.value?.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
 const cancelWriting = () => {
   isWritingMode.value = false;
 };
 
+const removeNewImage = () => {
+  imagePreview.value = null;
+  uploadStore().setReset();
+  notificationStore.showSuccess("Gambar dihapus dari lembaran.");
+};
+
+const newTextWordCount = computed(() =>
+  newText.value.trim() ? newText.value.trim().split(/\s+/).length : 0,
+);
+
+watch([newText, newTagsInput, selectedMood], () => {
+  if (!import.meta.client || !isWritingMode.value || !currentBook.value.id) return;
+  draftStatus.value = "Menyimpan draft...";
+  if (draftTimer) clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => {
+    localStorage.setItem(`diary-draft-${currentBook.value.id}`, newText.value);
+    localStorage.setItem(`diary-draft-tags-${currentBook.value.id}`, newTagsInput.value);
+    draftStatus.value = "Draft tersimpan otomatis";
+  }, 500);
+});
+
+const normalizeTags = (value: string) =>
+  [...new Set(value.split(",").map((tag) => tag.trim().toLowerCase()).filter(Boolean))].slice(0, 8);
+
+const clearAdvancedFilters = () => {
+  searchQuery.value = "";
+  moodFilter.value = "";
+  dateFilter.value = "";
+};
+
 // ✅ BARU: Menulis lembaran teks catatan langsung ke sub-collection notebooks milik jurnal terpilih
 const savePage = async () => {
   const upStore = uploadStore();
+  if (upStore.uploading) {
+    return notificationStore.showError("Tunggu sampai gambar selesai diunggah.");
+  }
+  if (isSavingPage.value) return;
   const rawPiniaUrl = upStore.getUrlRef;
 
   if (!newText.value || !newText.value.trim()) {
@@ -1648,11 +1722,13 @@ const savePage = async () => {
     image: finalImageValue,
     createdAt: Date.now(),
     mood: selectedMood.value,
+    tags: normalizeTags(newTagsInput.value),
     isLocked: false,
     pin: "",
   };
 
   try {
+    isSavingPage.value = true;
     useloadingStore().setLoading(true);
     const notebooksSubRef = collection(
       $fbDb,
@@ -1672,6 +1748,11 @@ const savePage = async () => {
 
     currentPageIndex.value = currentBook.value.pages.length - 1;
     newText.value = "";
+    newTagsInput.value = "";
+    if (import.meta.client) {
+      localStorage.removeItem(`diary-draft-${currentBook.value.id}`);
+      localStorage.removeItem(`diary-draft-tags-${currentBook.value.id}`);
+    }
     imagePreview.value = null;
     isWritingMode.value = false;
     searchQuery.value = "";
@@ -1680,10 +1761,14 @@ const savePage = async () => {
 
     upStore.setReset();
     useloadingStore().setLoading(false);
+    notificationStore.showSuccess("Lembaran jurnal berhasil disimpan.");
   } catch (e) {
     useloadingStore().setLoading(false);
     console.error("❌ Gagal menyimpan notebook baru:", e);
     notificationStore.showError("Gagal mencadangkan lembar baru.");
+  } finally {
+    isSavingPage.value = false;
+    useloadingStore().setLoading(false);
   }
 };
 
@@ -1832,7 +1917,9 @@ const currentPage = computed(
 // const searchBook = ref("");
 const searchPage = ref("");
 const filteredNotebooks = computed(() => {
-  const listBuku = Array.isArray(notebooks.value) ? notebooks.value : [];
+  const listBuku = Array.isArray(notebooks.value)
+    ? notebooks.value.filter((book: any) => !book.deletedAt)
+    : [];
 
   if (!searchBook.value.trim()) {
     return listBuku;
@@ -1848,7 +1935,15 @@ const filteredPages = computed(() => {
     return [];
   }
 
-  return currentBook.value.pages;
+  return currentBook.value.pages.filter((page: any) => {
+    if (page.deletedAt) return false;
+    const keyword = searchQuery.value.trim().toLowerCase();
+    const searchable = `${page.text || ""} ${(page.tags || []).join(" ")}`.toLowerCase();
+    const matchesKeyword = !keyword || searchable.includes(keyword);
+    const matchesMood = !moodFilter.value || page.mood === moodFilter.value;
+    const matchesDate = !dateFilter.value || new Date(page.createdAt).toISOString().slice(0, 10) === dateFilter.value;
+    return matchesKeyword && matchesMood && matchesDate;
+  });
 });
 
 watch(searchQuery, () => {
@@ -1917,7 +2012,7 @@ const selectBook = (clickedBook: any) => {
 const deleteBook = async (clickedBook: any) => {
   const confirmed = await confirmationDialog.value?.show(
     "Konfirmasi Hapus",
-    "Anda yakin ingin menghapus data ini?",
+    "Jurnal akan dipindahkan ke tempat sampah dan dapat dipulihkan.",
   );
 
   if (!confirmed) {
@@ -1934,35 +2029,18 @@ const deleteBook = async (clickedBook: any) => {
 
   try {
     useloadingStore().setLoading(true);
-    // 1. Bersihkan semua lembar notebooks di bawah jurnal ini
-    const pagesToDelete = notebooks.value[originalIndex].pages || [];
-    for (const p of pagesToDelete) {
-      if (p.id) {
-        const pageDocRef = doc(
-          $fbDb,
-          "user_diaries",
-          uid,
-          "jurnals",
-          bookId,
-          "notebooks",
-          p.id,
-        );
-        await deleteDoc(pageDocRef);
-      }
-    }
-
-    // 2. Hapus dokumen induk Jurnal
+    // Soft-delete agar jurnal dapat dipulihkan dari tempat sampah.
     const journalDocRef = doc($fbDb, "user_diaries", uid, "jurnals", bookId);
-    await deleteDoc(journalDocRef);
-
-    notebooks.value.splice(originalIndex, 1);
+    const deletedAt = Date.now();
+    await updateDoc(journalDocRef, { deletedAt });
+    notebooks.value[originalIndex].deletedAt = deletedAt;
     activeBookIndex.value =
       notebooks.value.length === 0
         ? 0
         : Math.min(activeBookIndex.value, notebooks.value.length - 1);
     currentPageIndex.value = 0;
 
-    notificationStore.showSuccess("Jurnal berhasil dibersihkan dari cloud!");
+    notificationStore.showSuccess("Jurnal dipindahkan ke tempat sampah.");
     useloadingStore().setLoading(false);
   } catch (e) {
     useloadingStore().setLoading(false);
@@ -2227,7 +2305,7 @@ async function deleteNotebook(noteId: string) {
 
   const isConfirmed = await confirmationDialog.value.show(
     "Hapus Lembaran Ini?",
-    "Halaman akan dihapus permanen dari cloud database dan tidak bisa dikembalikan.",
+    "Halaman akan dipindahkan ke tempat sampah dan dapat dipulihkan.",
   );
 
   if (!isConfirmed) return;
@@ -2250,11 +2328,13 @@ async function deleteNotebook(noteId: string) {
       noteId,
     );
 
-    await deleteDoc(docRef);
-
-    await loadUserDiary(user.uid);
+    const deletedAt = Date.now();
+    await updateDoc(docRef, { deletedAt });
+    const target = currentBook.value.pages.find((page: any) => page.id === noteId);
+    if (target) target.deletedAt = deletedAt;
+    currentPageIndex.value = Math.max(0, currentPageIndex.value - 1);
     useloadingStore().setLoading(false);
-    console.log("Database updated: Notebook berhasil dihapus!");
+    notificationStore.showSuccess("Lembaran dipindahkan ke tempat sampah.");
   } catch (error) {
     useloadingStore().setLoading(false);
     console.error("Waduh, gagal menghapus data dari Firestore:", error);

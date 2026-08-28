@@ -1,99 +1,145 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { uploadStore } from "@/stores/uploadStore";
 
-const props = defineProps({
-  label: {
-    type: String,
-    default: "Upload Foto Jurnal",
-  },
-  typefolder: {
-    type: String,
-    default: "user_diaries",
-  },
+const props = withDefaults(defineProps<{ label?: string; typefolder?: string }>(), {
+  label: "Pilih Foto Jurnal",
+  typefolder: "user_diaries",
 });
-
-const emit = defineEmits(["success-upload"]);
-
-const useuploadStore = uploadStore();
+const emit = defineEmits(["success-upload", "preview", "remove", "upload-error"]);
+const store = uploadStore();
+const currentTheme = useState<string>("diary-active-theme", () => "cream");
 const fileInput = ref<HTMLInputElement | null>(null);
-const fileValueName = ref(""); // Menyimpan nama file untuk UI Tailwind
+const fileName = ref("");
+const previewUrl = ref("");
+const errorMessage = ref("");
+const progress = computed(() => Math.round(store.getprogressUpload || 0));
+const isUploading = computed(() => store.uploading);
+const isUploaded = computed(() => Boolean(store.getUrlRef) && progress.value >= 100);
+const accentClasses = computed(() => ({
+  cream: { border: "border-amber-300/80", soft: "bg-amber-50 text-amber-800", icon: "bg-orange-500", bar: "from-orange-500 to-amber-400" },
+  pink: { border: "border-pink-300/80", soft: "bg-pink-50 text-pink-800", icon: "bg-pink-500", bar: "from-pink-500 to-rose-400" },
+  blue: { border: "border-sky-300/80", soft: "bg-sky-50 text-sky-800", icon: "bg-sky-500", bar: "from-sky-500 to-indigo-400" },
+  green: { border: "border-emerald-300/80", soft: "bg-emerald-50 text-emerald-800", icon: "bg-emerald-500", bar: "from-emerald-500 to-teal-400" },
+  dark: { border: "border-indigo-500/50", soft: "bg-slate-900 text-slate-200", icon: "bg-indigo-500", bar: "from-indigo-500 to-violet-400" },
+}[currentTheme.value] || { border: "border-indigo-300", soft: "bg-indigo-50 text-indigo-800", icon: "bg-indigo-500", bar: "from-indigo-500 to-violet-400" }));
 
-onMounted(() => {
-  useuploadStore.setReset();
+onMounted(() => store.setReset());
+onBeforeUnmount(() => {
+  if (previewUrl.value.startsWith("blob:")) URL.revokeObjectURL(previewUrl.value);
 });
 
-async function uploadPicture() {
+const resetLocalPreview = () => {
+  if (previewUrl.value.startsWith("blob:")) URL.revokeObjectURL(previewUrl.value);
+  previewUrl.value = "";
+  fileName.value = "";
+  errorMessage.value = "";
+  if (fileInput.value) fileInput.value.value = "";
+};
+
+const removeImage = () => {
+  resetLocalPreview();
+  store.setReset();
+  emit("remove");
+};
+
+const uploadPicture = async () => {
   try {
-    // Jalankan upload dan tunggu sampai promise selesai membawa URL resmi
-    const downloadURL: any = await useuploadStore.simpanFileAction(props.typefolder);
-    
-    if (downloadURL) {
-      console.log("📢 [UPLOAD SUCCESS] Memancarkan URL ke Parent:", downloadURL);
-      // Lempar URL ke komponen utama agar disimpan ke Firestore
-      emit("success-upload", downloadURL); 
+    const downloadURL = await store.simpanFileAction(props.typefolder);
+    if (typeof downloadURL === "string" && downloadURL) {
+      previewUrl.value = downloadURL;
+      emit("preview", downloadURL);
+      emit("success-upload", downloadURL);
     }
-  } catch (error) {
-    console.error("Gagal mengunggah gambar:", error);
+  } catch (error: any) {
+    errorMessage.value = error?.message || "Gambar gagal diunggah. Silakan coba lagi.";
+    emit("upload-error", errorMessage.value);
   }
-}
+};
 
-function onfilepicked(event: any) {
-  const file = event.target.files[0];
+const onFilePicked = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
   if (!file) return;
-  
-  fileValueName.value = file.name;
-  const originalname = file.name;
-  const filename = originalname.replace(/\s+/g, "_").toLowerCase();
-  
-  useuploadStore.setnameFile(filename);
-  useuploadStore.setfile(file);
-  useuploadStore.setTypeFile(file.type);
-  
-  // Langsung picu upload tanpa nunggu tombol lain
-  uploadPicture();
-}
-
-const progress = computed(() => useuploadStore.getprogressUpload);
-
-// Kosongkan input dan nama file ketika progress di-reset ke 0 oleh parent
-watch(progress, (val) => {
-  if (val === 0) {
-    fileValueName.value = ""; 
-    if (fileInput.value) {
-      fileInput.value.value = ""; // Reset input file HTML asli
-    }
+  errorMessage.value = "";
+  if (!file.type.startsWith("image/")) {
+    errorMessage.value = "File harus berupa gambar.";
+    input.value = "";
+    return;
   }
-});
+  if (file.size > 5 * 1024 * 1024) {
+    errorMessage.value = "Ukuran gambar maksimal 5 MB.";
+    input.value = "";
+    return;
+  }
+  if (previewUrl.value.startsWith("blob:")) URL.revokeObjectURL(previewUrl.value);
+  previewUrl.value = URL.createObjectURL(file);
+  fileName.value = file.name;
+  emit("preview", previewUrl.value);
+  store.setnameFile(`${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_").toLowerCase()}`);
+  store.setfile(file);
+  store.setTypeFile(file.type);
+  await uploadPicture();
+};
 </script>
 
 <template>
-  <div class="w-full space-y-2">
-    <div 
-      class="relative flex items-center justify-between border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-    >
-      <input
-        ref="fileInput"
-        type="file"
-        accept="image/*"
-        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-        @change="onfilepicked"
-      />
-      
-      <span class="text-sm font-medium text-slate-600 dark:text-slate-300 truncate max-w-[70%]">
-        {{ fileValueName || props.label }}
-      </span>
-
-      <span class="text-xs bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-md font-sans">
-        Pilih File
-      </span>
+  <div class="w-full">
+    <div v-if="previewUrl" class="grid grid-cols-[112px_1fr] sm:grid-cols-[150px_1fr] gap-3 rounded-2xl border p-2.5 shadow-sm transition-colors" :class="[accentClasses.border, accentClasses.soft]">
+      <div class="relative h-28 sm:h-32 overflow-hidden rounded-xl bg-black/5">
+        <img :src="previewUrl" alt="Preview foto jurnal" class="h-full w-full object-cover" />
+        <span v-if="isUploaded" class="absolute left-2 top-2 rounded-full bg-emerald-500 px-2 py-1 text-[9px] font-black text-white shadow">SIAP</span>
+      </div>
+      <div class="flex min-w-0 flex-col justify-between py-1">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white shadow-sm" :class="accentClasses.icon">
+              <Icon icon="solar:gallery-check-bold-duotone" class="h-4 w-4" />
+            </span>
+            <div class="min-w-0">
+              <p class="truncate text-xs font-black">{{ fileName || "Foto jurnal" }}</p>
+              <p class="text-[10px] opacity-60">{{ isUploading ? `Mengunggah ${progress}%` : isUploaded ? "Foto siap disertakan" : "Menyiapkan preview" }}</p>
+            </div>
+          </div>
+          <div v-if="isUploading" class="mt-3 h-1.5 overflow-hidden rounded-full bg-black/10">
+            <div class="h-full rounded-full bg-gradient-to-r transition-all" :class="accentClasses.bar" :style="{ width: `${progress}%` }" />
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <label
+            class="group/change inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-2 text-[10px] font-black text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
+            :class="accentClasses.icon"
+          >
+            <Icon icon="solar:gallery-edit-bold-duotone" class="h-3.5 w-3.5 transition-transform group-hover/change:rotate-6 group-hover/change:scale-110" />
+            <span>Ganti foto</span>
+            <input ref="fileInput" type="file" accept="image/*" class="hidden" :disabled="isUploading" @change="onFilePicked" />
+          </label>
+          <button
+            type="button"
+            :disabled="isUploading"
+            @click="removeImage"
+            title="Hapus gambar"
+            aria-label="Hapus gambar"
+            class="group/remove inline-flex h-8 w-8 items-center justify-center rounded-full border border-rose-500 bg-rose-500 text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-rose-600 hover:bg-rose-600 hover:shadow-md active:translate-y-0 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Icon icon="solar:trash-bin-minimalistic-linear" class="h-4 w-4 transition-transform group-hover/remove:scale-110" />
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div v-if="progress > 0" class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden transition-all">
-      <div 
-        class="bg-blue-500 h-full rounded-full transition-all duration-300 ease-out"
-        :style="{ width: `${progress}%` }"
-      ></div>
-    </div>
+    <label v-else class="group flex min-h-20 cursor-pointer items-center gap-3 rounded-2xl border-2 border-dashed px-4 py-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm" :class="[accentClasses.border, accentClasses.soft, { 'pointer-events-none opacity-60': isUploading }]">
+      <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFilePicked" />
+      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-md transition group-hover:scale-105" :class="accentClasses.icon">
+        <Icon icon="solar:gallery-add-bold-duotone" class="h-6 w-6" />
+      </span>
+      <span class="min-w-0 flex-1">
+        <span class="block text-xs font-black">{{ props.label }}</span>
+        <span class="mt-0.5 block text-[10px] opacity-55">Klik untuk memilih · JPG, PNG, WEBP · Maks. 5 MB</span>
+      </span>
+      <Icon icon="solar:alt-arrow-right-linear" class="h-4 w-4 shrink-0 opacity-40" />
+    </label>
+
+    <p v-if="errorMessage" class="mt-2 rounded-xl bg-rose-500/10 px-3 py-2 text-[11px] font-bold text-rose-500">{{ errorMessage }}</p>
   </div>
 </template>
