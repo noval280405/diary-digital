@@ -1,43 +1,21 @@
-import { ref, onMounted } from 'vue'
-
-// State global agar sinkron di semua halaman (Layout, Index, Login)
-const darkMode = ref(false)
+import { computed, watchEffect } from "vue";
 
 export const useDiaryTheme = () => {
-    // Fungsi untuk membalikkan status tema
-    const toggleTheme = () => {
-        darkMode.value = !darkMode.value
-        // Simpan pilihan user ke localStorage biar awet
-        localStorage.setItem('diary-theme', darkMode.value ? 'dark' : 'light')
+  const currentTheme = useState<string>("diary-active-theme", () => "cream");
+  const darkMode = computed(() => currentTheme.value === "dark");
 
-        // Opsional: Pasang class 'dark' di root HTML untuk Tailwind CSS versi global
-        if (darkMode.value) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
+  watchEffect(() => {
+    if (!import.meta.client) return;
+    document.documentElement.classList.toggle("dark", darkMode.value);
+    document.documentElement.style.colorScheme = darkMode.value ? "dark" : "light";
+  });
+
+  const toggleTheme = () => {
+    currentTheme.value = darkMode.value ? "cream" : "dark";
+    if (import.meta.client) {
+      localStorage.setItem("diary-active-theme", currentTheme.value);
     }
+  };
 
-    // Cek tema pilihan user saat pertama kali aplikasi dimuat di browser
-    onMounted(() => {
-        const savedTheme = localStorage.getItem('diary-theme')
-        if (savedTheme) {
-            darkMode.value = savedTheme === 'dark'
-        } else {
-            // Jika user belum pernah milih, ikuti setelan bawaan laptop/HP mereka
-            darkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
-        }
-
-        // Terapkan class sesuai kondisi awal
-        if (darkMode.value) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
-    })
-
-    return {
-        darkMode,
-        toggleTheme
-    }
-}
+  return { darkMode, toggleTheme };
+};

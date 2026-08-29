@@ -24,8 +24,7 @@
             notebooks[activeBookIndex]?.id === book.id
               ? currentThemeClasses.itemActive +
                 ' shadow-sm'
-              : currentThemeClasses.navLink +
-                ' hover:bg-current/5',
+              : currentThemeClasses.itemInactive,
           ]"
           class="group relative rounded-xl border transition-all duration-200 cursor-pointer overflow-visible select-none"
         >
@@ -112,7 +111,7 @@
                 <template v-if="editingBookId === book.id">
                   <button
                     @click.stop="saveBookTitle(book)"
-                    class="p-1 rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                    class="journal-action journal-action-save"
                     title="Simpan"
                   >
                     <Icon icon="mdi:check" class="w-3.5 h-3.5" />
@@ -120,7 +119,7 @@
 
                   <button
                     @click.stop="cancelEdit"
-                    class="p-1 rounded-md bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+                    class="journal-action journal-action-cancel"
                     title="Batal"
                   >
                     <Icon icon="mdi:close" class="w-3.5 h-3.5" />
@@ -131,7 +130,7 @@
                   <button
                     type="button"
                     @click.stop.prevent="journalMenuOpenId = journalMenuOpenId === book.id ? null : book.id"
-                    class="flex items-center justify-center w-7 h-7 rounded-lg bg-white/80 border border-slate-200 text-slate-500 hover:bg-white hover:text-slate-800 transition-colors dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400"
+                    class="journal-action journal-action-menu"
                     title="Pilihan jurnal"
                     aria-label="Buka pilihan jurnal"
                   >
@@ -141,17 +140,17 @@
                   <div
                     v-if="journalMenuOpenId === book.id"
                     @click.stop
-                    class="absolute right-0 top-9 z-30 w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                    class="journal-menu-popover absolute right-0 top-9 z-30 w-40 rounded-xl border p-1.5 shadow-lg"
                   >
-                    <button @click="toggleJournalLock(book); journalMenuOpenId = null" class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs hover:bg-slate-100 dark:hover:bg-slate-800">
-                      <Icon :icon="book.isLocked ? 'solar:lock-keyhole-linear' : 'solar:key-linear'" class="w-4 h-4" />
+                    <button @click="toggleJournalLock(book); journalMenuOpenId = null" class="journal-menu-item journal-menu-lock">
+                      <Icon :icon="book.isLocked ? 'solar:lock-keyhole-linear' : 'solar:key-linear'" class="w-4 h-4 shrink-0" />
                       {{ book.isLocked ? "Buka kunci" : "Kunci jurnal" }}
                     </button>
-                    <button @click="startEditBook(book); journalMenuOpenId = null" class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs hover:bg-slate-100 dark:hover:bg-slate-800">
-                      <Icon icon="solar:pen-2-linear" class="w-4 h-4" /> Ubah judul
+                    <button @click="startEditBook(book); journalMenuOpenId = null" class="journal-menu-item journal-menu-edit">
+                      <Icon icon="solar:pen-2-linear" class="w-4 h-4 shrink-0" /> Ubah judul
                     </button>
-                    <button @click="deleteBook(book); journalMenuOpenId = null" class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">
-                      <Icon icon="solar:trash-bin-minimalistic-linear" class="w-4 h-4" /> Hapus jurnal
+                    <button @click="deleteBook(book); journalMenuOpenId = null" class="journal-menu-item journal-menu-delete">
+                      <Icon icon="solar:trash-bin-minimalistic-linear" class="w-4 h-4 shrink-0" /> Hapus jurnal
                     </button>
                   </div>
                 </template>
@@ -2366,6 +2365,90 @@ const filteredJournals = computed(() => {
 </script>
 
 <style scoped>
+.journal-action {
+  display: inline-flex;
+  width: 1.75rem;
+  height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.journal-action-save {
+  color: white;
+  background: #059669;
+  border-color: #047857;
+}
+
+.journal-action-cancel {
+  color: #be123c;
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.journal-action-menu {
+  color: #475569;
+  background: rgba(255, 255, 255, 0.88);
+  border-color: #e2e8f0;
+}
+
+.journal-action-menu:hover {
+  color: #0f172a;
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.journal-menu-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  text-align: left;
+  font-size: 0.75rem;
+}
+
+.journal-menu-popover {
+  color: #334155;
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+}
+
+.journal-menu-lock { color: #b45309; }
+.journal-menu-lock:hover { background: #fffbeb; }
+.journal-menu-edit { color: #0369a1; }
+.journal-menu-edit:hover { background: #f0f9ff; }
+.journal-menu-delete { color: #be123c; }
+.journal-menu-delete:hover { background: #fff1f2; }
+
+:global(.dark) .journal-action-cancel {
+  color: #fda4af;
+  background: rgba(136, 19, 55, 0.28);
+  border-color: rgba(251, 113, 133, 0.24);
+}
+
+:global(.dark) .journal-action-menu {
+  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.78);
+  border-color: #334155;
+}
+
+:global(.dark) .journal-menu-lock { color: #fbbf24; }
+:global(.dark) .journal-menu-lock:hover { background: rgba(120, 53, 15, 0.28); }
+:global(.dark) .journal-menu-edit { color: #7dd3fc; }
+:global(.dark) .journal-menu-edit:hover { background: rgba(12, 74, 110, 0.28); }
+:global(.dark) .journal-menu-delete { color: #fda4af; }
+:global(.dark) .journal-menu-delete:hover { background: rgba(136, 19, 55, 0.25); }
+:global(.dark) .journal-menu-popover {
+  color: #e2e8f0;
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
 .page-flip-enter-active,
 .page-flip-leave-active {
   transition: all 0.25s ease-out;

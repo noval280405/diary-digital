@@ -137,7 +137,7 @@
                 :class="
                   currentTheme === 'dark' ? 'text-slate-500' : 'text-current/40'
                 "
-                class="text-[10px] font-bold tracking-wide mt-0.5"
+            class="text-[10px] font-bold tracking-wide mt-0.5 opacity-80"
               >
                 Ruang Cerita
               </p>
@@ -148,8 +148,7 @@
             <NuxtLink
               to="/stats"
               @click="isSidebarOpen = false"
-              class="sidebar-head-action"
-              :class="themeClasses[currentTheme]?.navLink"
+              class="sidebar-head-action sidebar-action-info"
               title="Statistik dan backup"
               aria-label="Statistik dan backup"
             >
@@ -157,8 +156,7 @@
             </NuxtLink>
             <button
               @click="showThemePicker = !showThemePicker"
-              class="sidebar-head-action"
-              :class="themeClasses[currentTheme]?.navLink"
+              class="sidebar-head-action sidebar-action-theme"
               title="Pilih tema"
               aria-label="Pilih tema"
             >
@@ -166,8 +164,7 @@
             </button>
             <button
               @click="isSidebarOpen = false"
-              :class="themeClasses[currentTheme]?.mobileClose || themeClasses['dark'].mobileClose"
-              class="sidebar-head-action md:hidden"
+              class="sidebar-head-action sidebar-action-neutral sidebar-mobile-close"
               title="Tutup menu"
               aria-label="Tutup menu"
             >
@@ -346,8 +343,8 @@
         <!-- SECTION: JURNAL BARU -->
         <div class="space-y-2 pt-1">
           <label
-            :class="currentThemeClasses.textLabel"
-            class="text-[10px] uppercase tracking-[0.14em] font-semibold flex items-center gap-1.5 opacity-55"
+            :class="currentThemeClasses.iconPrimary"
+            class="text-[10px] uppercase tracking-[0.14em] font-bold flex items-center gap-1.5 opacity-75"
           >
             <Icon
               icon="solar:folder-add-bold-duotone"
@@ -360,14 +357,14 @@
               v-model="newBookTitle"
               placeholder="Nama rak jurnal..."
               :class="currentThemeClasses.input || currentThemeClasses.navLink"
-              class="flex-1 h-10 px-3 border rounded-xl text-sm outline-none transition-shadow placeholder:text-slate-400 focus:shadow-sm"
+              class="flex-1 h-10 px-3 border rounded-xl text-sm outline-none transition-shadow placeholder:text-slate-500/80 focus:shadow-sm"
               @keyup.enter="createNewBook"
             />
 
             <button
               @click="createNewBook"
               :class="currentThemeClasses.btnGradient"
-              class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-white shadow-sm"
+              class="sidebar-add-button w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-white shadow-sm"
               title="Tambah Jurnal Baru"
             >
               <Icon icon="iconamoon:sign-plus-fill" class="w-4 h-4" />
@@ -378,8 +375,8 @@
         <!-- HEADER & PENCARIAN RAK JURNAL -->
         <div class="space-y-2 pt-1">
           <label
-            :class="currentThemeClasses.textLabel"
-            class="text-[10px] uppercase tracking-[0.14em] font-semibold flex items-center gap-1.5 opacity-55"
+            :class="currentThemeClasses.iconPrimary"
+            class="text-[10px] uppercase tracking-[0.14em] font-bold flex items-center gap-1.5 opacity-75"
           >
             <Icon
               icon="solar:bookmark-opened-bold-duotone"
@@ -395,12 +392,12 @@
               type="text"
               placeholder="Cari judul jurnal..."
               :class="currentThemeClasses.input || currentThemeClasses.navLink"
-              class="w-full h-10 pl-9 pr-8 border rounded-xl text-sm outline-none transition-shadow placeholder:text-slate-400 focus:shadow-sm"
+              class="w-full h-10 pl-9 pr-8 border rounded-xl text-sm outline-none transition-shadow placeholder:text-slate-500/80 focus:shadow-sm"
             />
             <Icon
               icon="solar:magnifer-bold"
               :class="currentThemeClasses.iconPrimary"
-              class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-60 pointer-events-none"
+              class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
             />
             <button
               v-if="searchBook"
@@ -656,8 +653,8 @@ const themeClasses: Record<string, any> = {
       "bg-white/95 border-pink-200/70 text-pink-950 shadow-[0_18px_50px_rgba(157,23,77,0.07)]",
     iconPrimary: "text-pink-600",
     iconSecondary: "text-rose-500",
-    syncText: "text-pink-600",
-    syncDot: "bg-pink-500",
+    syncText: "text-emerald-700",
+    syncDot: "bg-emerald-600",
     mobileClose:
       "bg-white/80 border-pink-200 text-pink-600 hover:text-pink-800",
     btnGradient: "bg-gradient-to-tr from-pink-500 to-rose-500",
@@ -796,6 +793,8 @@ const changeTheme = (themeName: string) => {
 
   if (import.meta.client) {
     localStorage.setItem("diary-active-theme", themeName);
+    document.documentElement.classList.toggle("dark", themeName === "dark");
+    document.documentElement.style.colorScheme = themeName === "dark" ? "dark" : "light";
   }
 };
 
@@ -903,6 +902,8 @@ onMounted(() => {
    * Kalau user terakhir pilih pink, saat refresh tetap pink.
    */
   currentTheme.value = getSavedTheme();
+  document.documentElement.classList.toggle("dark", currentTheme.value === "dark");
+  document.documentElement.style.colorScheme = currentTheme.value === "dark" ? "dark" : "light";
 
   /**
    * Setelah theme dipastikan benar, baru layout boleh tampil.
@@ -1090,6 +1091,54 @@ const createNewBook = async () => {
 
 .sidebar-head-action:hover {
   filter: brightness(0.98);
+}
+
+/* Warna semantik menjaga fungsi tombol tetap mudah dibedakan di semua tema. */
+.sidebar-action-info {
+  color: white;
+  background: #0284c7;
+  border-color: #0369a1;
+}
+
+.sidebar-action-theme {
+  color: white;
+  background: #7c3aed;
+  border-color: #6d28d9;
+}
+
+.sidebar-action-neutral {
+  color: white;
+  background: #475569;
+  border-color: #334155;
+}
+
+.dark .sidebar-action-info {
+  color: #7dd3fc;
+  background: rgba(12, 74, 110, 0.35);
+  border-color: rgba(56, 189, 248, 0.24);
+}
+
+.dark .sidebar-action-theme {
+  color: #c4b5fd;
+  background: rgba(76, 29, 149, 0.3);
+  border-color: rgba(167, 139, 250, 0.24);
+}
+
+.dark .sidebar-action-neutral {
+  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.72);
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+.sidebar-add-button {
+  box-shadow: 0 6px 16px color-mix(in srgb, currentColor 18%, transparent);
+}
+
+/* Tombol ini hanya berguna untuk drawer mobile. */
+@media (min-width: 768px) {
+  .sidebar-mobile-close {
+    display: none !important;
+  }
 }
 
 .sidebar-controls :deep(label > svg),
