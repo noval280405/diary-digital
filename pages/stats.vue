@@ -34,7 +34,7 @@
 
         <NuxtLink
           to="/"
-          class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold tracking-wide border transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 shadow-xs group shrink-0"
+          class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold border transition-colors shadow-xs group shrink-0"
           :class="
             currentTheme === 'dark'
               ? 'bg-slate-900 border-slate-800 text-slate-200 hover:bg-slate-800 hover:text-white'
@@ -66,11 +66,12 @@
 
       <div v-show="activeStatsTab === 'overview'" class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-5">
         <div
-          class="p-4 md:p-5 rounded-2xl border relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
+          class="p-4 md:p-5 rounded-xl border relative overflow-hidden transition-colors"
           :class="panelClass"
         >
-          <div class="absolute right-4 top-4 opacity-15" :class="currentThemeClasses.icon">
-            <Icon icon="solar:letter-opened-bold-duotone" class="w-12 h-12" />
+          <div class="absolute inset-x-0 top-0 h-0.5" :class="currentThemeClasses.btnGradient" />
+          <div class="absolute right-4 top-4 rounded-xl bg-slate-100 p-2 dark:bg-slate-800" :class="currentThemeClasses.icon">
+            <Icon icon="solar:letter-opened-bold-duotone" class="w-5 h-5" />
           </div>
           <div
             class="text-xs font-black uppercase opacity-70 tracking-wider mb-2 flex items-center gap-1.5 text-slate-500 dark:text-slate-400"
@@ -87,11 +88,12 @@
         </div>
 
         <div
-          class="p-4 md:p-5 rounded-2xl border relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
+          class="p-4 md:p-5 rounded-xl border relative overflow-hidden transition-colors"
           :class="panelClass"
         >
-          <div class="absolute right-4 top-4 opacity-15" :class="currentThemeClasses.icon">
-            <Icon icon="solar:heart-bold-duotone" class="w-12 h-12" />
+          <div class="absolute inset-x-0 top-0 h-0.5" :class="currentThemeClasses.btnGradient" />
+          <div class="absolute right-4 top-4 rounded-xl bg-slate-100 p-2 dark:bg-slate-800" :class="currentThemeClasses.icon">
+            <Icon icon="solar:heart-bold-duotone" class="w-5 h-5" />
           </div>
           <div
             class="text-xs font-black uppercase opacity-70 tracking-wider mb-2 flex items-center gap-1.5 text-slate-500 dark:text-slate-400"
@@ -116,11 +118,12 @@
         </div>
 
         <div
-          class="p-4 md:p-5 rounded-2xl border relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
+          class="p-4 md:p-5 rounded-xl border relative overflow-hidden transition-colors"
           :class="panelClass"
         >
-          <div class="absolute right-4 top-4 opacity-15" :class="currentThemeClasses.icon">
-            <Icon icon="solar:notebook-bold-duotone" class="w-12 h-12" />
+          <div class="absolute inset-x-0 top-0 h-0.5" :class="currentThemeClasses.btnGradient" />
+          <div class="absolute right-4 top-4 rounded-xl bg-slate-100 p-2 dark:bg-slate-800" :class="currentThemeClasses.icon">
+            <Icon icon="solar:notebook-bold-duotone" class="w-5 h-5" />
           </div>
           <div
             class="text-xs font-black uppercase opacity-70 tracking-wider mb-2 flex items-center gap-1.5 text-slate-500 dark:text-slate-400"
@@ -139,7 +142,7 @@
 
       <!-- Productivity dashboard -->
       <div v-show="activeStatsTab === 'calendar'" class="grid grid-cols-1 xl:grid-cols-3 gap-5 no-print">
-        <section class="xl:col-span-2 p-5 md:p-6 rounded-3xl border shadow-sm" :class="panelClass">
+        <section class="xl:col-span-2 p-5 md:p-6 rounded-xl border" :class="panelClass">
           <div class="flex items-center justify-between gap-3 mb-5">
             <div>
               <h3 class="font-black text-lg">Kalender Perjalananmu</h3>
@@ -175,7 +178,7 @@
         </section>
 
         <div class="space-y-5">
-          <section class="p-5 rounded-3xl border shadow-sm" :class="panelClass">
+          <section class="p-5 rounded-xl border" :class="panelClass">
             <div class="flex items-center gap-3 mb-4">
               <div class="p-3 rounded-2xl bg-orange-500/10 text-orange-500"><Icon icon="solar:fire-bold-duotone" class="w-6 h-6" /></div>
               <div><p class="text-2xl font-black">{{ writingStreak }} hari</p><p class="text-[11px] opacity-50">Streak menulis saat ini</p></div>
@@ -185,7 +188,7 @@
             <input v-model.number="dailyGoal" @change="savePreferences" type="number" min="50" step="50" class="mt-4 w-full px-3 py-2 rounded-xl border text-xs" :class="currentThemeClasses.border" />
           </section>
 
-          <section class="p-5 rounded-3xl border shadow-sm" :class="panelClass">
+          <section class="p-5 rounded-xl border" :class="panelClass">
             <h3 class="font-black text-sm mb-1">Pengingat Menulis</h3>
             <p class="text-[11px] opacity-50 mb-4">Notifikasi muncul saat aplikasi terbuka.</p>
             <div class="flex gap-2">
@@ -197,7 +200,7 @@
       </div>
 
       <div v-show="activeStatsTab !== 'calendar'" class="grid grid-cols-1 gap-5 no-print">
-        <section v-show="activeStatsTab === 'overview'" class="p-5 md:p-6 rounded-3xl border shadow-sm" :class="panelClass">
+        <section v-show="activeStatsTab === 'overview'" class="p-5 md:p-6 rounded-xl border" :class="panelClass">
           <h3 class="font-black text-lg">Insight Mood</h3>
           <p class="text-xs opacity-50 mb-5">Distribusi suasana hati dari seluruh tulisan aktif.</p>
           <div class="space-y-3">
@@ -209,7 +212,7 @@
           </div>
         </section>
 
-        <section v-show="activeStatsTab === 'data'" class="p-5 md:p-6 rounded-3xl border shadow-sm" :class="panelClass">
+        <section v-show="activeStatsTab === 'data'" class="p-5 md:p-6 rounded-xl border" :class="panelClass">
           <div class="flex items-center justify-between mb-4">
             <div><h3 class="font-black text-lg">Tempat Sampah</h3><p class="text-xs opacity-50">Pulihkan data yang tidak sengaja dihapus.</p></div>
             <span class="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-500 text-xs font-black">{{ trashItems.length }}</span>
@@ -227,7 +230,7 @@
 
       <div
         v-show="activeStatsTab === 'data'"
-        class="p-6 md:p-8 rounded-3xl border relative overflow-hidden no-print transition-all duration-500 shadow-md"
+        class="p-5 md:p-6 rounded-xl border relative overflow-hidden no-print transition-colors"
         :class="
           currentTheme === 'dark'
             ? 'bg-slate-900/40 border-slate-800/80 shadow-black/10'
@@ -279,7 +282,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button
               @click="exportToTXT"
-              class="w-full px-5 py-4 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-3 group border border-transparent"
+              class="w-full px-4 py-3 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2.5 group border border-transparent"
               :class="[
                 currentThemeClasses.btnGradient,
                 currentTheme === 'dark'
@@ -291,12 +294,12 @@
                 icon="solar:download-square-bold-duotone"
                 class="w-5 h-5 opacity-90 group-hover:animate-bounce"
               />
-              <span>Unduh Dokumen Mentah (.TXT)</span>
+              <span>Unduh TXT</span>
             </button>
 
             <button
               @click="triggerPrint"
-              class="w-full px-5 py-4 border text-xs font-black uppercase tracking-widest rounded-2xl shadow-xs hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-3 group"
+              class="w-full px-4 py-3 border text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2.5 group"
               :class="
                 currentTheme === 'dark'
                   ? 'bg-slate-900 border-slate-800 text-slate-200 hover:bg-slate-800 hover:text-white'
@@ -308,12 +311,12 @@
                 class="w-5 h-5 transition-colors duration-500"
                 :class="currentThemeClasses.icon"
               />
-              <span>Cetak Cetakan Fisik (PDF)</span>
+              <span>Cetak / Simpan PDF</span>
             </button>
-            <button @click="exportToJSON" class="w-full px-5 py-4 border text-xs font-black uppercase tracking-widest rounded-2xl hover:scale-[1.01] transition flex items-center justify-center gap-3" :class="currentThemeClasses.border">
-              <Icon icon="solar:database-bold-duotone" class="w-5 h-5" /> Backup Lengkap (.JSON)
+            <button @click="exportToJSON" class="w-full px-4 py-3 border text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2.5" :class="currentThemeClasses.border">
+              <Icon icon="solar:database-bold-duotone" class="w-5 h-5" /> Backup JSON
             </button>
-            <label class="w-full px-5 py-4 border text-xs font-black uppercase tracking-widest rounded-2xl hover:scale-[1.01] transition flex items-center justify-center gap-3 cursor-pointer" :class="currentThemeClasses.border">
+            <label role="button" tabindex="0" class="w-full px-4 py-3 border text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2.5 cursor-pointer" :class="currentThemeClasses.border">
               <Icon icon="solar:upload-square-bold-duotone" class="w-5 h-5" /> Impor Backup
               <input type="file" accept=".json,application/json" class="hidden" @change="importFromJSON" />
             </label>
@@ -369,10 +372,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { Icon } from "@iconify/vue";
 import { useDiaryTheme } from "~/composables/useDiaryTheme";
-import { doc, setDoc, updateDoc } from "firebase/firestore";
+import { collection, doc, getDocs, orderBy, query, setDoc, updateDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 const { darkMode } = useDiaryTheme();
 const notebooks = useState("global-notebooks", () => []);
@@ -389,6 +393,25 @@ const dailyGoal = ref(300);
 const reminderTime = ref("20:00");
 const reminderEnabled = ref(false);
 const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+let reminderInterval;
+let authUnsubscribe;
+
+const loadStatsData = async (uid) => {
+  const journalSnapshot = await getDocs(collection($fbDb, "user_diaries", uid, "jurnals"));
+  const books = [];
+  for (const journalDoc of journalSnapshot.docs) {
+    const pageSnapshot = await getDocs(query(
+      collection($fbDb, "user_diaries", uid, "jurnals", journalDoc.id, "notebooks"),
+      orderBy("createdAt", "asc"),
+    ));
+    books.push({
+      id: journalDoc.id,
+      ...journalDoc.data(),
+      pages: pageSnapshot.docs.map((pageDoc) => ({ id: pageDoc.id, ...pageDoc.data() })),
+    });
+  }
+  notebooks.value = books;
+};
 
 // --- TAMBAHKAN LOGIKA TEMA DI BAWAH INI AGAR TIDAK ERROR ---
 const currentTheme = useState("diary-active-theme", () => "cream");
@@ -536,6 +559,11 @@ const enableReminder = async () => {
 };
 
 onMounted(() => {
+  authUnsubscribe = onAuthStateChanged($fbAuth, async (user) => {
+    if (user && notebooks.value.length === 0) {
+      try { await loadStatsData(user.uid); } catch (error) { console.error("Gagal memuat statistik", error); }
+    }
+  });
   const saved = localStorage.getItem("diary-productivity");
   if (saved) {
     try {
@@ -545,7 +573,7 @@ onMounted(() => {
       reminderEnabled.value = Boolean(value.reminderEnabled);
     } catch {}
   }
-  setInterval(() => {
+  reminderInterval = setInterval(() => {
     const now = new Date();
     const current = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
     const notificationKey = `diary-reminded-${dateKey(now)}`;
@@ -554,6 +582,11 @@ onMounted(() => {
       sessionStorage.setItem(notificationKey, "1");
     }
   }, 30000);
+});
+
+onBeforeUnmount(() => {
+  if (reminderInterval) clearInterval(reminderInterval);
+  if (authUnsubscribe) authUnsubscribe();
 });
 // -----------------------------------------------------------
 
@@ -654,11 +687,26 @@ const downloadBlob = (content, type, extension) => {
 };
 
 const exportToJSON = () => {
+  const safeNotebooks = notebooks.value.map((book) => ({
+    ...book,
+    isLocked: false,
+    journalPin: "",
+    journalPinHash: "",
+    journalPinSalt: "",
+    pages: (book.pages || []).map((page) => ({
+      ...page,
+      isLocked: false,
+      pin: "",
+      pinHash: "",
+      pinSalt: "",
+    })),
+  }));
   const backup = {
     format: "diary-digital-backup",
     version: 1,
     exportedAt: new Date().toISOString(),
-    notebooks: notebooks.value,
+    securityNote: "PIN tidak disertakan. Jurnal hasil impor akan terbuka.",
+    notebooks: safeNotebooks,
   };
   downloadBlob(JSON.stringify(backup, null, 2), "application/json;charset=utf-8", "json");
 };
@@ -679,10 +727,18 @@ const importFromJSON = async (event) => {
       if (!book?.id || !book?.title) continue;
       const { pages = [], ...journalData } = book;
       delete journalData.id;
+      journalData.isLocked = false;
+      journalData.journalPin = "";
+      journalData.journalPinHash = "";
+      journalData.journalPinSalt = "";
       await setDoc(doc($fbDb, "user_diaries", user.uid, "jurnals", book.id), journalData, { merge: true });
       for (const page of pages) {
         if (!page?.id) continue;
         const { id, ...pageData } = page;
+        pageData.isLocked = false;
+        pageData.pin = "";
+        pageData.pinHash = "";
+        pageData.pinSalt = "";
         await setDoc(doc($fbDb, "user_diaries", user.uid, "jurnals", book.id, "notebooks", id), pageData, { merge: true });
       }
     }

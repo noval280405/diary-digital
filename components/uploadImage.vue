@@ -37,9 +37,19 @@ const resetLocalPreview = () => {
   if (fileInput.value) fileInput.value.value = "";
 };
 
-const removeImage = () => {
+const removeImage = async () => {
+  const uploadedUrl = store.getUrlRef;
   resetLocalPreview();
-  store.setReset();
+  if (uploadedUrl) {
+    try {
+      await store.deleteUploadedFile(uploadedUrl);
+    } catch {
+      store.setReset();
+      emit("upload-error", "Gambar dihapus dari jurnal, tetapi file cloud gagal dibersihkan.");
+    }
+  } else {
+    store.setReset();
+  }
   emit("remove");
 };
 
@@ -85,8 +95,8 @@ const onFilePicked = async (event: Event) => {
 
 <template>
   <div class="w-full">
-    <div v-if="previewUrl" class="grid grid-cols-[112px_1fr] sm:grid-cols-[150px_1fr] gap-3 rounded-2xl border p-2.5 shadow-sm transition-colors" :class="[accentClasses.border, accentClasses.soft]">
-      <div class="relative h-28 sm:h-32 overflow-hidden rounded-xl bg-black/5">
+    <div v-if="previewUrl" class="grid grid-cols-[104px_1fr] sm:grid-cols-[136px_1fr] gap-3 rounded-xl border p-2.5 transition-colors" :class="[accentClasses.border, accentClasses.soft]">
+      <div class="relative h-24 sm:h-28 overflow-hidden rounded-lg bg-black/5">
         <img :src="previewUrl" alt="Preview foto jurnal" class="h-full w-full object-cover" />
         <span v-if="isUploaded" class="absolute left-2 top-2 rounded-full bg-emerald-500 px-2 py-1 text-[9px] font-black text-white shadow">SIAP</span>
       </div>
@@ -107,7 +117,7 @@ const onFilePicked = async (event: Event) => {
         </div>
         <div class="flex flex-wrap gap-2">
           <label
-            class="group/change inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-2 text-[10px] font-black text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
+            class="group/change inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90 active:opacity-75"
             :class="accentClasses.icon"
           >
             <Icon icon="solar:gallery-edit-bold-duotone" class="h-3.5 w-3.5 transition-transform group-hover/change:rotate-6 group-hover/change:scale-110" />
@@ -120,7 +130,7 @@ const onFilePicked = async (event: Event) => {
             @click="removeImage"
             title="Hapus gambar"
             aria-label="Hapus gambar"
-            class="group/remove inline-flex h-8 w-8 items-center justify-center rounded-full border border-rose-500 bg-rose-500 text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-rose-600 hover:bg-rose-600 hover:shadow-md active:translate-y-0 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            class="group/remove inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-500 bg-rose-500 text-white shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Icon icon="solar:trash-bin-minimalistic-linear" class="h-4 w-4 transition-transform group-hover/remove:scale-110" />
           </button>
@@ -128,9 +138,9 @@ const onFilePicked = async (event: Event) => {
       </div>
     </div>
 
-    <label v-else class="group flex min-h-20 cursor-pointer items-center gap-3 rounded-2xl border-2 border-dashed px-4 py-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm" :class="[accentClasses.border, accentClasses.soft, { 'pointer-events-none opacity-60': isUploading }]">
+    <label v-else class="group flex min-h-18 cursor-pointer items-center gap-3 rounded-xl border border-dashed px-4 py-3 text-left transition-colors" :class="[accentClasses.border, accentClasses.soft, { 'pointer-events-none opacity-60': isUploading }]">
       <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFilePicked" />
-      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-md transition group-hover:scale-105" :class="accentClasses.icon">
+      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white shadow-sm" :class="accentClasses.icon">
         <Icon icon="solar:gallery-add-bold-duotone" class="h-6 w-6" />
       </span>
       <span class="min-w-0 flex-1">

@@ -3,15 +3,14 @@ import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
 export default defineNuxtPlugin(() => {
-    // Masukkan konfigurasi yang kamu salin dari Firebase Console tadi
+    const config = useRuntimeConfig()
     const firebaseConfig = {
-        apiKey: "AIzaSyCu0xsfZCiIegl21EOvwWu42HnDcC9As6Y",
-        authDomain: "syafama-media.firebaseapp.com",
-        databaseURL: "https://syafama-media-default-rtdb.firebaseio.com",
-        projectId: "syafama-media",
-        storageBucket: "syafama-media.firebasestorage.app",
-        messagingSenderId: "909231531359",
-        appId: "1:909231531359:web:e72585a1544cb7929042ea"
+        apiKey: config.public.firebaseApiKey,
+        authDomain: config.public.firebaseAuthDomain,
+        projectId: config.public.firebaseProjectId,
+        storageBucket: config.public.firebaseStorageBucket,
+        messagingSenderId: config.public.firebaseMessagingSenderId,
+        appId: config.public.firebaseAppId,
     }
 
     const app = initializeApp(firebaseConfig)

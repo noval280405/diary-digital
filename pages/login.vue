@@ -274,6 +274,12 @@
                 : "Belum punya akun? Daftar gratis sekarang"
             }}
           </p>
+          <p class="mt-4 text-[10px] leading-5 text-slate-400">
+            Dengan menggunakan MyDiary, Anda menyetujui
+            <NuxtLink to="/terms" class="font-semibold underline hover:text-slate-600">Syarat Penggunaan</NuxtLink>
+            dan
+            <NuxtLink to="/privacy" class="font-semibold underline hover:text-slate-600">Kebijakan Privasi</NuxtLink>.
+          </p>
         </div>
       </div>
     </div>

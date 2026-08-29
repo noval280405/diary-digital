@@ -1,5 +1,7 @@
 <template>
+  <OnboardingModal />
   <ConfirmationDialog ref="confirmationDialog" />
+  <PagePinModal :open="showPagePinCreate" @close="showPagePinCreate = false" @confirm="createPagePin" />
   <PinModal
     v-model="isPinModalOpen"
     :mode="pinModalMode"
@@ -20,14 +22,14 @@
           @click="selectBook(book)"
           :class="[
             notebooks[activeBookIndex]?.id === book.id
-              ? currentThemeClasses.btnGradient +
-                ' border-transparent shadow-md ring-2 ring-white/20'
+              ? currentThemeClasses.itemActive +
+                ' shadow-sm'
               : currentThemeClasses.navLink +
-                ' hover:shadow-xs hover:-translate-y-0.5',
+                ' hover:bg-current/5',
           ]"
-          class="group rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden select-none"
+          class="group relative rounded-xl border transition-all duration-200 cursor-pointer overflow-visible select-none"
         >
-          <div class="p-2.5">
+          <div class="p-3">
             <!-- BARIS UTAMA: ICON, JUDUL, HALAMAN & ACTION -->
             <div class="flex items-start gap-2.5">
               <!-- ICON KUNCI / BUKU -->
@@ -44,11 +46,13 @@
 
                 <div
                   v-else
-                  class="w-7 h-7 rounded-lg flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30"
+                  class="w-8 h-8 rounded-lg flex items-center justify-center border border-current/10"
+                  :class="currentThemeClasses.badge"
                 >
                   <Icon
                     icon="solar:notebook-bold-duotone"
-                    class="w-4 h-4 text-emerald-500"
+                    class="w-4 h-4"
+                    :class="currentThemeClasses.icon"
                   />
                 </div>
               </div>
@@ -104,7 +108,7 @@
               </div>
 
               <!-- ACTION BUTTONS (Gaya Ringkas & Minimalis) -->
-              <div class="flex items-center gap-1 shrink-0 pt-0.5">
+              <div class="relative flex items-center gap-1 shrink-0 pt-0.5">
                 <template v-if="editingBookId === book.id">
                   <button
                     @click.stop="saveBookTitle(book)"
@@ -126,44 +130,30 @@
                 <template v-else>
                   <button
                     type="button"
-                    @click.stop.prevent="toggleJournalLock(book)"
-                    class="flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-gray-200 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
-                    :title="book.isLocked ? 'Buka Kunci' : 'Kunci Jurnal'"
+                    @click.stop.prevent="journalMenuOpenId = journalMenuOpenId === book.id ? null : book.id"
+                    class="flex items-center justify-center w-7 h-7 rounded-lg bg-white/80 border border-slate-200 text-slate-500 hover:bg-white hover:text-slate-800 transition-colors dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400"
+                    title="Pilihan jurnal"
+                    aria-label="Buka pilihan jurnal"
                   >
-                    <Icon
-                      :icon="
-                        book.isLocked
-                          ? 'solar:lock-keyhole-bold'
-                          : 'solar:key-bold'
-                      "
-                      :class="
-                        book.isLocked ? 'text-rose-500' : 'text-emerald-500'
-                      "
-                      class="w-3.5 h-3.5"
-                    />
+                    <Icon icon="solar:menu-dots-bold" class="w-4 h-4" />
                   </button>
 
-                  <button
-                    @click.stop="startEditBook(book)"
-                    class="flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-gray-200 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
-                    title="Edit Judul"
+                  <div
+                    v-if="journalMenuOpenId === book.id"
+                    @click.stop
+                    class="absolute right-0 top-9 z-30 w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
                   >
-                    <Icon
-                      icon="solar:pen-2-bold-duotone"
-                      class="w-3.5 h-3.5 text-indigo-500"
-                    />
-                  </button>
-
-                  <button
-                    @click.stop="deleteBook(book)"
-                    class="flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-gray-200 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
-                    title="Hapus Jurnal"
-                  >
-                    <Icon
-                      icon="solar:trash-bin-trash-bold-duotone"
-                      class="w-3.5 h-3.5 text-rose-500"
-                    />
-                  </button>
+                    <button @click="toggleJournalLock(book); journalMenuOpenId = null" class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs hover:bg-slate-100 dark:hover:bg-slate-800">
+                      <Icon :icon="book.isLocked ? 'solar:lock-keyhole-linear' : 'solar:key-linear'" class="w-4 h-4" />
+                      {{ book.isLocked ? "Buka kunci" : "Kunci jurnal" }}
+                    </button>
+                    <button @click="startEditBook(book); journalMenuOpenId = null" class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs hover:bg-slate-100 dark:hover:bg-slate-800">
+                      <Icon icon="solar:pen-2-linear" class="w-4 h-4" /> Ubah judul
+                    </button>
+                    <button @click="deleteBook(book); journalMenuOpenId = null" class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">
+                      <Icon icon="solar:trash-bin-minimalistic-linear" class="w-4 h-4" /> Hapus jurnal
+                    </button>
+                  </div>
                 </template>
               </div>
             </div>
@@ -250,7 +240,7 @@
           >
             <Icon
               icon="solar:book-bookmark-bold-duotone"
-              class="w-8 h-8 md:w-10 md:h-10 opacity-95"
+              class="premium-icon w-9 h-9 opacity-95"
             />
           </div>
 
@@ -316,20 +306,20 @@
       <!-- Panel pencarian lanjutan dan mode fokus -->
       <div
         v-if="!isWritingMode"
-        class="sticky top-0 z-30 mb-4 rounded-2xl border p-2.5 sm:p-3 shadow-sm backdrop-blur-xl"
+        class="sticky top-0 z-30 mb-4 rounded-xl border p-2 sm:p-2.5 shadow-sm backdrop-blur-xl"
         :class="[currentThemeClasses.border, currentTheme === 'dark' ? 'bg-slate-900/50' : 'bg-white/70']"
       >
         <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
           <div class="relative flex-1">
             <Icon icon="solar:magnifer-linear" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" />
-            <input v-model="searchQuery" type="search" placeholder="Cari isi cerita atau tag..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs outline-none" :class="currentThemeClasses.inputSearch" />
+            <input v-model="searchQuery" type="search" placeholder="Cari isi cerita atau tag..." class="w-full pl-9 pr-3 py-2.5 rounded-lg border text-xs outline-none transition-shadow focus:shadow-sm" :class="currentThemeClasses.inputSearch" />
           </div>
           <div class="grid grid-cols-2 sm:flex gap-2">
-            <select v-model="moodFilter" class="px-3 py-2.5 rounded-xl border text-xs outline-none" :class="currentThemeClasses.inputSearch">
+            <select v-model="moodFilter" class="px-3 py-2.5 rounded-lg border text-xs outline-none" :class="currentThemeClasses.inputSearch">
               <option value="">Semua mood</option>
               <option v-for="m in moodList" :key="m.emoji" :value="m.emoji">{{ m.emoji }} {{ m.label }}</option>
             </select>
-            <input v-model="dateFilter" type="date" class="px-3 py-2.5 rounded-xl border text-xs outline-none" :class="currentThemeClasses.inputSearch" />
+            <input v-model="dateFilter" type="date" class="px-3 py-2.5 rounded-lg border text-xs outline-none" :class="currentThemeClasses.inputSearch" />
             <button v-if="searchQuery || moodFilter || dateFilter" @click="clearAdvancedFilters" class="col-span-2 sm:col-span-1 px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">Reset Filter</button>
           </div>
         </div>
@@ -400,7 +390,7 @@
               <button
                 v-if="!isWritingMode && currentPage.text"
                 @click="togglePageLock"
-                class="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 active:scale-95 select-none"
+                class="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-colors select-none"
                 :class="
                   currentPage.isLocked
                     ? 'bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-500 dark:text-white dark:border-transparent'
@@ -432,7 +422,7 @@
                 <button
                   @click="prevPage"
                   :disabled="currentPageIndex === 0 || !filteredPages.length"
-                  class="group p-1.5 rounded-xl border-2 disabled:opacity-20 active:scale-95 transition-all duration-200"
+                  class="group p-1.5 rounded-lg border disabled:opacity-20 transition-colors"
                   :class="[
                     currentThemeClasses.border,
                     currentThemeClasses.itemInactive,
@@ -442,7 +432,7 @@
                 >
                   <Icon
                     icon="solar:alt-arrow-left-bold"
-                    class="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5 text-current"
+                    class="w-4 h-4 text-current"
                   />
                 </button>
 
@@ -465,7 +455,7 @@
                     currentPageIndex >= filteredPages.length - 1 ||
                     !filteredPages.length
                   "
-                  class="group p-1.5 rounded-xl border-2 disabled:opacity-20 active:scale-95 transition-all duration-200"
+                  class="group p-1.5 rounded-lg border disabled:opacity-20 transition-colors"
                   :class="[
                     currentThemeClasses.border,
                     currentThemeClasses.itemInactive,
@@ -475,7 +465,7 @@
                 >
                   <Icon
                     icon="solar:alt-arrow-right-bold"
-                    class="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 text-current"
+                    class="w-4 h-4 text-current"
                   />
                 </button>
               </div>
@@ -718,10 +708,10 @@
                           currentThemeClasses.badge,
                           currentThemeClasses.border,
                         ]"
-                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-black border shadow-3xs transition-transform duration-300 hover:scale-105 select-none"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold border select-none"
                       >
                         <span
-                          class="text-xs md:text-sm transform scale-110 active:animate-ping"
+                          class="text-xs md:text-sm"
                           >{{ currentPage.mood }}</span
                         >
                         <span class="tracking-wide opacity-90"
@@ -762,7 +752,7 @@
                     >
                       <button
                         @click="startEditPage"
-                        class="group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black border-2 backdrop-blur-md shadow-3xs transition-all duration-300 active:scale-95 hover:shadow-sm hover:-translate-y-0.5"
+                        class="group flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border backdrop-blur-md transition-colors active:opacity-70"
                         :class="[
                           currentThemeClasses.border,
                           currentThemeClasses.borderEditHover,
@@ -774,14 +764,14 @@
                       >
                         <Icon
                           icon="solar:pen-new-square-bold-duotone"
-                          class="w-4 h-4 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"
+                          class="w-4 h-4"
                         />
                         <span class="tracking-wider">Edit Lembar</span>
                       </button>
 
                       <button
                         @click="deleteNotebook(currentPage.id!)"
-                        class="group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black border-2 backdrop-blur-md shadow-3xs transition-all duration-300 active:scale-95 hover:shadow-sm hover:-translate-y-0.5"
+                        class="group flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border backdrop-blur-md transition-colors"
                         :class="[
                           currentThemeClasses.border,
                           currentThemeClasses.borderEditHover,
@@ -793,7 +783,7 @@
                       >
                         <Icon
                           icon="solar:trash-bin-trash-bold-duotone"
-                          class="w-5 h-5 transition-transform duration-300 group-hover/btnTrash:scale-110 group-hover/btnTrash:rotate-6"
+                          class="w-4 h-4"
                         />
                         <span class="tracking-wider">Hapus Lembar</span>
                       </button>
@@ -955,7 +945,7 @@
 
         <!-- TOMBOL NAVIGASI BAWAH (Aksi Simpan / Batal / Tulis) -->
         <div
-          class="sticky bottom-2 z-30 flex justify-end gap-2.5 p-3 mt-5 border rounded-2xl w-full shadow-lg backdrop-blur-xl"
+          class="sticky bottom-2 z-30 flex justify-end gap-2.5 p-2.5 mt-5 border rounded-xl w-full shadow-sm backdrop-blur-xl"
           :class="[currentThemeClasses.border, currentTheme === 'dark' ? 'bg-slate-950/90' : 'bg-white/90']"
         >
           <button
@@ -963,7 +953,7 @@
             @click="startWriting"
             :disabled="!notebooks.length"
             :class="currentThemeClasses.btnGradient"
-            class="w-full sm:w-auto justify-center px-5 py-3 sm:py-2.5 rounded-xl text-white font-black text-xs flex items-center gap-2 shadow-md disabled:opacity-40 active:scale-95 transition-transform"
+            class="w-full sm:w-auto justify-center px-5 py-2.5 rounded-lg text-white font-semibold text-xs flex items-center gap-2 shadow-sm disabled:opacity-40 active:opacity-80 transition-opacity"
           >
             <Icon icon="solar:pen-bold-duotone" class="w-4 h-4" /> TULIS JURNAL
           </button>
@@ -979,7 +969,7 @@
                 ? 'border-slate-700/80 text-slate-400 hover:bg-slate-800/60 hover:text-slate-300'
                 : 'hover:bg-current/5 border-opacity-60',
             ]"
-            class="w-1/2 sm:w-auto text-center justify-center px-5 py-3 sm:py-2.5 rounded-xl font-black text-xs border-4 transition-all active:scale-95 shadow-3xs tracking-wider"
+            class="w-1/2 sm:w-auto text-center justify-center px-5 py-2.5 rounded-lg font-semibold text-xs border transition-colors active:opacity-70"
           >
             BATAL
           </button>
@@ -989,7 +979,7 @@
             @click="savePage"
             :disabled="isSavingPage || uploadStore().uploading"
             :class="currentThemeClasses.btnGradient"
-            class="w-1/2 sm:w-auto justify-center px-5 py-3 sm:py-2.5 rounded-xl text-white font-black text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-1/2 sm:w-auto justify-center px-5 py-2.5 rounded-lg text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm active:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Icon
               icon="solar:check-square-bold-duotone"
@@ -1197,6 +1187,7 @@ import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { Icon } from "@iconify/vue";
 import { useDiaryTheme } from "~/composables/useDiaryTheme";
 import { uploadStore } from "@/stores/uploadStore";
+import { createPinHash, verifyPinHash } from "~/utils/pinSecurity";
 const notificationStore = useNotificationStore();
 const confirmationDialog = ref<any>(null);
 // Di dalam index.vue kamu:
@@ -1258,6 +1249,7 @@ let draftTimer: ReturnType<typeof setTimeout> | null = null;
 const isCurrentPageUnlocked = ref(false);
 const inputPin = ref("");
 const pinError = ref(false);
+const showPagePinCreate = ref(false);
 
 // State Pengaturan Modal Reset Lupa PIN via Password
 const showResetModal = ref(false);
@@ -1310,7 +1302,6 @@ onMounted(() => {
 // ✅ BARU: Memuat data bertingkat dari sub-collection jurnals -> notebooks
 const loadUserDiary = async (uid: string) => {
   try {
-    console.log("📂 Sinkronisasi data bertingkat dari cloud...");
 
     // 1. Ambil semua daftar Jurnal (Rak Buku) terlebih dahulu
     const journalsRef = collection($fbDb, "user_diaries", uid, "jurnals");
@@ -1340,6 +1331,8 @@ const loadUserDiary = async (uid: string) => {
         title: "Jurnal Utama Saya",
         isLocked: false,
         journalPin: "",
+        journalPinHash: "",
+        journalPinSalt: "",
         createdAt: Date.now(),
       };
       await setDoc(defaultJournalRef, defaultData);
@@ -1370,7 +1363,6 @@ const loadUserDiary = async (uid: string) => {
     }
 
     notebooks.value = baseBooks;
-    console.log("📊 [Sukses] Semua sub-collection terkelompok sempurna!");
   } catch (e) {
     console.error("❌ Gagal memuat lembaran bertingkat: ", e);
   }
@@ -1390,12 +1382,13 @@ const saveToFirebase = async () => {
           title: book.title,
           isLocked: book.isLocked,
           journalPin: book.journalPin,
+          journalPinHash: book.journalPinHash || "",
+          journalPinSalt: book.journalPinSalt || "",
           createdAt: book.createdAt || Date.now(),
         },
         { merge: true },
       );
     }
-    console.log("🔥 Metadata jurnals berhasil dicadangkan.");
   } catch (e) {
     console.error("Gagal mencadangkan jurnal: ", e);
   }
@@ -1410,11 +1403,25 @@ watch(activeBookIndex, () => {
   journalPinError.value = false;
 });
 
-const checkJournalPinInput = () => {
+const checkJournalPinInput = async () => {
   if (inputJournalPin.value.length === 6) {
-    if (inputJournalPin.value === currentBook.value.journalPin) {
+    const validHash = await verifyPinHash(
+      inputJournalPin.value,
+      currentBook.value.journalPinHash,
+      currentBook.value.journalPinSalt,
+    );
+    const validLegacy = !currentBook.value.journalPinHash
+      && inputJournalPin.value === currentBook.value.journalPin;
+    if (validHash || validLegacy) {
       isJournalUnlocked.value = true;
       journalPinError.value = false;
+      if (validLegacy) {
+        const secured = await createPinHash(inputJournalPin.value);
+        currentBook.value.journalPinHash = secured.hash;
+        currentBook.value.journalPinSalt = secured.salt;
+        currentBook.value.journalPin = "";
+        await saveToFirebase();
+      }
     } else {
       journalPinError.value = true;
       inputJournalPin.value = "";
@@ -1445,7 +1452,10 @@ const handlePinSubmit = async (pinYangDiketik: string) => {
   if (pinModalMode.value === "create") {
     // 🟢 LOGIKA: BUAT PIN BARU
     book.isLocked = true;
-    book.journalPin = pinYangDiketik; // Sesuaikan dengan nama field kamu (journalPin)
+    const secured = await createPinHash(pinYangDiketik);
+    book.journalPin = "";
+    book.journalPinHash = secured.hash;
+    book.journalPinSalt = secured.salt;
 
     // Jika buku yang dikunci kebetulan adalah buku yang sedang aktif dibuka di layar tengah
     if (currentBook.value?.id === book.id) {
@@ -1456,9 +1466,13 @@ const handlePinSubmit = async (pinYangDiketik: string) => {
     await saveToFirebase(); // Panggil fungsi save Firebase bawaan kamu
   } else {
     // 🔴 LOGIKA: HAPUS / LEPAS PIN
-    if (pinYangDiketik === book.journalPin) {
+    const valid = await verifyPinHash(pinYangDiketik, book.journalPinHash, book.journalPinSalt)
+      || (!book.journalPinHash && pinYangDiketik === book.journalPin);
+    if (valid) {
       book.isLocked = false;
       book.journalPin = "";
+      book.journalPinHash = "";
+      book.journalPinSalt = "";
 
       if (currentBook.value?.id === book.id) {
         isJournalUnlocked.value = false;
@@ -1482,7 +1496,10 @@ const handleResetJournalPinWithPassword = async () => {
       resetJournalPassword.value,
     );
     await reauthenticateWithCredential($fbAuth.currentUser!, credential);
-    currentBook.value.journalPin = resetNewJournalPin.value;
+    const secured = await createPinHash(resetNewJournalPin.value);
+    currentBook.value.journalPin = "";
+    currentBook.value.journalPinHash = secured.hash;
+    currentBook.value.journalPinSalt = secured.salt;
     currentBook.value.isLocked = true;
     isJournalUnlocked.value = true;
     await saveToFirebase();
@@ -1518,11 +1535,21 @@ watch(searchQuery, () => {
   currentPageIndex.value = 0;
 });
 
-const checkPinInput = () => {
+const checkPinInput = async () => {
   if (inputPin.value.length === 6) {
-    if (inputPin.value === currentPage.value.pin) {
+    const validHash = await verifyPinHash(inputPin.value, currentPage.value.pinHash, currentPage.value.pinSalt);
+    const validLegacy = !currentPage.value.pinHash && inputPin.value === currentPage.value.pin;
+    if (validHash || validLegacy) {
       isCurrentPageUnlocked.value = true;
       pinError.value = false;
+      if (validLegacy && currentPage.value.id) {
+        const secured = await createPinHash(inputPin.value);
+        currentPage.value.pin = "";
+        currentPage.value.pinHash = secured.hash;
+        currentPage.value.pinSalt = secured.salt;
+        const pageRef = doc($fbDb, "user_diaries", currentUser.value.uid, "jurnals", currentBook.value.id, "notebooks", currentPage.value.id);
+        await updateDoc(pageRef, { pin: "", pinHash: secured.hash, pinSalt: secured.salt });
+      }
     } else {
       pinError.value = true;
       inputPin.value = "";
@@ -1547,28 +1574,31 @@ const togglePageLock = async () => {
 
   if (currentPage.value.isLocked) {
     if (isCurrentPageUnlocked.value) {
-      const confirmPin = prompt("Masukkan PIN saat ini untuk melepas gembok:");
-      if (confirmPin === currentPage.value.pin) {
-        currentPage.value.isLocked = false;
-        currentPage.value.pin = "";
-        isCurrentPageUnlocked.value = false;
-        await updateDoc(pageDocRef, { isLocked: false, pin: "" });
-        notificationStore.showSuccess("Gembok dilepas.");
-      } else if (confirmPin !== null) {
-        notificationStore.showError("PIN Salah!");
-      }
+      currentPage.value.isLocked = false;
+      currentPage.value.pin = "";
+      currentPage.value.pinHash = "";
+      currentPage.value.pinSalt = "";
+      isCurrentPageUnlocked.value = false;
+      await updateDoc(pageDocRef, { isLocked: false, pin: "", pinHash: "", pinSalt: "" });
+      notificationStore.showSuccess("Gembok dilepas.");
     }
   } else {
-    const newPin = prompt("Buat 6-Digit PIN angka baru:");
-    if (newPin === null || newPin.length !== 6 || isNaN(Number(newPin))) return;
-
-    currentPage.value.isLocked = true;
-    currentPage.value.pin = newPin;
-    isCurrentPageUnlocked.value = true;
-
-    await updateDoc(pageDocRef, { isLocked: true, pin: newPin });
-    notificationStore.showSuccess("Lembaran terkunci.");
+    showPagePinCreate.value = true;
   }
+};
+
+const createPagePin = async (newPin: string) => {
+  if (!currentUser.value || !currentPage.value.id || !currentBook.value.id) return;
+  const secured = await createPinHash(newPin);
+  const pageDocRef = doc($fbDb, "user_diaries", currentUser.value.uid, "jurnals", currentBook.value.id, "notebooks", currentPage.value.id);
+  currentPage.value.isLocked = true;
+  currentPage.value.pin = "";
+  currentPage.value.pinHash = secured.hash;
+  currentPage.value.pinSalt = secured.salt;
+  isCurrentPageUnlocked.value = true;
+  await updateDoc(pageDocRef, { isLocked: true, pin: "", pinHash: secured.hash, pinSalt: secured.salt });
+  showPagePinCreate.value = false;
+  notificationStore.showSuccess("Lembaran terkunci.");
 };
 
 const handleResetPinWithPassword = async () => {
@@ -1591,11 +1621,14 @@ const handleResetPinWithPassword = async () => {
       currentPage.value.id,
     );
 
-    currentPage.value.pin = resetNewPin.value;
+    const secured = await createPinHash(resetNewPin.value);
+    currentPage.value.pin = "";
+    currentPage.value.pinHash = secured.hash;
+    currentPage.value.pinSalt = secured.salt;
     currentPage.value.isLocked = true;
     isCurrentPageUnlocked.value = true;
 
-    await updateDoc(pageDocRef, { isLocked: true, pin: resetNewPin.value });
+    await updateDoc(pageDocRef, { isLocked: true, pin: "", pinHash: secured.hash, pinSalt: secured.salt });
     notificationStore.showSuccess("PIN Halaman Berhasil Diperbarui!");
     closeResetModal();
   } catch (error: any) {
@@ -1694,10 +1727,6 @@ const savePage = async () => {
 
   if (rawPiniaUrl && rawPiniaUrl.trim() !== "") {
     finalImageValue = rawPiniaUrl.trim();
-    console.log(
-      "🎯 [SAVE-PAGE] Menggunakan URL Gambar dari Pinia Store:",
-      finalImageValue,
-    );
   } else if (
     imagePreview.value &&
     imagePreview.value.trim() !== "" &&
@@ -1706,7 +1735,6 @@ const savePage = async () => {
     finalImageValue = imagePreview.value.trim();
   } else {
     finalImageValue = null;
-    console.log("🎯 [SAVE-PAGE] Catatan dibuat tanpa gambar (null).");
   }
 
   const newPageData = {
@@ -1717,6 +1745,8 @@ const savePage = async () => {
     tags: normalizeTags(newTagsInput.value),
     isLocked: false,
     pin: "",
+    pinHash: "",
+    pinSalt: "",
   };
 
   try {
@@ -1749,7 +1779,6 @@ const savePage = async () => {
     isWritingMode.value = false;
     searchQuery.value = "";
 
-    console.log("📝 Sukses menulis cerita baru ke sub-collection notebooks!");
 
     upStore.setReset();
     useloadingStore().setLoading(false);
@@ -1897,6 +1926,8 @@ const currentBook = computed(() => {
       title: "",
       isLocked: false,
       journalPin: "",
+      journalPinHash: "",
+      journalPinSalt: "",
       pages: [],
     }
   );
@@ -1962,6 +1993,8 @@ const createNewBook = async () => {
     createdAt: Date.now(),
     isLocked: false,
     journalPin: "",
+    journalPinHash: "",
+    journalPinSalt: "",
   };
 
   try {
@@ -1982,7 +2015,6 @@ const createNewBook = async () => {
     currentPageIndex.value = 0;
     isWritingMode.value = false;
     useloadingStore().setLoading(false);
-    console.log("🎨 Jurnal baru berhasil dibentuk di Cloud sub-collection!");
   } catch (e) {
     useloadingStore().setLoading(false);
     console.error(e);
@@ -2048,6 +2080,7 @@ const displayedNotebooks = computed(() => {
 });
 
 const editingBookId = ref<string | null>(null);
+const journalMenuOpenId = ref<string | null>(null);
 const editingBookTitle = ref("");
 const editInputRef = ref<HTMLInputElement | null>(null);
 
@@ -2099,7 +2132,6 @@ const saveBookTitle = async (book: any) => {
     });
     book.title = cleanTitle;
     useloadingStore().setLoading(false);
-    console.log("Judul jurnal sukses diperbarui di sub-collection jurnals.");
   } catch (error) {
     useloadingStore().setLoading(false);
     console.error(error);
@@ -2151,8 +2183,6 @@ const saveEditPage = async () => {
   if (!confirmed) {
     return notificationStore.showError("Pengubahan cerita dibatalkan");
   }
-  console.log("=== 🚀 START DEBUGGING SAVE EDIT PAGE ===");
-
   const cleanText = editTextBuffer.value.trim();
   if (!cleanText) {
     notificationStore.showError("Isi cerita jurnal tidak boleh kosong.");
@@ -2172,50 +2202,17 @@ const saveEditPage = async () => {
   const upStore = uploadStore();
   const rawPiniaUrl = upStore.getUrlRef;
 
-  // 🔍 SPY LOGS - Memeriksa isi setiap penampung data sebelum diolah
-  console.log("📸 [DATA SPY] Nilai di Pinia:", `"${rawPiniaUrl}"`);
-  console.log(
-    "📸 [DATA SPY] Nilai di Local Buffer:",
-    `"${editImageBuffer.value}"`,
-  );
-  console.log("📸 [DATA SPY] Nilai Asli Gambar Lama:", `"${targetPage.image}"`);
-
-  // ==========================================
-  // 👇 TARO DI SINI (TEPAT DI ATAS TRY CATCH) 👇
-  // ==========================================
-  // 🛡️ STRATEGI FILTER BERLAPIS ANTI-NULL (VERSI MENDUKUNG PENGHAPUSANNYA)
   let finalImageValue = null;
 
   if (isImageDeleted.value) {
-    // Jalur Utama: Jika user sengaja menekan tombol hapus gambar, paksa database jadi null!
     finalImageValue = null;
-    console.log(
-      "🎯 [JALUR TERPILIH] User menghapus gambar. Set database menjadi null.",
-    );
   } else if (rawPiniaUrl && rawPiniaUrl.trim() !== "") {
-    // Jalur 1: User baru saja mengunggah foto baru lewat komponen upload
     finalImageValue = rawPiniaUrl.trim();
-    console.log("🎯 [JALUR TERPILIH] Menggunakan URL Baru dari Pinia Store.");
   } else if (editImageBuffer.value && editImageBuffer.value.trim() !== "") {
-    // Jalur 2: Menggunakan link gambar yang ada di buffer lokal
     finalImageValue = editImageBuffer.value.trim();
-    console.log("🎯 [JALUR TERPILIH] Menggunakan URL dari editImageBuffer.");
   } else {
-    // Jalur 3: Tidak ada aksi apa-apa, selamatkan gambar lama agar tidak hilang
     finalImageValue = targetPage.image ? targetPage.image : null;
-    console.log(
-      "🎯 [JALUR TERPILIH] Tidak ada perubahan gambar. Pertahankan yang lama.",
-    );
   }
-  // ==========================================
-  // 👆 SELESAI PELETAKAN 👆
-  // ==========================================
-
-  console.log(
-    "📝 [HASIL AKHIR] Nilai finalImageValue yang akan dikirim:",
-    finalImageValue,
-  );
-  console.log("=== 📜 SELESAI ANALISIS DATA ===");
 
   try {
     useloadingStore().setLoading(true);
@@ -2235,6 +2232,15 @@ const saveEditPage = async () => {
       mood: editMoodBuffer.value,
       image: finalImageValue, // 👈 Nilai hasil filter dikirim ke sini
     });
+
+    const oldImage = targetPage.image;
+    if (oldImage && oldImage !== finalImageValue) {
+      try {
+        await upStore.deleteUploadedFile(oldImage);
+      } catch {
+        notificationStore.showInfo("Cerita tersimpan, tetapi gambar lama belum dapat dibersihkan.");
+      }
+    }
 
     // Sinkronisasi data ke state lokal Vue secara instan
     targetPage.text = cleanText;
@@ -2301,12 +2307,6 @@ async function deleteNotebook(noteId: string) {
   );
 
   if (!isConfirmed) return;
-
-  console.log(`Memulai proses penghapusan notebook dengan ID: ${noteId}`);
-
-  console.log(
-    `Target path: /user_diaries/${user?.uid || userId.value}/jurnals/${currentBook.value.id}/notebooks/${noteId}`,
-  );
 
   try {
     useloadingStore().setLoading(true);

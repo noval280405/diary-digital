@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { useFirebaseStorage, useStorageFile } from "vuefire";
-import { ref as storageRef, uploadBytes, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import { getAuth } from "firebase/auth";
 import moment from "moment";
 export const uploadStore = defineStore('uploadStore', {
     state: () => {
@@ -101,6 +102,16 @@ export const uploadStore = defineStore('uploadStore', {
         setUrlref(file: string) {
             this.urlRef = file
         },
+        async deleteUploadedFile(url?: string) {
+            const targetUrl = url || this.urlRef
+            if (!targetUrl) return
+            try {
+                const storage = useFirebaseStorage()
+                await deleteObject(storageRef(storage, targetUrl))
+            } finally {
+                this.setReset()
+            }
+        },
         simpanFileAction(typefolder: string) {
             const loadingStore = useloadingStore()
             const picturestore = usePictureStore()
@@ -118,7 +129,9 @@ export const uploadStore = defineStore('uploadStore', {
                     };
                     loadingStore.setLoading(true)
                     this.uploading = true
-                    const filenamaref = storageRef(storage, `upload/${tahun}/${bulan}/${tanggal}/${typefolder}/` + this.namefile);
+                    const uid = getAuth().currentUser?.uid
+                    if (!uid) throw new Error("Sesi login berakhir. Silakan masuk kembali.")
+                    const filenamaref = storageRef(storage, `upload/${uid}/${tahun}/${bulan}/${tanggal}/${typefolder}/` + this.namefile);
                     const uploadTask = uploadBytesResumable(filenamaref, this.fileupload);
 
                     uploadTask.on('state_changed',
@@ -222,5 +235,4 @@ export const uploadStore = defineStore('uploadStore', {
     }
 
 })
-
 
