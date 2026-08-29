@@ -315,7 +315,7 @@
 
       <!-- Panel pencarian lanjutan dan mode fokus -->
       <div
-        v-if="!isFocusMode && !isWritingMode"
+        v-if="!isWritingMode"
         class="sticky top-0 z-30 mb-4 rounded-2xl border p-2.5 sm:p-3 shadow-sm backdrop-blur-xl"
         :class="[currentThemeClasses.border, currentTheme === 'dark' ? 'bg-slate-900/50' : 'bg-white/70']"
       >
@@ -330,17 +330,10 @@
               <option v-for="m in moodList" :key="m.emoji" :value="m.emoji">{{ m.emoji }} {{ m.label }}</option>
             </select>
             <input v-model="dateFilter" type="date" class="px-3 py-2.5 rounded-xl border text-xs outline-none" :class="currentThemeClasses.inputSearch" />
-            <button v-if="searchQuery || moodFilter || dateFilter" @click="clearAdvancedFilters" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">Reset</button>
-            <button @click="isFocusMode = true" class="px-3 py-2 rounded-xl text-xs font-bold text-white shadow-sm" :class="currentThemeClasses.btnGradient">
-              <Icon icon="solar:full-screen-bold-duotone" class="inline w-4 h-4 mr-1" /> Fokus
-            </button>
+            <button v-if="searchQuery || moodFilter || dateFilter" @click="clearAdvancedFilters" class="col-span-2 sm:col-span-1 px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">Reset Filter</button>
           </div>
         </div>
       </div>
-
-      <button v-else @click="isFocusMode = false" class="fixed top-4 right-4 z-40 px-4 py-2.5 rounded-xl bg-slate-900/80 text-white text-xs font-bold shadow-xl backdrop-blur">
-        <Icon icon="solar:quit-full-screen-bold-duotone" class="inline w-4 h-4 mr-1" /> Keluar Fokus
-      </button>
 
       <!-- KONDISI PERTAMA: JURNAL DIKUNCI TOTAL -->
       <div
@@ -1256,7 +1249,6 @@ const searchQuery = ref("");
 const selectedMood = ref("😊");
 const moodFilter = ref("");
 const dateFilter = ref("");
-const isFocusMode = ref(false);
 const newTagsInput = ref("");
 const draftStatus = ref("Draft siap");
 const isSavingPage = ref(false);
